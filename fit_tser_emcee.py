@@ -95,12 +95,16 @@ class oEmcee():
             p0.append(self.guess + np.random.normal(0,1.0,self.ndim) * self.guessSig)
         return p0
     
-    def showGuess(self):
+    def showGuess(self,showResult=False):
         """ Shows the guess against the input """
         plt.close('all')
         fig, ax = plt.subplots()
         ax.errorbar(self.x,self.y,yerr=self.yerr,fmt='o')
-        ax.plot(self.x,self.model.evaluate(self.x,self.guess))
+        if showResult == True:
+            modelParam = self.results['Median']
+        else:
+            modelParam = self.guess
+        ax.plot(self.x,self.model.evaluate(self.x,modelParam),linewidth=3.)
         fig.show()
     
     def runMCMC(self,nBurn=500,nRun=1500):
@@ -135,6 +139,10 @@ class oEmcee():
         t['Median'] = medianV
         t['Upper'] = upper
         self.results = t
+    
+    def showResult(self):
+        self.runCheck()
+        self.showGuess(showResult=True)
     
     def runCheck(self):
         """A check that the MCMC has been run. If not, it runs"""
