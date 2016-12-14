@@ -2,6 +2,7 @@ import numpy as np
 import emcee
 import pdb
 from astropy.io import ascii
+from astropy.table import Table
 import matplotlib.pyplot as plt
 import corner
 
@@ -68,6 +69,9 @@ class oEmcee():
         Initial Gaussian sigmas to start walkers around the guess
     nwalkers: int, optional
         Number of walkers in MCMC fit
+    p0: the initial arrays for the walkers
+    sampler: the `emcee` Sampler object
+    hasRun: whether or not the MCMC has been run
     """
     
     def __init__(self,model,x,y,yerr,guess,guessSig,nwalkers=50):
@@ -125,9 +129,12 @@ class oEmcee():
             medianV.append(np.median(flatChain))
             upper.append(np.percentile(flatChain,highPercent))
         
-        self.lower = np.array(lower)
-        self.medianV = np.array(medianV)
-        self.upper = np.array(upper)
+        self.limPercents = [lowPercent,highPercent]
+        t = Table()
+        t['Lower'] = lower
+        t['Median'] = medianV
+        t['Upper'] = upper
+        self.results = t
     
     def runCheck(self):
         """A check that the MCMC has been run. If not, it runs"""
@@ -139,7 +146,7 @@ class oEmcee():
         """ Runs a corner plot """
         self.runCheck()
         
-        fig = corner.corner(self.sampler.flatchain,labels=self.model.pnames,auto_bars=False,
+        fig = corner.corner(self.sampler.flatchain,labels=self.model.pnames,auto_bars=True,
                             quantiles=[0.159,0.841],show_titles=True)
         fig.savefig('plots/corner.pdf')
     
