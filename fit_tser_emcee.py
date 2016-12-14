@@ -8,7 +8,7 @@ import corner
 
 class sinModel:
     """ Simple sinusoidal model for fitting light curve.
-        y(t) = A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + Bt + C'
+        y(t) = A1 cos(2pi(t-t1)/tau) + Bt + C'
         p[0] = A, p[1] = t0, p[2]=tau, p[3]=B, p[4]=C
     """
     def __init__(self,priorArray=None):
@@ -40,6 +40,78 @@ class sinModel:
             return 0
         else:
             return -np.inf
+
+class fSeries:
+    """ A Fourier series model for fitting rotational modulations 
+    
+    y(t) = A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) +... + Bt + C'
+    Indices 0-2 are the time scale and baseline parameters
+    
+    Attributes
+    ----------
+    name: str
+        Name of the model
+    pnames: arr, str
+        names of each parameter (LaTeX coding included)
+        These begin with tau, B, C and then all A_i, then all t_i
+    nbaseterms: int
+        Number of timeline +baseline terms
+    order: the number of terms in the Fourier series
+    Aind: arr
+        The indices for the amplitude terms
+    tind: arr
+        The indices for the 
+    """
+    def __init__(self,priorArray=None,order=2):
+        self.name = "Fourier Series"
+        pnames = [r'$\tau$','B','C']
+        self.nbaseterms = len(pnames)
+        self.order = order
+        for i in range(order):
+            pnames.append(r'A$_'+str(i)+r'$')
+        self.Aind = np.arange(self.order) + self.nbaseterms
+        for i in range(order):
+            pnames.append(r't$_'+str(i)+r'$')
+        self.tind = np.arange(self.order) + self.order + self.nbaseterms
+        self.pnames = pnames
+        self.formula = 'A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + ..+ Bt + C'
+        self.ndim = len(self.pnames)
+    
+    def evaluate(self,x,p):
+        """ Evaluates the cosine function"""
+        freqArr = np.arange(self.order)+1.
+        cosTerms = 0
+        for Amp,freq,t in zip(p[self.Aind],freqArr,p[self.tind]):
+            cosTerms += Amp/100. * np.cos(freq * 2. * np.pi * (x - t)/p[0])
+        baseLine = p[1] * x + p[2]
+        
+        return cosTerms + baseLine
+    
+    def lnprior(self,p):
+        """ Prior likelihood function"""
+        ## Ensure positive amplitudes
+        aCheck = p[self.Aind] > 0
+        ## Ensure the offset is less than observation window
+        tCheck = (p[self.tind] > -6.) & (p[self.tind] < 6.)
+        ## Avoid harmonics
+        tauCheck = (p[0] > 0. and p[0] < 5.)
+        if np.all(aCheck) & np.all(tCheck) & np.all(tauCheck):
+            return 0
+        else:
+            return -np.inf
+
+def paramTable(model,values=None):
+    """ Makes an astropy table of parameters, which is easy to read
+    
+    Parameters
+    ----------
+    values: arr
+        Values to display next to parameter names
+    """
+    t = Table()
+    t['Parameter'] = model.pnames
+    t['Values'] = values
+    return t
 
 def lnprob(params, x, y, yerr, model):
     """ Likelihood function. A simple Chi-squared"""
@@ -79,8 +151,8 @@ class oEmcee():
         self.x = x
         self.y = y
         self.yerr = yerr
-        self.guess = guess
-        self.guessSig = guessSig
+        self.guess = np.array(guess)
+        self.guessSig = np.array(guessSig)
         self.ndim = model.ndim
         self.nwalkers = nwalkers
         self.p0 = self.makeWalkers()
@@ -135,14 +207,23 @@ class oEmcee():
         
         self.limPercents = [lowPercent,highPercent]
         t = Table()
+        t['Parameter'] = self.model.pnames
         t['Lower'] = lower
         t['Median'] = medianV
         t['Upper'] = upper
         self.results = t
     
     def showResult(self):
+        """ Shows the best-fit model from the median parameter values """
         self.runCheck()
         self.showGuess(showResult=True)
+        print(self.chisquare(self.results['Median']))
+    
+    def chisquare(self,param):
+        """ Calculates the chi-squared"""
+        chisquare = -2. * lnprob(param,self.x,self.y,self.yerr,self.model)
+        dof = self.x.shape[0] - self.ndim
+        return chisquare,chisquare/dof
     
     def runCheck(self):
         """A check that the MCMC has been run. If not, it runs"""
@@ -189,17 +270,29 @@ class oEmcee():
                 ax.set_ylabel(self.model.pnames[i])
         fig.show()
 
-def prepEmcee():
+def prepEmcee(doSeries=False):
     """ Prepares Emcee for run """
     dat = ascii.read('tser_data/timeser_1.08um_.txt',
                      names=['t','fl','flerr','model','resid'])
     x = np.array(dat['t'])
     y = np.array(dat['fl'])
     yerr = np.array(dat['flerr']) #* 3.
-    model = sinModel()
     
-    guess = np.array([1.5,1.38,4.1,0.,0.995])
-    spread = np.array([0.2,0.3,0.01,0.004,0.05])
+    if doSeries == True:
+        order = 2
+        if order == 1:
+            guess = [4.1,0.,0.995,1.5,1.38]
+            spread = [0.01,0.004,0.05,0.2,0.2]
+        
+        else:
+            guess = [4.1,0.,0.995,1.5,0.4,1.38,1.38]
+            spread = [0.01,0.004,0.05,0.2,0.2,0.2,0.2]
+        model = fSeries(order=order)
+        
+    else:
+        model = sinModel()
+        guess = [1.5,1.38,4.1,0.,0.995]
+        spread = [0.2,0.3,0.01,0.004,0.05]
     
     mcObj = oEmcee(model,x,y,yerr,guess,spread)
     
