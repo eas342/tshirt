@@ -290,7 +290,12 @@ class oEmcee():
         fig.show()
 
 def prepEmcee(doSeries=False):
-    """ Prepares Emcee for run """
+    """ Prepares Emcee for run 
+    
+    Example usage::
+    mcObj = fit_tser_emcee.prepEmcee(doSeries=True)
+    mcObj.showResults()
+    """
     dat = ascii.read('tser_data/timeser_1.08um_.txt',
                      names=['t','fl','flerr','model','resid'])
     x = np.array(dat['t'])
