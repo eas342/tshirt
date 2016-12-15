@@ -68,10 +68,10 @@ class fSeries:
         self.nbaseterms = len(pnames)
         self.order = order
         for i in range(order):
-            pnames.append(r'A$_'+str(i)+r'$')
+            pnames.append(r'A$_'+str(i+1)+r'$')
         self.Aind = np.arange(self.order) + self.nbaseterms
         for i in range(order):
-            pnames.append(r't$_'+str(i)+r'$')
+            pnames.append(r't$_'+str(i+1)+r'$')
         self.tind = np.arange(self.order) + self.order + self.nbaseterms
         self.pnames = pnames
         self.formula = 'A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + ..+ Bt + C'
@@ -141,15 +141,28 @@ class oEmcee():
         Initial Gaussian sigmas to start walkers around the guess
     nwalkers: int, optional
         Number of walkers in MCMC fit
-    p0: the initial arrays for the walkers
-    sampler: the `emcee` Sampler object
-    hasRun: whether or not the MCMC has been run
+    p0: arr
+        the initial arrays for the walkers
+        sampler: the `emcee` Sampler object
+    hasRun: bool
+        whether or not the MCMC has been run
+    xLabel: 
+        Label for X axis
+    yLabel:
+        Label for Y axis
+    title:
+        Label for plot title
+    
     """
     
-    def __init__(self,model,x,y,yerr,guess,guessSig,nwalkers=50):
+    def __init__(self,model,x,y,yerr,guess,guessSig,nwalkers=50,xLabel='',yLabel='',
+                 title=''):
         self.model = model
         self.x = x
         self.y = y
+        self.xLabel = xLabel
+        self.yLabel = yLabel
+        self.title = title
         self.yerr = yerr
         self.guess = np.array(guess)
         self.guessSig = np.array(guessSig)
@@ -167,7 +180,7 @@ class oEmcee():
             p0.append(self.guess + np.random.normal(0,1.0,self.ndim) * self.guessSig)
         return p0
     
-    def showGuess(self,showResult=False):
+    def showGuess(self,showResult=False,saveFile=None):
         """ Shows the guess against the input """
         plt.close('all')
         fig, ax = plt.subplots()
@@ -177,7 +190,13 @@ class oEmcee():
         else:
             modelParam = self.guess
         ax.plot(self.x,self.model.evaluate(self.x,modelParam),linewidth=3.)
-        fig.show()
+        ax.set_xlabel(self.xLabel)
+        ax.set_ylabel(self.yLabel)
+        ax.set_title(self.title)
+        if saveFile == None:
+            fig.show()
+        else:
+            fig.savefig(saveFile)
     
     def runMCMC(self,nBurn=500,nRun=1500):
         """ Runs the MCMC
@@ -216,7 +235,7 @@ class oEmcee():
     def showResult(self):
         """ Shows the best-fit model from the median parameter values """
         self.runCheck()
-        self.showGuess(showResult=True)
+        self.showGuess(showResult=True,saveFile='plots/best_fit.pdf')
         print(self.chisquare(self.results['Median']))
     
     def chisquare(self,param):
@@ -294,7 +313,8 @@ def prepEmcee(doSeries=False):
         guess = [1.5,1.38,4.1,0.,0.995]
         spread = [0.2,0.3,0.01,0.004,0.05]
     
-    mcObj = oEmcee(model,x,y,yerr,guess,spread)
+    mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Time (hr)',yLabel='Normalized Flux',
+                   title='Time Series at 1.08 $\mu$m')
     
     return mcObj
 
