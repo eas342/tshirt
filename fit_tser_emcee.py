@@ -235,7 +235,8 @@ class oEmcee():
             modelParam = self.results['Median']
         else:
             modelParam = self.guess
-        ax.plot(self.x,self.model.evaluate(self.x,modelParam),linewidth=3.)
+        xmodel = np.linspace(np.min(self.x),np.max(self.x),1024)
+        ax.plot(xmodel,self.model.evaluate(xmodel,modelParam),linewidth=3.)
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
         ax.set_title(self.title)
