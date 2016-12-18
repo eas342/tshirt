@@ -6,6 +6,51 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 import corner
 
+class tdiffModel:
+    """ A Two temperature surface model for fitting amplitude spectra of Brown Dwarfs
+    A_lambda = (a_1 - a_2) (B(T1)/B(T2) - 1)/
+                (a_1 + a_2) * B(T1)/B(T2) + (2 - a1 - a2)
+    """
+    def __init__(self,priorArray=None):
+        self.name = "Two Temp Surface Flux Amplitude flambda"
+        self.pnames = ['$\alpha$_1','$\alpha_2$','T$_1$','T$_2$']
+        # self.formula = ("(a_1 - a_2) (B(T1)/B(T2) - 1)/"+
+        #                 "(a_1 + a_2) B(T1)/B(T2)+ (2 - a1 - a2)")
+        self.ndim = len(self.pnames)
+    
+    def planckNoConst(self,wavel,t):
+        """ Planck function with no leading constants 
+        
+        Parameters
+        ----------
+        lambda: arr
+            wavelength in microns
+        t: arr
+            temperature in Kelvin
+        """
+        return 1./(wavel**5 * (np.exp(14387.8/(wavel * t)) - 1.))
+    
+    def planckRatio(self,wavel,t1,t2):
+        """ Finds the flux ratio of two Planck Functions"""
+        ratio = self.planckNoConst(wavel,t1) / self.planckNoConst(wavel,t2)
+        return ratio
+    
+    def evaluate(self,x,p):
+        """ Evaluates the 2 temp model flambda """
+        rat = self.planckRatio(x,p[2],p[3])
+        numerator = (p[0] - p[1]) * (rat - 1.)
+        denominator = (p[0] + p[1]) * rat + 2 - p[0] - p[1]
+        return numerator/denominator
+        
+    def lnprior(self,p):
+        """ Prior likelihood function """
+        aCheck = (p[0:2] < 1) & (p[0:2] > 0)
+        Tcheck = (p[3:5] > 1200) & (p[3:5] < 2500)
+        if np.all(aCheck) & np.all(Tcheck):
+            return 0
+        else:
+            return -np.inf
+
 class sinModel:
     """ Simple sinusoidal model for fitting light curve.
         y(t) = A1 cos(2pi(t-t1)/tau) + Bt + C'
@@ -323,7 +368,10 @@ def prepEmcee(doSeries=False):
     
     return mcObj
 
-
+def prepEmceeSpec():
+    """ Prepares Emcee run for """
+    model = tdiffModel()
+    
 
 
 
