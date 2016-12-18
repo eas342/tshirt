@@ -13,7 +13,7 @@ class tdiffModel:
     """
     def __init__(self,priorArray=None):
         self.name = "Two Temp Surface Flux Amplitude flambda"
-        self.pnames = ['$\alpha$_1','$\alpha_2$','T$_1$','T$_2$']
+        self.pnames = [r'$\alpha_1$',r'$\alpha_2$','T$_1$','T$_2$']
         # self.formula = ("(a_1 - a_2) (B(T1)/B(T2) - 1)/"+
         #                 "(a_1 + a_2) B(T1)/B(T2)+ (2 - a1 - a2)")
         self.ndim = len(self.pnames)
@@ -36,16 +36,17 @@ class tdiffModel:
         return ratio
     
     def evaluate(self,x,p):
-        """ Evaluates the 2 temp model flambda """
+        """ Evaluates the 2 temp model flambda. Puts it in percent """
         rat = self.planckRatio(x,p[2],p[3])
         numerator = (p[0] - p[1]) * (rat - 1.)
         denominator = (p[0] + p[1]) * rat + 2 - p[0] - p[1]
-        return numerator/denominator
+        return numerator/denominator * 100.
         
     def lnprior(self,p):
         """ Prior likelihood function """
         aCheck = (p[0:2] < 1) & (p[0:2] > 0)
-        Tcheck = (p[3:5] > 1200) & (p[3:5] < 2500)
+        #Tcheck = (p[3:5] > 1200) & (p[3:5] < 2500)
+        Tcheck = (p[3:5] > 100) & (p[3:5] < 1e4)
         if np.all(aCheck) & np.all(Tcheck):
             return 0
         else:
@@ -372,6 +373,16 @@ def prepEmceeSpec():
     """ Prepares Emcee run for """
     model = tdiffModel()
     
+    dat = ascii.read('tser_data/amp_vs_wavl.txt')
+    x = np.array(dat['Wavelength(um)'])
+    y = np.array(dat['Amp']) * 100.
+    yerr = np.array(dat['Amp_Err']) * 100.
+    guess = [0.0013,0.001,2300,1500]
+    spread = [0.001,0.001,200,200]
+    
+    mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Wavelength ($\mu$m)',
+                   yLabel='Amplitude (%)')
+    return mcObj
 
 
 
