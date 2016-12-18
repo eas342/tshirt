@@ -8,14 +8,14 @@ import corner
 
 class tdiffModel:
     """ A Two temperature surface model for fitting amplitude spectra of Brown Dwarfs
-    A_lambda = (a_1 - a_2) (B(T1)/B(T2) - 1)/
-                (a_1 + a_2) * B(T1)/B(T2) + (2 - a1 - a2)
+    A_lambda = (beta) (B(T1)/B(T2) - 1)/
+                (2 a_1 - beta) * B(T1)/B(T2) + (2 - 2 a1 + beta)
     """
     def __init__(self,priorArray=None):
         self.name = "Two Temp Surface Flux Amplitude flambda"
-        self.pnames = [r'$\alpha_1$',r'$\alpha_2$','T$_1$','T$_2$']
-        # self.formula = ("(a_1 - a_2) (B(T1)/B(T2) - 1)/"+
-        #                 "(a_1 + a_2) B(T1)/B(T2)+ (2 - a1 - a2)")
+        self.pnames = [r'$\alpha_1$',r'$\beta$','T$_1$','T$_2$']
+        self.formula = ("(beta) (B(T1)/B(T2) - 1)/"+
+                         "(2 a_1 - beta) B(T1)/B(T2)+ (2 - 2a1 + beta)")
         self.ndim = len(self.pnames)
     
     def planckNoConst(self,wavel,t):
@@ -38,8 +38,8 @@ class tdiffModel:
     def evaluate(self,x,p):
         """ Evaluates the 2 temp model flambda. Puts it in percent """
         rat = self.planckRatio(x,p[2],p[3])
-        numerator = (p[0] - p[1]) * (rat - 1.)
-        denominator = (p[0] + p[1]) * rat + 2 - p[0] - p[1]
+        numerator = p[1] * (rat - 1.)
+        denominator = (2 * p[0] - p[1]) * rat + 2. - 2. * p[0] + p[1]
         return numerator/denominator * 100.
         
     def lnprior(self,p):
