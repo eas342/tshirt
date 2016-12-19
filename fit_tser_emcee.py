@@ -226,10 +226,11 @@ class oEmcee():
             p0.append(self.guess + np.random.normal(0,1.0,self.ndim) * self.guessSig)
         return p0
     
-    def showGuess(self,showParamset=None,saveFile=None):
-        """ Shows the guess against the input """
+    def showGuess(self,showParamset=None,saveFile=None,ax=None,fig=None):
+        """ Shows the guess or specified parameters against the input """
         plt.close('all')
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
         ax.errorbar(self.x,self.y,yerr=self.yerr,fmt='o')
         if showParamset is None:
             modelParam = self.guess
@@ -240,7 +241,7 @@ class oEmcee():
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
         ax.set_title(self.title)
-        if saveFile == None:
+        if saveFile is None:
             fig.show()
         else:
             fig.savefig(saveFile)
@@ -382,6 +383,27 @@ def prepEmcee(doSeries=False):
                    title='Time Series at 1.08 $\mu$m')
     
     return mcObj
+
+def compareSingleDoubleCos():
+    """ Compares a single versus double cosine fit """
+    mcObj = prepEmcee(doSeries=False)
+    mcObj.runMCMC()
+    mcObj2 = prepEmcee(doSeries=True)
+    mcObj2.runMCMC()
+    fig, ax = plt.subplots()
+    ax.errorbar(mcObj.x,mcObj.y,yerr=mcObj.yerr,fmt='o')
+    xmodel = np.linspace(np.min(mcObj.x),np.max(mcObj.x),1024)
+    ax.plot(xmodel,mcObj.model.evaluate(xmodel,mcObj.maxLparam),linewidth=3.,
+            label='1 Term Fit')
+    ax.plot(xmodel,mcObj2.model.evaluate(xmodel,mcObj2.maxLparam),linewidth=3.,
+            label='2 Term Fit')
+    ax.set_xlabel(mcObj.xLabel)
+    ax.set_ylabel(mcObj.yLabel)
+    ax.set_title(mcObj.title)
+    
+    ax.legend(loc='best')
+    fig.savefig('plots/best_fit_comparison.pdf')
+    return mcObj, mcObj2
 
 def prepEmceeSpec():
     """ Prepares Emcee run for """
