@@ -226,15 +226,15 @@ class oEmcee():
             p0.append(self.guess + np.random.normal(0,1.0,self.ndim) * self.guessSig)
         return p0
     
-    def showGuess(self,showResult=False,saveFile=None):
+    def showGuess(self,showParamset=None,saveFile=None):
         """ Shows the guess against the input """
         plt.close('all')
         fig, ax = plt.subplots()
         ax.errorbar(self.x,self.y,yerr=self.yerr,fmt='o')
-        if showResult == True:
-            modelParam = self.results['Median']
-        else:
+        if showParamset is None:
             modelParam = self.guess
+        else:
+            modelParam = showParamset
         xmodel = np.linspace(np.min(self.x),np.max(self.x),1024)
         ax.plot(xmodel,self.model.evaluate(xmodel,modelParam),linewidth=3.)
         ax.set_xlabel(self.xLabel)
@@ -278,12 +278,25 @@ class oEmcee():
         t['Median'] = medianV
         t['Upper'] = upper
         self.results = t
+        self.getMaxL()
     
-    def showResult(self):
+    def getMaxL(self):
+        """ Get the maximum likelihood parameters """
+        lnprob = self.sampler.lnprobability
+        argMax = np.argmax(lnprob)
+        tupArg = np.unravel_index(argMax,lnprob.shape)
+        self.maxL = lnprob[tupArg]
+        self.maxLparam = self.sampler.chain[tupArg]
+    
+    def showResult(self,showMedian=False):
         """ Shows the best-fit model from the median parameter values """
         self.runCheck()
-        self.showGuess(showResult=True,saveFile='plots/best_fit.pdf')
-        print(self.chisquare(self.results['Median']))
+        if showMedian == True:
+            paramShow = self.results['Median']
+        else:
+            paramShow = self.maxLparam
+        self.showGuess(showParamset=paramShow,saveFile='plots/best_fit.pdf')
+        print(self.chisquare(paramShow))
     
     def chisquare(self,param):
         """ Calculates the chi-squared"""
@@ -378,8 +391,8 @@ def prepEmceeSpec():
     x = np.array(dat['Wavelength(um)'])
     y = np.array(dat['Amp']) * 100.
     yerr = np.array(dat['Amp_Err']) * 100.
-    guess = [0.0013,0.001,2300,1500]
-    spread = [0.001,0.001,200,200]
+    guess = [0.0013,1e-4,2300,1500]
+    spread = [0.001,5e-5,200,200]
     
     mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Wavelength ($\mu$m)',
                    yLabel='Amplitude (%)')
