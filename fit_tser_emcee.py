@@ -226,18 +226,44 @@ class oEmcee():
             p0.append(self.guess + np.random.normal(0,1.0,self.ndim) * self.guessSig)
         return p0
     
-    def showGuess(self,showParamset=None,saveFile=None,ax=None,fig=None):
-        """ Shows the guess or specified parameters against the input """
+    def showGuess(self,showParamset=None,saveFile=None,ax=None,fig=None,
+                  residual=False):
+        """ Shows the guess or specified parameters against the input
+        
+        Parameters
+        ---------------
+        showParamset: arr
+            the parameters to show a model for. If `None`, it shows the guess
+        saveFile: str
+            where to save the plot. If `None`, it doesn't save a file
+        ax: obj
+            matplotlib axis object of plot to use
+        fig: obj
+            matplotlib figure object of plot to use
+        residual: bool
+            whether to show the residuals
+                  """
         plt.close('all')
         if ax is None:
             fig, ax = plt.subplots()
-        ax.errorbar(self.x,self.y,yerr=self.yerr,fmt='o')
+        
         if showParamset is None:
             modelParam = self.guess
         else:
             modelParam = showParamset
         xmodel = np.linspace(np.min(self.x),np.max(self.x),1024)
-        ax.plot(xmodel,self.model.evaluate(xmodel,modelParam),linewidth=3.)
+        
+        if residual == True:
+            yModel = self.model.evaluate(self.x,modelParam)
+            yShow = self.y - yModel
+            print('Median Error = '+str(np.median(self.yerr)))
+            print('Standard Dev Residuals = '+str(np.nanstd(yShow)))
+            ax.errorbar(self.x,yShow,yerr=self.yerr,fmt='o')
+        else:
+            ax.errorbar(self.x,self.y,yerr=self.yerr,fmt='o')
+            yModel = self.model.evaluate(xmodel,modelParam)
+            yShow = yModel
+            ax.plot(xmodel,yShow,linewidth=3.)
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
         ax.set_title(self.title)
@@ -349,6 +375,13 @@ class oEmcee():
                 ax.plot(chainDat)
                 ax.set_ylabel(self.model.pnames[i])
         fig.show()
+    
+    def plotResids(self):
+        """ Shows the residual time series """
+        self.runCheck()
+        self.showGuess(showParamset=self.maxLparam,residual=True,
+                       saveFile='plots/residual_ML.pdf')
+        
 
 def prepEmcee(doSeries=False):
     """ Prepares Emcee for run 
