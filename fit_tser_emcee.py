@@ -443,26 +443,37 @@ def prepEmcee(nterms=1):
     
     return mcObj
 
-def compareSingleDoubleCos():
-    """ Compares a single versus double cosine fit """
-    mcObj = prepEmcee(nterms=1)
-    mcObj.runMCMC()
-    mcObj2 = prepEmcee(nterms=2)
-    mcObj2.runMCMC()
+def compareMultiTerms(maxTerms = 3):
+    """ Compares a single versus multiple cosine terms fit
+    
+    Parameters
+    -------------
+    maxterms: int
+        The maximum terms to show of the cosine fits to the time series
+    """
+    mcArray = []
+    for i in range(maxTerms):
+        thisMC = prepEmcee(nterms=i+1)
+        thisMC.runMCMC()
+        mcArray.append(thisMC)
+    
     fig, ax = plt.subplots()
-    ax.errorbar(mcObj.x,mcObj.y,yerr=mcObj.yerr,fmt='o')
-    xmodel = np.linspace(np.min(mcObj.x),np.max(mcObj.x),1024)
-    ax.plot(xmodel,mcObj.model.evaluate(xmodel,mcObj.maxLparam),linewidth=3.,
-            label='1 Term Fit')
-    ax.plot(xmodel,mcObj2.model.evaluate(xmodel,mcObj2.maxLparam),linewidth=3.,
-            label='2 Term Fit')
-    ax.set_xlabel(mcObj.xLabel)
-    ax.set_ylabel(mcObj.yLabel)
-    ax.set_title(mcObj.title)
+    ax.errorbar(thisMC.x,thisMC.y,yerr=thisMC.yerr,fmt='o')
+    xmodel = np.linspace(np.min(thisMC.x),np.max(thisMC.x),1024)
+    for i in range(maxTerms):
+        thisMC = mcArray[i]
+        chisq, chisPDof = thisMC.chisquare(thisMC.maxLparam)
+        thisLabel = str(i+1)+' Term Fit, $\chi^2$/dof={:.1f}'.format(chisPDof)
+        yShow = thisMC.model.evaluate(xmodel,thisMC.maxLparam)
+        ax.plot(xmodel,yShow,linewidth=3.,label=thisLabel)
+    
+    ax.set_xlabel(thisMC.xLabel)
+    ax.set_ylabel(thisMC.yLabel)
+    ax.set_title(thisMC.title)
     
     ax.legend(loc='best')
     fig.savefig('plots/best_fit_comparison.pdf')
-    return mcObj, mcObj2
+    return mcArray
 
 def prepEmceeSpec():
     """ Prepares Emcee run for """
