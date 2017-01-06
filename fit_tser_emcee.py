@@ -146,7 +146,7 @@ class fSeries:
         p = sanitize_param(inputP)
         aCheck = p[self.Aind] > 0
         ## Ensure the offset is less than observation window
-        offRange = 6.
+        offRange = 4.2
         ## For higher order terms, the time offsets must have correspondingly small windows
         windowRange = offRange/np.arange(1,self.order+1,dtype=float)
         tCheck = ((p[self.tind] > -1. * windowRange) & 
@@ -412,11 +412,11 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
-def prepEmcee(doSeries=False):
+def prepEmcee(nterms=1):
     """ Prepares Emcee for run 
     
     Example usage::
-    mcObj = fit_tser_emcee.prepEmcee(doSeries=True)
+    mcObj = fit_tser_emcee.prepEmcee(nterms=1)
     mcObj.showResults()
     """
     dat = ascii.read('tser_data/timeser_1.08um_.txt',
@@ -425,21 +425,18 @@ def prepEmcee(doSeries=False):
     y = np.array(dat['fl'])
     yerr = np.array(dat['flerr']) #* 3.
     
-    if doSeries == True:
-        order = 2
-        if order == 1:
-            guess = [4.1,0.,0.995,1.5,1.38]
-            spread = [0.01,0.004,0.05,0.2,0.2]
-        
-        else:
-            guess = [4.1,0.,0.995,1.5,0.4,1.38,1.38]
-            spread = [0.01,0.004,0.05,0.2,0.2,0.2,0.2]
-        model = fSeries(order=order)
-        
+    model = fSeries(order=nterms)
+    if nterms == 1:
+        guess = [4.1,0.,0.995,1.5,1.38]
+        spread = [0.01,0.004,0.05,0.2,0.2]
+    elif nterms == 2:
+        guess = [4.1,0.,0.995,1.5,0.4,1.38,0.4]
+        spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2]
+    elif nterms == 3:
+        guess = [4.1,0.,0.995,1.5,0.4,0.4,1.38,0.4,0.1]
+        spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2,0.2,0.2]
     else:
-        model = sinModel()
-        guess = [1.5,1.38,4.1,0.,0.995]
-        spread = [0.2,0.3,0.01,0.004,0.05]
+        print("Doesn't accept nterms="+str(nterms))
     
     mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Time (hr)',yLabel='Normalized Flux',
                    title='Time Series at 1.08 $\mu$m')
@@ -448,9 +445,9 @@ def prepEmcee(doSeries=False):
 
 def compareSingleDoubleCos():
     """ Compares a single versus double cosine fit """
-    mcObj = prepEmcee(doSeries=False)
+    mcObj = prepEmcee(nterms=1)
     mcObj.runMCMC()
-    mcObj2 = prepEmcee(doSeries=True)
+    mcObj2 = prepEmcee(nterms=2)
     mcObj2.runMCMC()
     fig, ax = plt.subplots()
     ax.errorbar(mcObj.x,mcObj.y,yerr=mcObj.yerr,fmt='o')
