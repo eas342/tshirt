@@ -4,6 +4,7 @@ import pdb
 from astropy.io import ascii
 from astropy.table import Table
 import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
 import corner
 
 class tdiffModel:
@@ -381,7 +382,24 @@ class oEmcee():
         self.runCheck()
         self.showGuess(showParamset=self.maxLparam,residual=True,
                        saveFile='plots/residual_ML.pdf')
+
+    def residHisto(self):
+        """ Shows a histogram of the time series residuals """
+        self.runCheck()
+        yModel = self.model.evaluate(self.x,self.maxLparam)#self.guess)
+        self.residy = self.y - yModel
+        fig, ax = plt.subplots()
+        n, bins, patches = ax.hist(self.residy, 30,normed=True,
+                                   label='Residuals')
         
+        ## Show a Gaussian dist
+        sigGauss = np.nanstd(self.residy)
+        yGauss = mlab.normpdf( bins, 0., sigGauss)
+        l = plt.plot(bins, yGauss, 'r--', linewidth=2,label='Gaussian')
+        ax.set_xlabel(self.yLabel)
+        ax.set_ylabel('Probability')
+        ax.legend(loc='best')
+        fig.savefig('plots/histo_resids.pdf')
 
 def prepEmcee(doSeries=False):
     """ Prepares Emcee for run 
