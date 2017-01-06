@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import corner
 
+def sanitize_param(inputP):
+    """ Sanitizes the input parameters"""
+    return np.array(inputP)
+    
 class tdiffModel:
     """ A Two temperature surface model for fitting amplitude spectra of Brown Dwarfs
     A_lambda = (beta) (B(T1)/B(T2) - 1)/
@@ -43,8 +47,9 @@ class tdiffModel:
         denominator = (2 * p[0] - p[1]) * rat + 2. - 2. * p[0] + p[1]
         return numerator/denominator * 100.
         
-    def lnprior(self,p):
+    def lnprior(self,inputP):
         """ Prior likelihood function """
+        p = sanitize_param(inputP)
         aCheck = (p[0:2] < 1) & (p[0:2] > 0)
         #Tcheck = (p[3:5] > 1200) & (p[3:5] < 2500)
         Tcheck = (p[3:5] > 100) & (p[3:5] < 1e4)
@@ -73,8 +78,9 @@ class sinModel:
         baseLine = p[3] * x + p[4]
         return cosTerm + baseLine #+cosTerm2
     
-    def lnprior(self,p):
+    def lnprior(self,inputP):
         """ Prior likelihood function"""
+        p = sanitize_param(inputP)
         pCheck = []
         pCheck.append(p[0] > 0)
         ## Ensure the offset is less than observation window
@@ -134,12 +140,17 @@ class fSeries:
         
         return cosTerms + baseLine
     
-    def lnprior(self,p):
+    def lnprior(self,inputP):
         """ Prior likelihood function"""
         ## Ensure positive amplitudes
+        p = sanitize_param(inputP)
         aCheck = p[self.Aind] > 0
         ## Ensure the offset is less than observation window
-        tCheck = (p[self.tind] > -6.) & (p[self.tind] < 6.)
+        offRange = 6.
+        ## For higher order terms, the time offsets must have correspondingly small windows
+        windowRange = offRange/np.arange(1,self.order+1,dtype=float)
+        tCheck = ((p[self.tind] > -1. * windowRange) & 
+                  (p[self.tind] < 1. * windowRange))
         ## Avoid harmonics
         tauCheck = (p[0] > 0. and p[0] < 5.)
         if np.all(aCheck) & np.all(tCheck) & np.all(tauCheck):
