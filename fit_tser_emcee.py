@@ -412,18 +412,33 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
-def prepEmcee(nterms=1):
+def prepEmcee(nterms=1,moris=False):
     """ Prepares Emcee for run 
     
     Example usage::
     mcObj = fit_tser_emcee.prepEmcee(nterms=1)
     mcObj.showResults()
+    
+    Parameters
+    -------------
+    nterms: int
+        Passes to fSeries terms
+    moris: bool
+        
     """
-    dat = ascii.read('tser_data/timeser_1.08um_.txt',
-                     names=['t','fl','flerr','model','resid'])
-    x = np.array(dat['t'])
-    y = np.array(dat['fl'])
-    yerr = np.array(dat['flerr']) #* 3.
+    if moris == True:
+        dat = Table.read('tser_data/moris_1821_tser.fits')
+        x = dat['hours']
+        y = dat['AP00_RATIO_00_01']
+        y1frac = dat['AP00_ERR_00']/dat['AP00_FLUX_00']
+        y2frac = dat['AP00_ERR_01']/dat['AP00_FLUX_01']
+        yerr = y * np.sqrt(y1frac**2 + y2frac**2)
+    else:
+        dat = ascii.read('tser_data/timeser_1.08um_.txt',
+                         names=['t','fl','flerr','model','resid'])
+        x = np.array(dat['t'])
+        y = np.array(dat['fl'])
+        yerr = np.array(dat['flerr']) #* 3.
     
     model = fSeries(order=nterms)
     if nterms == 1:
