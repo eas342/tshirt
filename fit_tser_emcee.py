@@ -412,7 +412,7 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
-def prepEmcee(nterms=1,moris=False):
+def prepEmcee(nterms=1,moris=False,src='1821'):
     """ Prepares Emcee for run 
     
     Example usage::
@@ -434,8 +434,17 @@ def prepEmcee(nterms=1,moris=False):
         y2frac = dat['AP00_ERR_01']/dat['AP00_FLUX_01']
         yerr = y * np.sqrt(y1frac**2 + y2frac**2)
     else:
-        dat = ascii.read('tser_data/timeser_1.08um_.txt',
-                         names=['t','fl','flerr','model','resid'])
+        if src=='0835':
+            tserFName = 'tser_data/2mass_0835/timeser_2.35um_.txt'
+            showTitle = 'Time Series at 2.35 $\mu$m'
+        elif src=='1821':
+            tserFName = 'tser_data/timeser_1.08um_.txt'
+            showTitle = 'Time Series at 1.08 $\mu$m'
+        else:
+            print("Unrecognized source")
+            return 0
+        dat = ascii.read(tserFName,
+                         names=['t','fl','flerr','model','resid'])    
         x = np.array(dat['t'])
         y = np.array(dat['fl'])
         yerr = np.array(dat['flerr']) #* 3.
@@ -454,7 +463,7 @@ def prepEmcee(nterms=1,moris=False):
         print("Doesn't accept nterms="+str(nterms))
     
     mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Time (hr)',yLabel='Normalized Flux',
-                   title='Time Series at 1.08 $\mu$m')
+                   title=showTitle)
     
     return mcObj
 
