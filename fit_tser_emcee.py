@@ -412,7 +412,7 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
-def prepEmcee(nterms=1,moris=False,src='1821'):
+def prepEmcee(nterms=1,moris=False,src='1821',specWavel=1.08):
     """ Prepares Emcee for run 
     
     Example usage::
@@ -424,7 +424,11 @@ def prepEmcee(nterms=1,moris=False,src='1821'):
     nterms: int
         Passes to fSeries terms
     moris: bool
-        
+        Whether or not to look at MORIS photometry
+    src: str
+        Which source to look at, e.g. '0835' for 2MASS J08354256 0819237
+    specWavel: float
+        Which wavelength to look at for spectroscopy
     """
     if moris == True:
         dat = Table.read('tser_data/moris_1821_tser.fits')
@@ -434,12 +438,13 @@ def prepEmcee(nterms=1,moris=False,src='1821'):
         y2frac = dat['AP00_ERR_01']/dat['AP00_FLUX_01']
         yerr = y * np.sqrt(y1frac**2 + y2frac**2)
     else:
+        waveString = "{:.2f}".format(specWavel)
         if src=='0835':
-            tserFName = 'tser_data/2mass_0835/timeser_2.35um_.txt'
-            showTitle = 'Time Series at 2.35 $\mu$m'
+            tserFName = 'tser_data/2mass_0835/timeser_'+waveString+'um_.txt'
+            showTitle = 'Time Series at '+waveString+' $\mu$m'
         elif src=='1821':
-            tserFName = 'tser_data/timeser_1.08um_.txt'
-            showTitle = 'Time Series at 1.08 $\mu$m'
+            tserFName = 'tser_data/timeser_'+waveString+'_.txt'
+            showTitle = 'Time Series at '+waveString+' $\mu$m'
         else:
             print("Unrecognized source")
             return 0
