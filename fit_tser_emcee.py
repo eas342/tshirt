@@ -291,6 +291,18 @@ class oEmcee():
         mcObj.runMCMC()
         mcObj.plotMCMC()
         
+        If you look at the chains and they're not converged, you can continue
+        with mcObj.runMCMC(nBurn=0), which discards the previous points and continues on.
+            (Technically, it is burning all the previous samples, so it's a little misleading)
+        
+        Parameters
+        ---------------------
+        nBurn: int
+            Number of samples to burn at the beginning. When nBurn is 0
+            it will continue from the current state. When it is any other value
+            it begins the mcmc sample from the initial guess point
+        nRun: int
+            The number of samples to run for
         """
         if nBurn != 0:
             self.pos, prob, state = self.sampler.run_mcmc(self.p0,nBurn)
