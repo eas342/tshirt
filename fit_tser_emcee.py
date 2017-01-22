@@ -1,6 +1,8 @@
 import numpy as np
 import emcee
 import pdb
+import os
+import glob
 from astropy.io import ascii
 from astropy.table import Table
 import matplotlib.pyplot as plt
@@ -144,9 +146,11 @@ class fSeries:
         """ Prior likelihood function"""
         ## Ensure positive amplitudes
         p = sanitize_param(inputP)
-        aCheck = p[self.Aind] > 0
-        ## Ensure the offset is less than observation window
-        offRange = 4.2
+        #aCheck = p[self.Aind] > 0
+        aCheck = True
+        ## Ensure the offset is less than half the observation window to avoid
+        ## negative amplitude and opposite phase
+        offRange = 0.5 * p[0]#4.2
         ## For higher order terms, the time offsets must have correspondingly small windows
         windowRange = offRange/np.arange(1,self.order+1,dtype=float)
         tCheck = ((p[self.tind] > -1. * windowRange) & 
@@ -310,11 +314,12 @@ class oEmcee():
         else:
             self.sampler.reset()
         self.pos, prob, state = self.sampler.run_mcmc(self.pos,nRun)
-        self.getResults()
         self.hasRun= True
+        self.getResults()
     
     def getResults(self,lowPercent=15.9,highPercent=84.1):
         """ Get results from the chains in the sampler object """
+        self.runCheck()
         lower,medianV,upper = [], [], []
         for i in range(self.ndim):
             flatChain = self.sampler.flatchain[:,i]
@@ -451,10 +456,10 @@ def prepEmcee(nterms=1,moris=False,src='1821',specWavel=1.08):
         yerr = y * np.sqrt(y1frac**2 + y2frac**2)
     else:
         waveString = "{:.2f}".format(specWavel)
-        if src=='0835':
+        if src=='2mass_0835':
             tserFName = 'tser_data/2mass_0835/timeser_'+waveString+'um_.txt'
             showTitle = 'Time Series at '+waveString+' $\mu$m'
-        elif src=='1821':
+        elif src=='2mass_1821':
             tserFName = 'tser_data/timeser_'+waveString+'_.txt'
             showTitle = 'Time Series at '+waveString+' $\mu$m'
         else:
@@ -483,6 +488,41 @@ def prepEmcee(nterms=1,moris=False,src='1821',specWavel=1.08):
                    title=showTitle)
     
     return mcObj
+
+def allBins(src='2mass_0835'):
+    """ Goes through each wavelength bin and does an MCMC fit, saving results
+    """
+    fileList = glob.glob('tser_data/'+src+'/*.txt')
+    for oneFile in fileList:
+        baseName = os.path.basename(oneFile)
+        thisWave = float(baseName.split("_")[1].split("um")[0])
+        mcObj = prepEmcee(src=src,specWavel=thisWave)
+        mcObj.runMCMC()
+        mcObj.results.write('spectra/'+src+'/'+'fit_'+"{:.2f}".format(thisWave)+'.csv')
+
+def plotSpectra(src='2mass_0835',param="A$_1$"):
+    """ Goes through each wavelength bin and plots the spectra
+    """
+    fileList = glob.glob('spectra/'+src+'/fit*.csv')
+    lowLim, medLim, hiLim = [], [], []
+    wavel = []
+    for oneFile in fileList:
+        t = ascii.read(oneFile)
+        AmpRow = t['Parameter'] == param
+        lowLim.append(t['Lower'][AmpRow])
+        medLim.append(t['Median'][AmpRow])
+        hiLim.append(t['Upper'][AmpRow])
+        baseName = os.path.basename(oneFile)
+        thisWavel = float(os.path.splitext(baseName.split("_")[1])[0])
+        wavel.append(thisWavel)
+    yerrLow = np.array(medLim) - np.array(lowLim)
+    yerrHigh = np.array(hiLim) - np.array(medLim)
+    plt.close('all')
+    fig, ax = plt.subplots()
+    ax.errorbar(wavel,medLim,fmt="o",yerr=[yerrLow,yerrHigh])
+    ax.set_xlabel('Wavelength ($\mu$m)')
+    ax.set_ylabel(param)
+    fig.savefig('plots/'+src+"_spectrum.pdf")
 
 def compareMultiTerms(maxTerms = 3):
     """ Compares a single versus multiple cosine terms fit
