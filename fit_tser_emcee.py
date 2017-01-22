@@ -489,12 +489,16 @@ def allBins(src='2mass_0835'):
     """ Goes through each wavelength bin and does an MCMC fit, saving results
     """
     fileList = glob.glob('tser_data/'+src+'/*.txt')
+    ## Make a directory for spectra if there isn't one yet
+    specDir = 'spectra/'+src
+    if os.path.exists(specDir) == False:
+        os.mkdir(specDir)
     for oneFile in fileList:
         baseName = os.path.basename(oneFile)
         thisWave = float(baseName.split("_")[1].split("um")[0])
         mcObj = prepEmcee(src=src,specWavel=thisWave)
         mcObj.runMCMC()
-        mcObj.results.write('spectra/'+src+'/'+'fit_'+"{:.2f}".format(thisWave)+'.csv')
+        mcObj.results.write(specDir+'/fit_'+"{:.2f}".format(thisWave)+'.csv')
 
 def plotSpectra(src='2mass_0835',param="A$_1$"):
     """ Goes through each wavelength bin and plots the spectra
