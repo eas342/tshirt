@@ -429,7 +429,7 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
-def prepEmcee(nterms=1,moris=False,src='1821',specWavel=1.08):
+def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
     """ Prepares Emcee for run 
     
     Example usage::
@@ -456,13 +456,9 @@ def prepEmcee(nterms=1,moris=False,src='1821',specWavel=1.08):
         yerr = y * np.sqrt(y1frac**2 + y2frac**2)
     else:
         waveString = "{:.2f}".format(specWavel)
-        if src=='2mass_0835':
-            tserFName = 'tser_data/2mass_0835/timeser_'+waveString+'um_.txt'
-            showTitle = 'Time Series at '+waveString+' $\mu$m'
-        elif src=='2mass_1821':
-            tserFName = 'tser_data/timeser_'+waveString+'_.txt'
-            showTitle = 'Time Series at '+waveString+' $\mu$m'
-        else:
+        tserFName = 'tser_data/'+src+'/timeser_'+waveString+'um_.txt'
+        showTitle = 'Time Series at '+waveString+' $\mu$m'
+        if os.path.exists(tserFName) == False:
             print("Unrecognized source")
             return 0
         dat = ascii.read(tserFName,
