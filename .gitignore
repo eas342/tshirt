@@ -3,3 +3,5 @@
 *.pdf
 *.png
 spectra/*/*.csv
+chisquare/*/*.csv
+mcmcRuns/*/*/*.pic
