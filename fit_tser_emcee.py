@@ -156,7 +156,7 @@ class fSeries:
         tCheck = ((p[self.tind] > -1. * windowRange) & 
                   (p[self.tind] < 1. * windowRange))
         ## Avoid harmonics
-        tauCheck = (p[0] > 0. and p[0] < 5.)
+        tauCheck = (p[0] > 3.8 and p[0] < 4.0)
         if np.all(aCheck) & np.all(tCheck) & np.all(tauCheck):
             return 0
         else:
@@ -465,11 +465,11 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
                          names=['t','fl','flerr','model','resid'])    
         x = np.array(dat['t'])
         y = np.array(dat['fl'])
-        yerr = np.array(dat['flerr']) * 4.
+        yerr = np.array(dat['flerr']) * 2.5
     
     model = fSeries(order=nterms)
     if nterms == 1:
-        guess = [4.1,0.,0.995,1.5,1.38]
+        guess = [3.9,0.,0.995,1.5,1.38]
         spread = [0.01,0.004,0.05,0.2,0.2]
     elif nterms == 2:
         guess = [4.1,0.,0.995,1.5,0.4,1.38,0.4]
