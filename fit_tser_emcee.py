@@ -344,14 +344,14 @@ class oEmcee():
         self.maxL = lnprob[tupArg]
         self.maxLparam = self.sampler.chain[tupArg]
     
-    def showResult(self,showMedian=False):
+    def showResult(self,showMedian=False,saveFile='plots/best_fit.pdf'):
         """ Shows the best-fit model from the median parameter values """
         self.runCheck()
         if showMedian == True:
             paramShow = self.results['Median']
         else:
             paramShow = self.maxLparam
-        self.showGuess(showParamset=paramShow,saveFile='plots/best_fit.pdf')
+        self.showGuess(showParamset=paramShow,saveFile=saveFile)
         print(self.chisquare(paramShow))
     
     def chisquare(self,param):
@@ -465,7 +465,7 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
                          names=['t','fl','flerr','model','resid'])    
         x = np.array(dat['t'])
         y = np.array(dat['fl'])
-        yerr = np.array(dat['flerr']) #* 3.
+        yerr = np.array(dat['flerr']) * 4.
     
     model = fSeries(order=nterms)
     if nterms == 1:
@@ -490,15 +490,27 @@ def allBins(src='2mass_0835'):
     """
     fileList = glob.glob('tser_data/'+src+'/*.txt')
     ## Make a directory for spectra if there isn't one yet
-    specDir = 'spectra/'+src
-    if os.path.exists(specDir) == False:
-        os.mkdir(specDir)
+    specDir = os.path.join('spectra/',src)
+    chisqDir = os.path.join('chisquare',src)
+    plotDir = os.path.join('plots','individual_fits',src)
+    for onePath in [specDir,chisqDir,plotDir]:
+        if os.path.exists(onePath) == False:
+            os.mkdir(onePath)
+    
     for oneFile in fileList:
         baseName = os.path.basename(oneFile)
         thisWave = float(baseName.split("_")[1].split("um")[0])
         mcObj = prepEmcee(src=src,specWavel=thisWave)
         mcObj.runMCMC()
-        mcObj.results.write(specDir+'/fit_'+"{:.2f}".format(thisWave)+'.csv')
+        waveString = "{:.2f}".format(thisWave)
+        mcObj.results.write(specDir+'/fit_'+waveString+'.csv')
+        
+        chisq, chisqpDOF = mcObj.chisquare(mcObj.maxLparam)
+        t2 = Table()
+        t2['Chisquare Best'] = [chisq]
+        t2['Chisquare/DOF Best'] = [chisqpDOF]
+        t2.write(chisqDir+'/chisq_'+waveString+'.csv')
+        mcObj.showResult(saveFile=os.path.join(plotDir,'tser_'+waveString+'.pdf'))
 
 def plotSpectra(src='2mass_0835',param="A$_1$"):
     """ Goes through each wavelength bin and plots the spectra
