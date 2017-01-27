@@ -8,6 +8,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import corner
+import yaml
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
@@ -117,7 +118,7 @@ class fSeries:
     tind: arr
         The indices for the 
     """
-    def __init__(self,priorArray=None,order=2):
+    def __init__(self,srcData=None,order=2):
         self.name = "Fourier Series"
         pnames = [r'$\tau$','B','C']
         self.nbaseterms = len(pnames)
@@ -131,6 +132,17 @@ class fSeries:
         self.pnames = pnames
         self.formula = 'A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + ..+ Bt + C'
         self.ndim = len(self.pnames)
+        if srcData == None:
+            self.priorSet = False
+        else:
+            self.get_prior_params(srcData)
+        
+    def get_prior_params(self,srcData):
+        """ Reads in the YAML file for parameters and sets them """
+        with open('parameters/fit_params.yaml') as paramFile:
+            priorP = yaml.load(paramFile)
+            self.priorSet = True
+            self.priorPeriod = priorP[srcData]['prior']['periodRange']
     
     def evaluate(self,x,p):
         """ Evaluates the cosine function"""
@@ -156,7 +168,11 @@ class fSeries:
         tCheck = ((p[self.tind] > -1. * windowRange) & 
                   (p[self.tind] < 1. * windowRange))
         ## Avoid harmonics
-        tauCheck = (p[0] > 3.8 and p[0] < 4.0)
+        if self.priorSet == True:
+            tauCheck = (p[0] > self.priorPeriod[0] and p[0] < self.priorPeriod[1])
+        else:
+            tauCheck = True
+        
         if np.all(aCheck) & np.all(tCheck) & np.all(tauCheck):
             return 0
         else:
@@ -467,15 +483,21 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
         y = np.array(dat['fl'])
         yerr = np.array(dat['flerr']) * 2.5
     
-    model = fSeries(order=nterms)
+    
+    model = fSeries(order=nterms,srcData=src)
+    
+    with open('parameters/fit_params.yaml') as paramFile:
+        priorP = yaml.load(paramFile)
+        periodGuess = priorP[src]['guess']['periodGuess']
+    
     if nterms == 1:
-        guess = [3.9,0.,0.995,1.5,1.38]
+        guess = [periodGuess,0.,0.995,1.5,1.38]
         spread = [0.01,0.004,0.05,0.2,0.2]
     elif nterms == 2:
-        guess = [4.1,0.,0.995,1.5,0.4,1.38,0.4]
+        guess = [periodGuess,0.,0.995,1.5,0.4,1.38,0.4]
         spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2]
     elif nterms == 3:
-        guess = [4.1,0.,0.995,1.5,0.4,0.4,1.38,0.4,0.1]
+        guess = [periodGuess,0.,0.995,1.5,0.4,0.4,1.38,0.4,0.1]
         spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2,0.2,0.2]
     else:
         print("Doesn't accept nterms="+str(nterms))
@@ -532,6 +554,11 @@ def plotSpectra(src='2mass_0835',param="A$_1$"):
     plt.close('all')
     fig, ax = plt.subplots()
     ax.errorbar(wavel,medLim,fmt="o",yerr=[yerrLow,yerrHigh])
+    with open('parameters/fit_params.yaml') as paramFile:
+        priorP = yaml.load(paramFile)
+        if 'spectraYrange' in priorP[src]:
+            ax.set_ylim(priorP[src]['spectraYrange'])
+    
     ax.set_xlabel('Wavelength ($\mu$m)')
     ax.set_ylabel(param)
     fig.savefig('plots/'+src+"_spectrum.pdf")
