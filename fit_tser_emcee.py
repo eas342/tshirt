@@ -481,7 +481,7 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
                          names=['t','fl','flerr','model','resid'])    
         x = np.array(dat['t'])
         y = np.array(dat['fl'])
-        yerr = np.array(dat['flerr']) * 2.5
+        yerr = np.array(dat['flerr']) * 4.0
     
     
     model = fSeries(order=nterms,srcData=src)
