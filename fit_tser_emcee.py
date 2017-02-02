@@ -11,6 +11,7 @@ import corner
 import yaml
 import re
 import string
+import mie_model
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
