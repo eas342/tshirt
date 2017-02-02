@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import corner
 import yaml
+import re
+import string
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
@@ -534,34 +536,46 @@ def allBins(src='2mass_0835'):
         t2.write(chisqDir+'/chisq_'+waveString+'.csv')
         mcObj.showResult(saveFile=os.path.join(plotDir,'tser_'+waveString+'.pdf'))
 
-def plotSpectra(src='2mass_0835',param="A$_1$"):
+def plotSpectra(src='2mass_0835'):
     """ Goes through each wavelength bin and plots the spectra
     """
     fileList = glob.glob('spectra/'+src+'/fit*.csv')
-    lowLim, medLim, hiLim = [], [], []
-    wavel = []
-    for oneFile in fileList:
-        t = ascii.read(oneFile)
-        AmpRow = t['Parameter'] == param
-        lowLim.append(t['Lower'][AmpRow])
-        medLim.append(t['Median'][AmpRow])
-        hiLim.append(t['Upper'][AmpRow])
-        baseName = os.path.basename(oneFile)
-        thisWavel = float(os.path.splitext(baseName.split("_")[1])[0])
-        wavel.append(thisWavel)
-    yerrLow = np.array(medLim) - np.array(lowLim)
-    yerrHigh = np.array(hiLim) - np.array(medLim)
-    plt.close('all')
-    fig, ax = plt.subplots()
-    ax.errorbar(wavel,medLim,fmt="o",yerr=[yerrLow,yerrHigh])
-    with open('parameters/fit_params.yaml') as paramFile:
-        priorP = yaml.load(paramFile)
-        if 'spectraYrange' in priorP[src]:
-            ax.set_ylim(priorP[src]['spectraYrange'])
+    plotPath = os.path.join('plots','spectra',src)
     
-    ax.set_xlabel('Wavelength ($\mu$m)')
-    ax.set_ylabel(param)
-    fig.savefig('plots/'+src+"_spectrum.pdf")
+    if os.path.exists(plotPath) == False:
+        os.mkdir(plotPath)
+    
+    exampleFile = ascii.read(fileList[0])
+    paramList = exampleFile['Parameter']
+    
+    for oneParam in paramList:
+        lowLim, medLim, hiLim = [], [], []
+        wavel = []
+        
+        for oneFile in fileList:
+            t = ascii.read(oneFile)
+            AmpRow = t['Parameter'] == oneParam
+            lowLim.append(t['Lower'][AmpRow])
+            medLim.append(t['Median'][AmpRow])
+            hiLim.append(t['Upper'][AmpRow])
+            baseName = os.path.basename(oneFile)
+            thisWavel = float(os.path.splitext(baseName.split("_")[1])[0])
+            wavel.append(thisWavel)
+        
+            
+        yerrLow = np.array(medLim) - np.array(lowLim)
+        yerrHigh = np.array(hiLim) - np.array(medLim)
+        plt.close('all')
+        fig, ax = plt.subplots()
+        ax.errorbar(wavel,medLim,fmt="o",yerr=[yerrLow,yerrHigh])
+        with open('parameters/fit_params.yaml') as paramFile:
+            priorP = yaml.load(paramFile)
+            if 'spectraYrange' in priorP[src] and oneParam == r'$A_1$':
+                ax.set_ylim(priorP[src]['spectraYrange'])
+    
+        ax.set_xlabel('Wavelength ($\mu$m)')
+        ax.set_ylabel(oneParam)
+        fig.savefig(os.path.join(plotPath,oneParam+'_spectrum.pdf'))
 
 def compareMultiTerms(maxTerms = 3):
     """ Compares a single versus multiple cosine terms fit
