@@ -64,6 +64,31 @@ class tdiffModel:
         else:
             return -np.inf
 
+class mieModel:
+    """ A Mie extinction model for the brown dwarf rotation curves
+    """
+    def __init__(self,composition='simple'):
+        self.name = "Mie extinction model for flux amplitude"
+        self.pnames = [r'A$_1$','r']
+        self.formula = ("A_1 * Qext(wavel,tau)")
+        self.ndim = len(self.pnames)
+    
+    def evaluate(self,x,p):
+        """ Evaluates the Mie extinction model assuming 
+        that the wavelength and radius are the same parameters
+        see obj.pnames for parameter names"""
+        Qext = mie_model.extinct(x,p[1])
+        return p[0] * Qext
+    
+    def lnprior(self,inputP):
+        p = sanitize_param(inputP)
+        zeroCheck = inputP > 0
+        if np.all(zeroCheck):
+            return 0
+        else:
+            return -np.inf
+
+
 class sinModel:
     """ Simple sinusoidal model for fitting light curve.
         y(t) = A1 cos(2pi(t-t1)/tau) + Bt + C'
@@ -610,16 +635,33 @@ def compareMultiTerms(maxTerms = 3):
     fig.savefig('plots/best_fit_comparison.pdf')
     return mcArray
 
-def prepEmceeSpec():
-    """ Prepares Emcee run for """
-    model = tdiffModel()
+def prepEmceeSpec(method='tdiff'):
+    """ Prepares Emcee run for fitting spectra
+    
+    Parameters
+    ------------
+    method: str
+        Method of fitting - Temp Diff vs Mie Scattering
+    """
     
     dat = ascii.read('tser_data/amp_vs_wavl.txt')
     x = np.array(dat['Wavelength(um)'])
     y = np.array(dat['Amp']) * 100.
     yerr = np.array(dat['Amp_Err']) * 100.
-    guess = [0.0013,1e-4,2300,1500]
-    spread = [0.001,5e-5,200,200]
+    
+    if method == 'tdiff':
+        # Temperature difference model
+        model = tdiffModel()
+        guess = [0.0013,1e-4,2300,1500]
+        spread = [0.001,5e-5,200,200]
+    elif method == 'mie':
+        model = mieModel()
+        guess = [.4,0.5]
+        spread = [0.1,0.2]
+    else:
+        print('Unrecognized model')
+        return 0
+
     
     mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Wavelength ($\mu$m)',
                    yLabel='Amplitude (%)')
