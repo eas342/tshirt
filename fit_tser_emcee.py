@@ -67,17 +67,18 @@ class tdiffModel:
 class mieModel:
     """ A Mie extinction model for the brown dwarf rotation curves
     """
-    def __init__(self,composition='simple'):
+    def __init__(self,composition='simple',logNorm=False):
         self.name = "Mie extinction model for flux amplitude"
         self.pnames = [r'A$_1$','r']
         self.formula = ("A_1 * Qext(wavel,tau)")
+        self.logNorm = logNorm
         self.ndim = len(self.pnames)
     
     def evaluate(self,x,p):
         """ Evaluates the Mie extinction model assuming 
         that the wavelength and radius are the same parameters
         see obj.pnames for parameter names"""
-        Qext = mie_model.extinct(x,p[1])
+        Qext = mie_model.extinct(x,p[1],logNorm=self.logNorm)
         return p[0] * Qext
     
     def lnprior(self,inputP):
@@ -635,7 +636,7 @@ def compareMultiTerms(maxTerms = 3):
     fig.savefig('plots/best_fit_comparison.pdf')
     return mcArray
 
-def prepEmceeSpec(method='tdiff'):
+def prepEmceeSpec(method='tdiff',logNorm=False):
     """ Prepares Emcee run for fitting spectra
     
     Parameters
@@ -655,7 +656,7 @@ def prepEmceeSpec(method='tdiff'):
         guess = [0.0013,1e-4,2300,1500]
         spread = [0.001,5e-5,200,200]
     elif method == 'mie':
-        model = mieModel()
+        model = mieModel(logNorm=logNorm)
         guess = [.4,0.5]
         spread = [0.1,0.2]
     else:
