@@ -4,7 +4,7 @@ import pdb
 import matplotlib.pyplot as plt
 
 def extinct(wavel,rad=1.0,n=complex(1.825,-1e-4),logNorm=False,
-            npoint=100):
+            npoint=32):
     """
     Calculates the Mie extinction cross section Q_ext as a function of wavelength
     
@@ -71,13 +71,14 @@ def compareTest():
     """
     Compares the Single Particle and Log-normal distributions
     """
-    x = np.linspace(0.9,10,1024)
+    x = np.linspace(0.2,15,1024)
     rad = 1.0
-    ysingle = extinct(x,rad=rad,logNorm=False)
-    plt.plot(x,ysingle,label='Single Particle')
-    npointA = [10,32,64,1024]
+    nInd=complex(1.825,-1e-4)
+    ysingle = extinct(x,rad=rad,logNorm=False,n=nInd)
+    plt.loglog(x,ysingle,label='Single Particle')
+    npointA = [32,64,128,256]
     for npoint in npointA:
-        ymulti = extinct(x,rad=rad,logNorm=True,npoint=npoint)
+        ymulti = extinct(x,rad=rad,logNorm=True,npoint=npoint,n=nInd)
         plt.plot(x,ymulti,label='Log Normal N='+str(npoint))
     plt.legend()
     plt.show()
