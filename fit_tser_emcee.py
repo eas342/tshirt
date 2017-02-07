@@ -79,7 +79,8 @@ class mieModel:
         """ Evaluates the Mie extinction model assuming 
         that the wavelength and radius are the same parameters
         see obj.pnames for parameter names"""
-        Qext = mie_model.extinct(x,p[1],logNorm=self.logNorm)
+        #Qext = mie_model.extinct(x,p[1],logNorm=self.logNorm)
+        Qext = mie_model.polyExtinct(x,rad=p[1])
         return p[0] * Qext
     
     def lnprior(self,inputP):
