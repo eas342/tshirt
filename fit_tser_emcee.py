@@ -67,12 +67,13 @@ class tdiffModel:
 class mieModel:
     """ A Mie extinction model for the brown dwarf rotation curves
     """
-    def __init__(self,composition='simple',logNorm=False):
+    def __init__(self,composition='simple',logNorm=False,maxRad = 5.):
         self.name = "Mie extinction model for flux amplitude"
         self.pnames = [r'A$_1$','r']
         self.formula = ("A_1 * Qext(wavel,tau)")
         self.logNorm = logNorm
         self.ndim = len(self.pnames)
+        self.maxRad = maxRad
     
     def evaluate(self,x,p):
         """ Evaluates the Mie extinction model assuming 
@@ -84,7 +85,8 @@ class mieModel:
     def lnprior(self,inputP):
         p = sanitize_param(inputP)
         zeroCheck = inputP > 0
-        if np.all(zeroCheck):
+        maxRadCheck = p[1] < self.maxRad
+        if np.all(zeroCheck & maxRadCheck):
             return 0
         else:
             return -np.inf
