@@ -2,9 +2,22 @@ import numpy as np
 import miescatter
 import pdb
 import matplotlib.pyplot as plt
+import es_gen
+import yaml
+
+coeff = yaml.load(open('parameters/mie_params/simplePoly.yaml'))
+
+
+def polyExtinct(wavel,rad=1.0,type=r'Simple n=(1.825-0.0001j)'):
+    """
+    Extinction function using a high order polynomial fit
+    """
+    normWave = wavel/rad
+    Carr = coeff[type]['coefficients']
+    return np.polyval(Carr,normWave)
 
 def extinct(wavel,rad=1.0,n=complex(1.825,-1e-4),logNorm=False,
-            npoint=32):
+            npoint=128,lowMult=0.2,highMult=5.,s=0.5):
     """
     Calculates the Mie extinction cross section Q_ext as a function of wavelength
     
@@ -22,8 +35,8 @@ def extinct(wavel,rad=1.0,n=complex(1.825,-1e-4),logNorm=False,
         ## Size multiplier
         nwav = sz.size
         ## Size to evaluate lognormal weights
-        sizeEval = np.linspace(0.2,5.,npoint)
-        weights = lognorm(sizeEval,0.5,1.)
+        sizeEval = np.linspace(lowMult,highMult,npoint)
+        weights = lognorm(sizeEval,s,1.)
         ## Arrange the array into 2D for multiplication of the grids
         sizeMult = (np.tile(sizeEval,(nwav,1))).transpose()
         sizeArr = np.tile(sz,(npoint,1))
@@ -79,7 +92,28 @@ def compareTest():
     npointA = [32,64,128,256]
     for npoint in npointA:
         ymulti = extinct(x,rad=rad,logNorm=True,npoint=npoint,n=nInd)
-        plt.plot(x,ymulti,label='Log Normal N='+str(npoint))
-    plt.legend()
+        plt.plot(x,ymulti,label='Log Normal N='+str(npoint)+',[0.2,5]')
+    yWider = extinct(x,rad=rad,logNorm=True,npoint=256,n=nInd,
+                     lowMult=0.1,highMult=10.)
+    plt.plot(x,yWider,label='Log normal N=256,[0.1,10]')
+    plt.legend(loc='best')
+    plt.show()
+    
+def getPoly(pord=15):
+    """
+    Fits a polynomial to a Mie extinction curve
+    """
+    x = np.linspace(0.2,15,1024)
+    rad = 1.0
+    nInd = complex(1.825,-1e-4)
+    y = extinct(x,rad=rad,logNorm=True,npoint=1024,n=nInd)
+    polyFit = es_gen.robust_poly(x,y,pord,sigreject=100.)
+    plt.loglog(x,y,label='Log-Normal Q$_{ext}$')
+    plt.plot(x,np.polyval(polyFit,x),label='Polynomial Fit')
+    plt.legend(loc='best')
+    
+    fitDict = {'Simple n='+str(nInd):{'coefficients':polyFit.tolist()}}
+    with open('parameters/mie_params/simplePoly.yaml','w') as outFile:
+        yaml.dump(fitDict,outFile,default_flow_style=False)
     plt.show()
     
