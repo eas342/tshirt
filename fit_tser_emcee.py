@@ -369,8 +369,16 @@ class oEmcee():
         """ Get results from the chains in the sampler object """
         self.runCheck()
         lower,medianV,upper = [], [], []
+        # As in CHIMERA, reject chains that are stuck in local min (at much lower likelihood)
+        maxLogL = np.max(self.sampler.lnprobability)
+        keepP = -self.sampler.lnprobability[:,-1] < -5. * maxLogL
+        
+        chainShape = self.sampler.chain.shape
+        
+        self.cleanFlatChain = np.reshape(self.sampler.chain[keepP,:,:],(np.sum(keepP)*chainShape[1],chainShape[2]))
+        
         for i in range(self.ndim):
-            flatChain = self.sampler.flatchain[:,i]
+            flatChain = self.cleanFlatChain[:,i]
             lower.append(np.percentile(flatChain,lowPercent))
             medianV.append(np.median(flatChain))
             upper.append(np.percentile(flatChain,highPercent))
@@ -418,7 +426,7 @@ class oEmcee():
         """ Runs a corner plot """
         self.runCheck()
         
-        fig = corner.corner(self.sampler.flatchain,labels=self.model.pnames,auto_bars=True,
+        fig = corner.corner(self.cleanFlatChain,labels=self.model.pnames,auto_bars=True,
                             quantiles=[0.159,0.841],show_titles=True)
         fig.savefig('plots/corner.pdf')
     
@@ -429,7 +437,7 @@ class oEmcee():
         plt.close('all')
         fig, axArr = plt.subplots(1,self.ndim,figsize=(17,5))
         for i, ax in enumerate(axArr):
-            postData = self.sampler.flatchain[:,i]
+            postData = self.cleanFlatChain[:,i]
             ax.hist(postData,100,histtype='step')
             ax.set_xlabel(self.model.pnames[i])
             lowLimit = np.percentile(postData,5)
