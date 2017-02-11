@@ -574,23 +574,25 @@ def allBins(src='2mass_0835'):
         t2.write(chisqDir+'/chisq_'+waveString+'.csv')
         mcObj.showResult(saveFile=os.path.join(plotDir,'tser_'+waveString+'.pdf'))
 
-def plotSpectra(src='2mass_0835'):
-    """ Goes through each wavelength bin and plots the spectra
-    """
-    fileList = glob.glob('spectra/'+src+'/fit*.csv')
-    plotPath = os.path.join('plots','spectra',src)
+class getSpectrum():
+    """ A spectrum object that gathers spectra from individual wavelength fits"""
+    def __init__(self,src):
+        self.src = src
+        self.fileList = glob.glob('spectra/'+src+'/fit*.csv')
+        self.plotPath = os.path.join('plots','spectra',src)
+        if os.path.exists(self.plotPath) == False:
+            os.mkdir(plotPath)
+        exampleFile = ascii.read(self.fileList[0])
+        self.paramList = exampleFile['Parameter']
     
-    if os.path.exists(plotPath) == False:
-        os.mkdir(plotPath)
     
-    exampleFile = ascii.read(fileList[0])
-    paramList = exampleFile['Parameter']
-    
-    for oneParam in paramList:
+    def getSpectrum(self,oneParam):
+        """ Gathers a spectrum for a given file List of wavelength bin CSV files
+        """
         lowLim, medLim, hiLim = [], [], []
         wavel = []
-        
-        for oneFile in fileList:
+    
+        for oneFile in self.fileList:
             t = ascii.read(oneFile)
             AmpRow = t['Parameter'] == oneParam
             lowLim.append(t['Lower'][AmpRow])
@@ -599,21 +601,60 @@ def plotSpectra(src='2mass_0835'):
             baseName = os.path.basename(oneFile)
             thisWavel = float(os.path.splitext(baseName.split("_")[1])[0])
             wavel.append(thisWavel)
+    
         
-            
         yerrLow = np.array(medLim) - np.array(lowLim)
         yerrHigh = np.array(hiLim) - np.array(medLim)
+    
+        specTable = Table()
+        specTable['Wavel'] = wavel
+        specTable['Median'] = medLim
+        specTable['yerrLow'] = yerrLow
+        specTable['yerrHigh'] = yerrHigh
+        specTable['yerrAverage'] = (yerrLow + yerrHigh)/2.
+        return specTable
+    
+    def plotSpectrum(self,oneParam):
+        """ Plots the spectrum for a given parameter """
+        t = self.getSpectrum(oneParam)
+        
         plt.close('all')
-        fig, ax = plt.subplots()
-        ax.errorbar(wavel,medLim,fmt="o",yerr=[yerrLow,yerrHigh])
+        self.fig, self.ax = plt.subplots()
+        self.ax.errorbar(t['Wavel'],t['Median'],fmt="o",yerr=[t['yerrLow'],t['yerrHigh']])
         with open('parameters/fit_params.yaml') as paramFile:
             priorP = yaml.load(paramFile)
-            if 'spectraYrange' in priorP[src] and oneParam == r'$A_1$':
-                ax.set_ylim(priorP[src]['spectraYrange'])
+            if 'spectraYrange' in priorP[self.src] and oneParam == r'$A_1$':
+                ax.set_ylim(priorP[self.src]['spectraYrange'])
     
-        ax.set_xlabel('Wavelength ($\mu$m)')
-        ax.set_ylabel(oneParam)
-        fig.savefig(os.path.join(plotPath,oneParam+'_spectrum.pdf'))
+        self.ax.set_xlabel('Wavelength ($\mu$m)')
+        self.ax.set_ylabel(oneParam)
+        self.fig.savefig(os.path.join(self.plotPath,oneParam+'_spectrum.pdf'))
+    
+
+def plotSpectra(src='2mass_0835'):
+    """ Goes through each wavelength bin and plots the spectra
+    """
+    
+    specObj = getSpectrum(src)
+    
+    for oneParam in specObj.paramList:
+        specObj.plotSpectrum(oneParam)
+
+
+def flatLineTest(src='2mass_1821',param='t$_1$'):
+    """ Tests if the phase offset is consistent with a flat line"""
+    specObj = getSpectrum(src)
+    t = specObj.getSpectrum(param)
+    specObj.plotSpectrum(param)
+    weights = 1./t['yerrAverage']**2
+    avg = np.sum(t['Median'] * weights)/np.sum(weights)
+    
+    specObj.ax.plot(t['Wavel'],avg * np.ones(len(t)),label='Flat')
+    chisQ = np.sum((t['Median'] - avg)**2 / t['yerrAverage']**2)
+    dof = len(t) - 1
+    chisQperDOF = chisQ / dof
+    print('Chi-squared/dof = ',chisQperDOF)
+    specObj.fig.show()
 
 def compareMultiTerms(maxTerms = 3):
     """ Compares a single versus multiple cosine terms fit
