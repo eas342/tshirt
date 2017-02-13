@@ -547,10 +547,10 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
     
     return mcObj
 
-def allBins(src='2mass_0835'):
+def allBins(src='2mass_0835',wavelSearch=r"*"):
     """ Goes through each wavelength bin and does an MCMC fit, saving results
     """
-    fileList = glob.glob('tser_data/'+src+'/*.txt')
+    fileList = glob.glob('tser_data/'+src+'/'+wavelSearch+'.txt')
     ## Make a directory for spectra if there isn't one yet
     specDir = os.path.join('spectra/',src)
     chisqDir = os.path.join('chisquare',src)
