@@ -641,20 +641,32 @@ def plotSpectra(src='2mass_0835'):
         specObj.plotSpectrum(oneParam)
 
 
-def flatLineTest(src='2mass_1821',param='t$_1$'):
+def flatLineTest(src='2mass_1821',param='t$_1$',comparePhase=False):
     """ Tests if the phase offset is consistent with a flat line"""
     specObj = getSpectrum(src)
     t = specObj.getSpectrum(param)
-    specObj.plotSpectrum(param)
+    
     weights = 1./t['yerrAverage']**2
     avg = np.sum(t['Median'] * weights)/np.sum(weights)
     
-    specObj.ax.plot(t['Wavel'],avg * np.ones(len(t)),label='Flat')
     chisQ = np.sum((t['Median'] - avg)**2 / t['yerrAverage']**2)
     dof = len(t) - 1
     chisQperDOF = chisQ / dof
     print('Chi-squared/dof = ',chisQperDOF)
-    specObj.fig.show()
+    
+    if comparePhase == True:
+        t2 = specObj.getSpectrum('A$_1$')
+        fig, ax = plt.subplots()
+        ax.errorbar(t['Median'],t2['Median'],yerr=[t2['yerrLow'],t2['yerrHigh']],
+                    xerr=[t['yerrLow'],t['yerrHigh']],fmt='o')
+        ax.set_xlabel('Phase Offset (hr)')
+        ax.set_ylabel('Amplitude (%)')
+        fig.savefig(os.path.join(specObj.plotPath,'offset_vs_amplitude.pdf'))
+        
+    else:
+        specObj.plotSpectrum(param)
+        specObj.ax.plot(t['Wavel'],avg * np.ones(len(t)),label='Flat')
+        specObj.fig.savefig(os.path.join(specObj.plotPath,'offset_spectrum_w_avg.pdf'))
 
 def compareMultiTerms(maxTerms = 3):
     """ Compares a single versus multiple cosine terms fit
