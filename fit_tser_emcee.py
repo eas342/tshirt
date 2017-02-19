@@ -521,7 +521,13 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
                          names=['t','fl','flerr','model','resid'])    
         x = np.array(dat['t'])
         y = np.array(dat['fl'])
-        yerr = np.array(dat['flerr']) * 4.0
+        ## For MORIS data, don't multiply
+        if specWavel < 0.8:
+            multFactor = 1.0
+        else:
+            multFactor = 4.0
+            
+        yerr = np.array(dat['flerr']) * multFactor
     
     
     model = fSeries(order=nterms,srcData=src)
@@ -623,11 +629,14 @@ class getSpectrum():
         self.ax.errorbar(t['Wavel'],t['Median'],fmt="o",yerr=[t['yerrLow'],t['yerrHigh']])
         with open('parameters/fit_params.yaml') as paramFile:
             priorP = yaml.load(paramFile)
-            if 'spectraYrange' in priorP[self.src] and oneParam == r'$A_1$':
-                ax.set_ylim(priorP[self.src]['spectraYrange'])
-    
+            if 'spectraYrange' in priorP[self.src] and oneParam == r'A$_1$':
+                self.ax.set_ylim(priorP[self.src]['spectraYrange'])
+                customYLabel = r'Amplitude (%)'
+            else:
+                customYLabel = oneParam
+        
         self.ax.set_xlabel('Wavelength ($\mu$m)')
-        self.ax.set_ylabel(oneParam)
+        self.ax.set_ylabel(customYLabel)
         self.fig.savefig(os.path.join(self.plotPath,oneParam+'_spectrum.pdf'))
     
 
