@@ -620,24 +620,39 @@ class getSpectrum():
         specTable['yerrAverage'] = (yerrLow + yerrHigh)/2.
         return specTable
     
-    def plotSpectrum(self,oneParam):
-        """ Plots the spectrum for a given parameter """
+    def plotSpectrum(self,oneParam,showComparison=True):
+        """ Plots the spectrum for a given parameter
+        
+        Parameters
+        --------------
+        showComparison: bool
+             show comparison to previous spectra
+        """
+        
         t = self.getSpectrum(oneParam)
         
         plt.close('all')
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.ax = plt.subplots(figsize=(6,4))
         self.ax.errorbar(t['Wavel'],t['Median'],fmt="o",yerr=[t['yerrLow'],t['yerrHigh']])
         with open('parameters/fit_params.yaml') as paramFile:
             priorP = yaml.load(paramFile)
             if 'spectraYrange' in priorP[self.src] and oneParam == r'A$_1$':
                 self.ax.set_ylim(priorP[self.src]['spectraYrange'])
                 customYLabel = r'Amplitude (%)'
+                
+                if showComparison & (self.src == '2mass_1821'):
+                    otherDat = ascii.read('spectra/specific/fratio_yang2016.csv')
+                    YangAmp = (otherDat['fratio'] - 1.)/(otherDat['fratio'] + 1.)
+                    self.ax.plot(otherDat['wavelength'],YangAmp * 100.,color='black')
+                    self.ax.text(np.mean(otherDat['wavelength']),np.mean(YangAmp * 100.)*1.05,
+                                 'WFC3 amp')
             else:
                 customYLabel = oneParam
         
+        
         self.ax.set_xlabel('Wavelength ($\mu$m)')
         self.ax.set_ylabel(customYLabel)
-        self.fig.savefig(os.path.join(self.plotPath,oneParam+'_spectrum.pdf'))
+        self.fig.savefig(os.path.join(self.plotPath,oneParam+'_spectrum.pdf'),bbox_inches='tight')
     
 
 def plotSpectra(src='2mass_0835'):
