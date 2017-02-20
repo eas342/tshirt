@@ -105,7 +105,7 @@ def getPoly(pord=15):
     """
     x = np.linspace(0.2,15,1024)
     rad = 1.0
-    nInd = complex(1.825,-1e-4)
+    nInd = complex(1.67,-0.006)
     y = extinct(x,rad=rad,logNorm=True,npoint=1024,n=nInd)
     polyFit = es_gen.robust_poly(x,y,pord,sigreject=100.)
     plt.loglog(x,y,label='Log-Normal Q$_{ext}$')
