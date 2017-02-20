@@ -148,7 +148,7 @@ class fSeries:
     Aind: arr
         The indices for the amplitude terms
     tind: arr
-        The indices for the 
+        The indices for the time offset of maximum deviation for each term
     """
     def __init__(self,srcData=None,order=2):
         self.name = "Fourier Series"
