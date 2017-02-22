@@ -8,7 +8,7 @@ import yaml
 coeff = yaml.load(open('parameters/mie_params/simplePoly.yaml'))
 
 
-def polyExtinct(wavel,rad=1.0,type=r'Simple n=(1.825-0.0001j)'):
+def polyExtinct(wavel,rad=1.0,type=r'Simple n=(1.67-0.006j)'):
     """
     Extinction function using a high order polynomial fit
     """

@@ -69,8 +69,8 @@ class mieModel:
     """
     def __init__(self,composition='simple',logNorm=False,maxRad = 5.):
         self.name = "Mie extinction model for flux amplitude"
-        self.pnames = [r'A$_1$','r']
-        self.formula = ("A_1 * Qext(wavel,tau)")
+        self.pnames = [r'B','r']
+        self.formula = ("B * Qext(wavel,tau)")
         self.logNorm = logNorm
         self.ndim = len(self.pnames)
         self.maxRad = maxRad
@@ -291,7 +291,7 @@ class oEmcee():
         return p0
     
     def showGuess(self,showParamset=None,saveFile=None,ax=None,fig=None,
-                  residual=False):
+                  residual=False,figsize=None):
         """ Shows the guess or specified parameters against the input
         
         Parameters
@@ -309,7 +309,7 @@ class oEmcee():
                   """
         plt.close('all')
         if ax is None:
-            fig, ax = plt.subplots()
+            fig, ax = plt.subplots(figsize=figsize)
         
         if showParamset is None:
             modelParam = self.guess
@@ -334,7 +334,7 @@ class oEmcee():
         if saveFile is None:
             fig.show()
         else:
-            fig.savefig(saveFile)
+            fig.savefig(saveFile,bbox_inches='tight')
     
     def runMCMC(self,nBurn=500,nRun=1500):
         """ Runs the MCMC
@@ -400,14 +400,15 @@ class oEmcee():
         self.maxL = lnprob[tupArg]
         self.maxLparam = self.sampler.chain[tupArg]
     
-    def showResult(self,showMedian=False,saveFile='plots/best_fit.pdf'):
+    def showResult(self,showMedian=False,saveFile='plots/best_fit.pdf',
+                   figsize=None):
         """ Shows the best-fit model from the median parameter values """
         self.runCheck()
         if showMedian == True:
             paramShow = self.results['Median']
         else:
             paramShow = self.maxLparam
-        self.showGuess(showParamset=paramShow,saveFile=saveFile)
+        self.showGuess(showParamset=paramShow,saveFile=saveFile,figsize=figsize)
         print(self.chisquare(paramShow))
     
     def chisquare(self,param):
@@ -601,9 +602,9 @@ class getSpectrum():
         for oneFile in self.fileList:
             t = ascii.read(oneFile)
             AmpRow = t['Parameter'] == oneParam
-            lowLim.append(t['Lower'][AmpRow])
-            medLim.append(t['Median'][AmpRow])
-            hiLim.append(t['Upper'][AmpRow])
+            lowLim.append(float(t['Lower'][AmpRow]))
+            medLim.append(float(t['Median'][AmpRow]))
+            hiLim.append(float(t['Upper'][AmpRow]))
             baseName = os.path.basename(oneFile)
             thisWavel = float(os.path.splitext(baseName.split("_")[1])[0])
             wavel.append(thisWavel)
@@ -724,7 +725,7 @@ def compareMultiTerms(maxTerms = 3):
     fig.savefig('plots/best_fit_comparison.pdf')
     return mcArray
 
-def prepEmceeSpec(method='tdiff',logNorm=False):
+def prepEmceeSpec(method='tdiff',logNorm=False,useIDLspec=False,src='2mass_1821'):
     """ Prepares Emcee run for fitting spectra
     
     Parameters
@@ -733,10 +734,17 @@ def prepEmceeSpec(method='tdiff',logNorm=False):
         Method of fitting - Temp Diff vs Mie Scattering
     """
     
-    dat = ascii.read('tser_data/amp_vs_wavl.txt')
-    x = np.array(dat['Wavelength(um)'])
-    y = np.array(dat['Amp']) * 100.
-    yerr = np.array(dat['Amp_Err']) * 100.
+    if useIDLspec == True:
+        dat = ascii.read('tser_data/amp_vs_wavl.txt')
+        x = np.array(dat['Wavelength(um)'])
+        y = np.array(dat['Amp']) * 100.
+        yerr = np.array(dat['Amp_Err']) * 100.        
+    else:
+        specObj = getSpectrum(src)
+        t = specObj.getSpectrum(r"A$_1$")
+        x = np.array(t['Wavel'])
+        y = np.array(t['Median'])
+        yerr = np.array(t['yerrAverage'])
     
     if method == 'tdiff':
         # Temperature difference model
@@ -745,8 +753,8 @@ def prepEmceeSpec(method='tdiff',logNorm=False):
         spread = [0.001,5e-5,200,200]
     elif method == 'mie':
         model = mieModel(logNorm=logNorm)
-        guess = [.4,0.5]
-        spread = [0.1,0.2]
+        guess = [0.5,0.2]
+        spread = [0.1,0.1]
     else:
         print('Unrecognized model')
         return 0
@@ -756,5 +764,15 @@ def prepEmceeSpec(method='tdiff',logNorm=False):
                    yLabel='Amplitude (%)')
     return mcObj
 
-
+def bdPaperSpecFits():
+    """ Makes the spectral fits for the Brown Dwarf paper """
+    mcObj = prepEmceeSpec(method='mie')
+    mcObj.runMCMC()
+    mcObj.runMCMC(nBurn=0)
+    
+    mcObj.showResult(figsize=(6,4))
+    mcObj.doCorner()
+    
+    
+    return mcObj
 
