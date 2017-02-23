@@ -12,6 +12,7 @@ import yaml
 import re
 import string
 import mie_model
+import pickle
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
@@ -401,14 +402,14 @@ class oEmcee():
         self.maxLparam = self.sampler.chain[tupArg]
     
     def showResult(self,showMedian=False,saveFile='plots/best_fit.pdf',
-                   figsize=None):
+                   figsize=None,ax=None,fig=None):
         """ Shows the best-fit model from the median parameter values """
         self.runCheck()
         if showMedian == True:
             paramShow = self.results['Median']
         else:
             paramShow = self.maxLparam
-        self.showGuess(showParamset=paramShow,saveFile=saveFile,figsize=figsize)
+        self.showGuess(showParamset=paramShow,saveFile=saveFile,figsize=figsize,ax=ax,fig=fig)
         print(self.chisquare(paramShow))
     
     def chisquare(self,param):
@@ -588,7 +589,7 @@ class getSpectrum():
         self.fileList = glob.glob('spectra/'+src+'/fit*.csv')
         self.plotPath = os.path.join('plots','spectra',src)
         if os.path.exists(self.plotPath) == False:
-            os.mkdir(plotPath)
+            os.mkdir(self.plotPath)
         exampleFile = ascii.read(self.fileList[0])
         self.paramList = exampleFile['Parameter']
     
@@ -621,7 +622,8 @@ class getSpectrum():
         specTable['yerrAverage'] = (yerrLow + yerrHigh)/2.
         return specTable
     
-    def plotSpectrum(self,oneParam,showComparison=True):
+    def plotSpectrum(self,oneParam,showComparison=True,ax=None,fig=None,
+                     legLabel=None):
         """ Plots the spectrum for a given parameter
         
         Parameters
@@ -633,20 +635,18 @@ class getSpectrum():
         t = self.getSpectrum(oneParam)
         
         plt.close('all')
-        self.fig, self.ax = plt.subplots(figsize=(6,4))
-        self.ax.errorbar(t['Wavel'],t['Median'],fmt="o",yerr=[t['yerrLow'],t['yerrHigh']])
+        if ax == None:
+            self.fig, self.ax = plt.subplots(figsize=(6,4))
+        else:
+            self.fig, self.ax = fig, ax
+        self.ax.errorbar(t['Wavel'],t['Median'],fmt="o",yerr=[t['yerrLow'],t['yerrHigh']],
+                         label=legLabel)
         with open('parameters/fit_params.yaml') as paramFile:
             priorP = yaml.load(paramFile)
             if 'spectraYrange' in priorP[self.src] and oneParam == r'A$_1$':
                 self.ax.set_ylim(priorP[self.src]['spectraYrange'])
                 customYLabel = r'Amplitude (%)'
                 
-                if showComparison & (self.src == '2mass_1821'):
-                    otherDat = ascii.read('spectra/specific/fratio_yang2016.csv')
-                    YangAmp = (otherDat['fratio'] - 1.)/(otherDat['fratio'] + 1.)
-                    self.ax.plot(otherDat['wavelength'],YangAmp * 100.,color='black')
-                    self.ax.text(np.mean(otherDat['wavelength']),np.mean(YangAmp * 100.)*1.05,
-                                 'WFC3 amp')
             else:
                 customYLabel = oneParam
         
@@ -764,13 +764,43 @@ def prepEmceeSpec(method='tdiff',logNorm=False,useIDLspec=False,src='2mass_1821'
                    yLabel='Amplitude (%)')
     return mcObj
 
-def bdPaperSpecFits():
+def bdPaperSpecFits(src='2mass_1821'):
     """ Makes the spectral fits for the Brown Dwarf paper """
-    mcObj = prepEmceeSpec(method='mie')
-    mcObj.runMCMC()
-    mcObj.runMCMC(nBurn=0)
+    emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc.pic'
+    if os.path.exists(emceeDir) == False:
+        mcObj = prepEmceeSpec(method='Mie,')
+        mcObj.runMCMC()
+        mcObj.runMCMC(nBurn=0)
+        pickle.dump(mcObj,open(emceeDir,'w'))
+    else:
+        mcObj = pickle.load(open(emceeDir))
     
-    mcObj.showResult(figsize=(6,4))
+    fig, ax = plt.subplots(figsize=(6,4))
+    
+    ## Make a spectrum object
+    specObj = getSpectrum(src)
+    specObj.plotSpectrum(r"A$_1$",ax=ax,fig=fig,legLabel='IRTF Amp')
+    
+    ## Show the model
+    specTable = specObj.getSpectrum(r"A$_1$")
+    xmodel = np.linspace(np.min(specTable['Wavel']),
+                         np.max(specTable['Wavel']),512.)
+    ymodel = mcObj.model.evaluate(xmodel,mcObj.maxLparam)
+    
+    radString = str(np.round(mcObj.maxLparam[1],2))
+    modelLabel = 'Mie r='+radString+' $\mu$m'
+    ax.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
+    
+    ax.set_ylim(-0.9,2.)
+    if src == '2mass_1821':
+        otherDat = ascii.read('spectra/specific/fratio_yang2016.csv')
+        YangAmp = (otherDat['fratio'] - 1.)/(otherDat['fratio'] + 1.)
+        ax.plot(otherDat['wavelength'],YangAmp * 100.,color='black',label='WFC3 Amp')
+        #ax.text(np.mean(otherDat['wavelength']),np.mean(YangAmp * 100.)*1.05,
+        #             'WFC3 amp')
+    ax.legend(loc='best',frameon=False)
+    fig.savefig('plots/best_fit_2mass_1821.pdf',bbox_inches="tight")
+    
     mcObj.doCorner()
     
     
