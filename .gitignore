@@ -5,4 +5,5 @@
 spectra/*/*.csv
 chisquare/*/*.csv
 mcmcRuns/*/*/*.pic
+mcmcRuns/*/*.pic
 parameters/mie_params/simplePoly.yaml
