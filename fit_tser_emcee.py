@@ -775,11 +775,11 @@ def bdPaperSpecFits(src='2mass_1821'):
     else:
         mcObj = pickle.load(open(emceeDir))
     
-    fig, ax = plt.subplots(figsize=(6,4))
+    fig, (ax1,ax2) = plt.subplots(2,figsize=(6,7),sharex=True)
     
     ## Make a spectrum object
     specObj = getSpectrum(src)
-    specObj.plotSpectrum(r"A$_1$",ax=ax,fig=fig,legLabel='IRTF Amp')
+    specObj.plotSpectrum(r"A$_1$",ax=ax1,fig=fig,legLabel='IRTF Amp')
     
     ## Show the model
     specTable = specObj.getSpectrum(r"A$_1$")
@@ -789,16 +789,22 @@ def bdPaperSpecFits(src='2mass_1821'):
     
     radString = str(np.round(mcObj.maxLparam[1],2))
     modelLabel = 'Mie r='+radString+' $\mu$m'
-    ax.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
+    ax1.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
     
-    ax.set_ylim(-0.9,2.)
+    ax1.set_ylim(-0.9,2.)
     if src == '2mass_1821':
         otherDat = ascii.read('spectra/specific/fratio_yang2016.csv')
         YangAmp = (otherDat['fratio'] - 1.)/(otherDat['fratio'] + 1.)
-        ax.plot(otherDat['wavelength'],YangAmp * 100.,color='black',label='WFC3 Amp')
-        #ax.text(np.mean(otherDat['wavelength']),np.mean(YangAmp * 100.)*1.05,
+        ax1.plot(otherDat['wavelength'],YangAmp * 100.,color='black',label='WFC3 Amp')
+        #ax1.text(np.mean(otherDat['wavelength']),np.mean(YangAmp * 100.)*1.05,
         #             'WFC3 amp')
-    ax.legend(loc='best',frameon=False)
+    ax1.legend(loc='best',frameon=False)
+    
+    ## Show the phase spectrum
+    specObj.plotSpectrum(r"t$_1$",ax=ax2,fig=fig,legLabel='')
+    fig.subplots_adjust(hspace=0)
+    plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+    
     fig.savefig('plots/best_fit_2mass_1821.pdf',bbox_inches="tight")
     
     mcObj.doCorner()
