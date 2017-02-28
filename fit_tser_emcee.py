@@ -151,9 +151,14 @@ class fSeries:
     tind: arr
         The indices for the time offset of maximum deviation for each term
     """
-    def __init__(self,srcData=None,order=2):
+    def __init__(self,srcData=None,order=2,useAirmass=False):
         self.name = "Fourier Series"
         pnames = [r'$\tau$','B','C']
+        
+        self.useAirmass = useAirmass
+        if useAirmass == True:
+            pnames.append('D')
+        
         self.nbaseterms = len(pnames)
         self.order = order
         for i in range(order):
@@ -163,7 +168,15 @@ class fSeries:
             pnames.append(r't$_'+str(i+1)+r'$')
         self.tind = np.arange(self.order) + self.order + self.nbaseterms
         self.pnames = pnames
-        self.formula = 'A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + ..+ Bt + C'
+        
+        fSeriesPart = '(A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + ..+) '
+        if useAirmass == True:
+            baselinePart = '* (Bt + C + D a(t)'
+        else:
+            baselinePart = '* (Bt + C)'
+        
+        self.formula = fSeriesPart + baselinePart
+        
         self.ndim = len(self.pnames)
         if srcData == None:
             self.priorSet = False
@@ -183,8 +196,12 @@ class fSeries:
         cosTerms = 0
         for Amp,freq,t in zip(p[self.Aind],freqArr,p[self.tind]):
             cosTerms += Amp/100. * np.cos(freq * 2. * np.pi * (x - t)/p[0])
-        baseLine = p[1] * x + p[2]
         
+        if self.useAirmass == True:
+            baseLine = p[1] * x[0,:] + p[2] + p[3] * x[1,:]
+        else:
+            baseLine = p[1] * x + p[2]
+            
         return cosTerms + baseLine
     
     def lnprior(self,inputP):
@@ -242,6 +259,10 @@ class oEmcee():
         Model for the fitting
     x: arr
         X values
+            Can be multi-dimensional
+    xplot: arr
+        X values to plot - one row of a possible multi-dimensional x
+        If x is a 1D array, xplot is the same as x
     y: arr
         Y values
     yerr: arr
@@ -267,9 +288,17 @@ class oEmcee():
     """
     
     def __init__(self,model,x,y,yerr,guess,guessSig,nwalkers=50,xLabel='',yLabel='',
-                 title=''):
+                 title='',plotIndx=0):
         self.model = model
         self.x = x
+        
+        ## IF x is multi-dimensional, choose one row to plot
+        self.plotIndx = plotIndx
+        if x.ndim > 1:
+            self.xplot = self.x[plotIndx,:]
+        else:
+            self.xplot = self.x
+        
         self.y = y
         self.xLabel = xLabel
         self.yLabel = yLabel
@@ -316,17 +345,28 @@ class oEmcee():
             modelParam = self.guess
         else:
             modelParam = showParamset
-        xmodel = np.linspace(np.min(self.x),np.max(self.x),1024)
+        
+        xmodel = np.linspace(np.min(self.xplot),np.max(self.xplot),1024)
+        if self.x.ndim > 1:
+            ## Interpolate other dimensions
+            xEntry = np.zeros_like(self.x)
+            sortedInd = np.argsort(self.x)
+            for oneRow in range(self.x.shape[0]):
+                pdb.set_trace()
+                xInterp = np.interp(self.x[self.plotIndx,sortedInd],xmodel,self.x[oneRow,sortedInd])
+                xEntry[oneRow,:] = xInterp
+        else:
+            xEntry = xmodel
         
         if residual == True:
             yModel = self.model.evaluate(self.x,modelParam)
             yShow = self.y - yModel
             print('Median Error = '+str(np.median(self.yerr)))
             print('Standard Dev Residuals = '+str(np.nanstd(yShow)))
-            ax.errorbar(self.x,yShow,yerr=self.yerr,fmt='o')
+            ax.errorbar(self.xplot,yShow,yerr=self.yerr,fmt='o')
         else:
-            ax.errorbar(self.x,self.y,yerr=self.yerr,fmt='o')
-            yModel = self.model.evaluate(xmodel,modelParam)
+            ax.errorbar(self.xplot,self.y,yerr=self.yerr,fmt='o')
+            yModel = self.model.evaluate(xEntry,modelParam)
             yShow = yModel
             ax.plot(xmodel,yShow,linewidth=3.)
         ax.set_xlabel(self.xLabel)
@@ -519,9 +559,23 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
         if os.path.exists(tserFName) == False:
             print("Unrecognized source")
             return 0
-        dat = ascii.read(tserFName,
-                         names=['t','fl','flerr','model','resid'])    
-        x = np.array(dat['t'])
+        
+        if src == 'original1821':
+            colNames = ['t','fl','flerr','model','resid']
+        else:
+            colNames = ['t','fl','flerr','model','resid','airmass']
+        
+        dat = ascii.read(tserFName,names=colNames)
+        
+        if 'airmass' in colNames:
+            useAirmass = True
+            x = np.zeros([2,len(dat)])
+            x[0,:] = dat['t']
+            x[1,:] = dat['airmass']
+        else:
+            x = np.array(dat['t'])
+            useAirmass = False
+        
         y = np.array(dat['fl'])
         ## For MORIS data, don't multiply
         if specWavel < 0.8:
@@ -532,23 +586,36 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
         yerr = np.array(dat['flerr']) * multFactor
     
     
-    model = fSeries(order=nterms,srcData=src)
+    model = fSeries(order=nterms,srcData=src,useAirmass=useAirmass)
     
     with open('parameters/fit_params.yaml') as paramFile:
         priorP = yaml.load(paramFile)
         periodGuess = priorP[src]['guess']['periodGuess']
     
-    if nterms == 1:
-        guess = [periodGuess,0.,0.995,1.5,1.38]
-        spread = [0.01,0.004,0.05,0.2,0.2]
-    elif nterms == 2:
-        guess = [periodGuess,0.,0.995,1.5,0.4,1.38,0.4]
-        spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2]
-    elif nterms == 3:
-        guess = [periodGuess,0.,0.995,1.5,0.4,0.4,1.38,0.4,0.1]
-        spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2,0.2,0.2]
+    if useAirmass == True:
+        if nterms == 1:
+            guess = [periodGuess,0.,0.995,0.05,1.5,1.38]
+            spread = [0.01,0.004,0.05,0.01,0.2,0.2]
+        elif nterms == 2:
+            guess = [periodGuess,0.,0.995,1.5,0.05,0.4,1.38,0.4]
+            spread = [0.1,0.004,0.05,0.05,0.2,0.2,0.2,0.2]
+        elif nterms == 3:
+            guess = [periodGuess,0.,0.995,1.5,0.05,0.4,0.4,1.38,0.4,0.1]
+            spread = [0.1,0.004,0.05,0.05,0.2,0.2,0.2,0.2,0.2,0.2]
+        else:
+            print("Doesn't accept nterms="+str(nterms))
     else:
-        print("Doesn't accept nterms="+str(nterms))
+        if nterms == 1:
+            guess = [periodGuess,0.,0.995,1.5,1.38]
+            spread = [0.01,0.004,0.01,0.2,0.2]
+        elif nterms == 2:
+            guess = [periodGuess,0.,0.995,1.5,0.4,1.38,0.4]
+            spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2]
+        elif nterms == 3:
+            guess = [periodGuess,0.,0.995,1.5,0.4,0.4,1.38,0.4,0.1]
+            spread = [0.1,0.004,0.05,0.2,0.2,0.2,0.2,0.2,0.2]
+        else:
+            print("Doesn't accept nterms="+str(nterms))
     
     mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Time (hr)',yLabel='Normalized Flux',
                    title=showTitle)
