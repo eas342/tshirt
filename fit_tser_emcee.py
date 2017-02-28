@@ -194,14 +194,20 @@ class fSeries:
         """ Evaluates the cosine function"""
         freqArr = np.arange(self.order)+1.
         cosTerms = 0
-        for Amp,freq,t in zip(p[self.Aind],freqArr,p[self.tind]):
-            cosTerms += Amp/100. * np.cos(freq * 2. * np.pi * (x - t)/p[0])
         
         if self.useAirmass == True:
-            baseLine = p[1] * x[0,:] + p[2] + p[3] * x[1,:]
+            xTime = x[0,:]
+            xAirmass = x[1,:]
         else:
-            baseLine = p[1] * x + p[2]
-            
+            xTime = x
+        
+        for Amp,freq,t in zip(p[self.Aind],freqArr,p[self.tind]):
+            cosTerms += Amp/100. * np.cos(freq * 2. * np.pi * (xTime - t)/p[0])
+        
+        baseLine = p[1] * xTime + p[2]
+        if self.useAirmass == True:
+            baseLine = baseLine + p[3] * x[1,:]
+        
         return cosTerms + baseLine
     
     def lnprior(self,inputP):
@@ -348,12 +354,11 @@ class oEmcee():
         
         xmodel = np.linspace(np.min(self.xplot),np.max(self.xplot),1024)
         if self.x.ndim > 1:
-            ## Interpolate other dimensions
-            xEntry = np.zeros_like(self.x)
-            sortedInd = np.argsort(self.x)
+            ## Interpolate other dimensions for just as many points
+            xEntry = np.zeros([self.x.shape[0],xmodel.size])
+            sortedInd = np.argsort(self.x[self.plotIndx,:])
             for oneRow in range(self.x.shape[0]):
-                pdb.set_trace()
-                xInterp = np.interp(self.x[self.plotIndx,sortedInd],xmodel,self.x[oneRow,sortedInd])
+                xInterp = np.interp(xmodel,self.x[self.plotIndx,sortedInd],self.x[oneRow,sortedInd])
                 xEntry[oneRow,:] = xInterp
         else:
             xEntry = xmodel
@@ -368,6 +373,7 @@ class oEmcee():
             ax.errorbar(self.xplot,self.y,yerr=self.yerr,fmt='o')
             yModel = self.model.evaluate(xEntry,modelParam)
             yShow = yModel
+            
             ax.plot(xmodel,yShow,linewidth=3.)
         ax.set_xlabel(self.xLabel)
         ax.set_ylabel(self.yLabel)
@@ -594,14 +600,14 @@ def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
     
     if useAirmass == True:
         if nterms == 1:
-            guess = [periodGuess,0.,0.995,0.05,1.5,1.38]
-            spread = [0.01,0.004,0.05,0.01,0.2,0.2]
+            guess = [periodGuess,0.,0.995,0.005,1.5,1.38]
+            spread = [0.01,0.004,0.005,0.01,0.2,0.2]
         elif nterms == 2:
-            guess = [periodGuess,0.,0.995,1.5,0.05,0.4,1.38,0.4]
-            spread = [0.1,0.004,0.05,0.05,0.2,0.2,0.2,0.2]
+            guess = [periodGuess,0.,0.995,0.005,1.5,0.4,1.38,0.4]
+            spread = [0.1,0.004,0.005,0.05,0.2,0.2,0.2,0.2]
         elif nterms == 3:
-            guess = [periodGuess,0.,0.995,1.5,0.05,0.4,0.4,1.38,0.4,0.1]
-            spread = [0.1,0.004,0.05,0.05,0.2,0.2,0.2,0.2,0.2,0.2]
+            guess = [periodGuess,0.,0.995,1.5,0.005,0.4,0.4,1.38,0.4,0.1]
+            spread = [0.1,0.004,0.05,0.005,0.2,0.2,0.2,0.2,0.2,0.2]
         else:
             print("Doesn't accept nterms="+str(nterms))
     else:
@@ -637,7 +643,7 @@ def allBins(src='2mass_0835',wavelSearch=r"*"):
     for oneFile in fileList:
         baseName = os.path.basename(oneFile)
         thisWave = float(baseName.split("_")[1].split("um")[0])
-        mcObj = prepEmcee(src=src,specWavel=thisWave)
+        mcObj = prepEmcee(src=src,specWavel=thisWave,nterms=2)
         mcObj.runMCMC()
         waveString = "{:.2f}".format(thisWave)
         mcObj.results.write(specDir+'/fit_'+waveString+'.csv')
@@ -835,7 +841,7 @@ def bdPaperSpecFits(src='2mass_1821'):
     """ Makes the spectral fits for the Brown Dwarf paper """
     emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc.pic'
     if os.path.exists(emceeDir) == False:
-        mcObj = prepEmceeSpec(method='Mie,')
+        mcObj = prepEmceeSpec(method='mie')
         mcObj.runMCMC()
         mcObj.runMCMC(nBurn=0)
         pickle.dump(mcObj,open(emceeDir,'w'))
