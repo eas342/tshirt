@@ -13,6 +13,7 @@ import re
 import string
 import mie_model
 import pickle
+from copy import deepcopy
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
@@ -850,21 +851,57 @@ def prepEmceeSpec(method='tdiff',logNorm=False,useIDLspec=False,src='2mass_1821'
                    yLabel='Amplitude (%)')
     return mcObj
 
-def tser_plots(src='2mass_1821'):
+def tser_plots(src='2mass_1821',removeBaselines=True):
     """ Shows the time series for each wavelength"""
-    fileList = glob.glob('mcmcRuns/fSeries/2mass_1821/*.pic')
+    fileList = glob.glob('mcmcRuns/fSeries/'+src+'/*.pic')
     
-    fig, ax = plt.subplots(figsize=(5,12))
+    plt.close('all')
+    fig, ax = plt.subplots(figsize=(7,10))
     
-    # baseName = os.path.basename(oneFile)
-    # thisWave = float(baseName.split("_")[1].split("um")[0])
-    #
-    # waveString = "{:.2f}".format(thisWave)
-    offset = 0.05
+
+    offset = 0.035
+#    for waveInd,oneFile in enumerate(fileList):
     for waveInd,oneFile in enumerate(fileList):
+        baseName = os.path.basename(oneFile)
+        basePrefix = os.path.splitext(baseName)
+        thisWave = float(basePrefix[0].split("_")[1].split("um")[0])
+        waveString = "{:.2f}".format(thisWave)
+        
         mcObj = pickle.load(open(oneFile))
-        ax.plot(mcObj.xplot,mcObj.y - offset * waveInd,'o',rasterized=True)
-    fig.savefig('plots/'+src+'_tser.pdf')
+        yModel = mcObj.model.evaluate(mcObj.x,mcObj.maxLparam)
+        #mcObj = prepEmcee(src=src,specWavel=thisWave,nterms=2)
+        if removeBaselines == True:
+            ## Findi the model with baselines
+            paramBaseline = deepcopy(mcObj.maxLparam)
+            paramBaseline[mcObj.model.Aind] = 0.
+            yBaseline = mcObj.model.evaluate(mcObj.x,paramBaseline)
+            
+            yShow = mcObj.y - yBaseline + 1.
+            yModel = yModel - yBaseline + 1.
+        else:
+            yShow = mcObj.y
+        
+        plotPoints = ax.plot(mcObj.xplot,yShow - offset * waveInd,'o',rasterized=True,
+                             markersize=4.)
+        
+        ax.plot(mcObj.xplot,yModel- offset * waveInd,linewidth=2.,rasterized=True)
+        
+        ax.text(np.max(mcObj.xplot)+0.3,
+                np.median(yShow - offset * waveInd),waveString+'$\mu$m',
+                color=plotPoints[0].get_color(),rasterized=True)
+    
+    ax.set_ylim(0.14,1.1)
+    ax.set_xlim(np.min(mcObj.x) - 0.5,np.max(mcObj.x)+1.8)
+    if src == '2mass_1821':
+        yLabel='JD - 2457565 (hr)'
+    elif src == '2mass_0835':
+        yLabel='JD - 2457388 (hr)'
+    else:
+        yLabel = 'Time'
+    
+    ax.set_xlabel(yLabel)
+    ax.set_ylabel('Flux Ratio + Offset')
+    fig.savefig('plots/'+src+'_tser.pdf',bbox_inches='tight')
     
 
 def bdPaperSpecFits(src='2mass_1821'):
