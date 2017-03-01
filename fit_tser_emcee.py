@@ -633,20 +633,30 @@ def allBins(src='2mass_0835',wavelSearch=r"*"):
     """
     fileList = glob.glob('tser_data/'+src+'/'+wavelSearch+'.txt')
     ## Make a directory for spectra if there isn't one yet
-    specDir = os.path.join('spectra/',src)
+    specDir = os.path.join('spectra',src)
     chisqDir = os.path.join('chisquare',src)
     plotDir = os.path.join('plots','individual_fits',src)
-    for onePath in [specDir,chisqDir,plotDir]:
+    mcmcDir = os.path.join('mcmcRuns','fSeries',src)
+    for onePath in [specDir,chisqDir,plotDir,mcmcDir]:
         if os.path.exists(onePath) == False:
             os.mkdir(onePath)
+    
     
     for oneFile in fileList:
         baseName = os.path.basename(oneFile)
         thisWave = float(baseName.split("_")[1].split("um")[0])
+        
+        waveString = "{:.2f}".format(thisWave)
+        
+        ## Run the MCMC sampler
         mcObj = prepEmcee(src=src,specWavel=thisWave,nterms=2)
         mcObj.runMCMC()
-        waveString = "{:.2f}".format(thisWave)
+        
+        emceePath = os.path.join(mcmcDir,'mcmc_'+waveString+'.pic')
+        
+        ## Save the results
         mcObj.results.write(specDir+'/fit_'+waveString+'.csv')
+        pickle.dump(mcObj,open(emceePath,'w'))
         
         chisq, chisqpDOF = mcObj.chisquare(mcObj.maxLparam)
         t2 = Table()
@@ -654,6 +664,9 @@ def allBins(src='2mass_0835',wavelSearch=r"*"):
         t2['Chisquare/DOF Best'] = [chisqpDOF]
         t2.write(chisqDir+'/chisq_'+waveString+'.csv')
         mcObj.showResult(saveFile=os.path.join(plotDir,'tser_'+waveString+'.pdf'))
+        
+        
+        
 
 class getSpectrum():
     """ A spectrum object that gathers spectra from individual wavelength fits"""
@@ -836,6 +849,23 @@ def prepEmceeSpec(method='tdiff',logNorm=False,useIDLspec=False,src='2mass_1821'
     mcObj = oEmcee(model,x,y,yerr,guess,spread,xLabel='Wavelength ($\mu$m)',
                    yLabel='Amplitude (%)')
     return mcObj
+
+def tser_plots(src='2mass_1821'):
+    """ Shows the time series for each wavelength"""
+    fileList = glob.glob('mcmcRuns/fSeries/2mass_1821/*.pic')
+    
+    fig, ax = plt.subplots(figsize=(5,12))
+    
+    # baseName = os.path.basename(oneFile)
+    # thisWave = float(baseName.split("_")[1].split("um")[0])
+    #
+    # waveString = "{:.2f}".format(thisWave)
+    offset = 0.05
+    for waveInd,oneFile in enumerate(fileList):
+        mcObj = pickle.load(open(oneFile))
+        ax.plot(mcObj.xplot,mcObj.y - offset * waveInd,'o',rasterized=True)
+    fig.savefig('plots/'+src+'_tser.pdf')
+    
 
 def bdPaperSpecFits(src='2mass_1821'):
     """ Makes the spectral fits for the Brown Dwarf paper """
