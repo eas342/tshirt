@@ -908,7 +908,7 @@ def bdPaperSpecFits(src='2mass_1821'):
     """ Makes the spectral fits for the Brown Dwarf paper """
     emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc.pic'
     if os.path.exists(emceeDir) == False:
-        mcObj = prepEmceeSpec(method='mie')
+        mcObj = prepEmceeSpec(method='mie',src=src)
         mcObj.runMCMC()
         mcObj.runMCMC(nBurn=0)
         pickle.dump(mcObj,open(emceeDir,'w'))
