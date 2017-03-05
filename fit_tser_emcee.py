@@ -462,7 +462,7 @@ class oEmcee():
     def chisquare(self,param):
         """ Calculates the chi-squared"""
         chisquare = -2. * lnprob(param,self.x,self.y,self.yerr,self.model)
-        dof = self.x.shape[0] - self.ndim
+        dof = self.y.shape[0] - self.ndim
         return chisquare,chisquare/dof
     
     def runCheck(self):
