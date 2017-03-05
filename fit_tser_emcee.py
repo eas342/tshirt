@@ -945,7 +945,7 @@ def bdPaperSpecFits(src='2mass_1821'):
     fig.subplots_adjust(hspace=0)
     plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
     
-    fig.savefig('plots/best_fit_2mass_1821.pdf',bbox_inches="tight")
+    fig.savefig('plots/best_fit_'+src+'.pdf',bbox_inches="tight")
     
     mcObj.doCorner()
     
