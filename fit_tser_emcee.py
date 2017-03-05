@@ -170,7 +170,7 @@ class fSeries:
         self.tind = np.arange(self.order) + self.order + self.nbaseterms
         self.pnames = pnames
         
-        fSeriesPart = '(A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + ..+) '
+        fSeriesPart = '(1 + A1 cos(2pi(t-t1)/tau) + A2 cos(2pi(t-t2)/0.5tau) + ..+) '
         if useAirmass == True:
             baselinePart = '* (Bt + C + D a(t)'
         else:
@@ -209,7 +209,7 @@ class fSeries:
         if self.useAirmass == True:
             baseLine = baseLine + p[3] * x[1,:]
         
-        return cosTerms + baseLine
+        return (cosTerms + 1.) * baseLine
     
     def lnprior(self,inputP):
         """ Prior likelihood function"""
