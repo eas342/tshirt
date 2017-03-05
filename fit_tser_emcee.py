@@ -648,7 +648,7 @@ def allBins(src='2mass_0835',wavelSearch=r"*"):
         thisWave = float(baseName.split("_")[1].split("um")[0])
         
         waveString = "{:.2f}".format(thisWave)
-        
+        print('Working on '+waveString)
         ## Run the MCMC sampler
         mcObj = prepEmcee(src=src,specWavel=thisWave,nterms=2)
         mcObj.runMCMC()
