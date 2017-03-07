@@ -1,12 +1,12 @@
 2mass_1821:
    prior:
-      periodRange: [3.8,4.0]
+      periodRange: [3.7,4.7]
    guess:
-      periodGuess: 3.9
+      periodGuess: 4.2
    spectraYrange: [-0.9,2.]
 2mass_0835:
    prior:
-      periodRange: [3.0,3.2]
+      periodRange: [2.6,3.6]
    guess:
       periodGuess: 3.1
    spectraYrange: [-0.9,2.]
