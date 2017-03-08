@@ -858,7 +858,20 @@ def tser_plots(src='2mass_1821',removeBaselines=True):
     plt.close('all')
     fig, ax = plt.subplots(figsize=(7,10))
     
-
+    ## Create a directory for baseline-removed time series
+    ## These are useful for Theodora's spot models
+    
+    cleanDir = os.path.join('cleaned_tser',src)
+    if os.path.exists(cleanDir) == False:
+        os.mkdir(cleanDir)
+    
+    if src == '2mass_1821':
+        xLabel='JD - 2457565 (hr)'
+    elif src == '2mass_0835':
+        xLabel='JD - 2457388 (hr)'
+    else:
+        xLabel = 'Time'
+    
     offset = 0.035
 #    for waveInd,oneFile in enumerate(fileList):
     for waveInd,oneFile in enumerate(fileList):
@@ -877,6 +890,15 @@ def tser_plots(src='2mass_1821',removeBaselines=True):
             yBaseline = mcObj.model.evaluate(mcObj.x,paramBaseline)
             
             yShow = mcObj.y - yBaseline + 1.
+            
+            ## Save the time series
+            t = Table()
+            t[xLabel] = mcObj.xplot
+            t['Norm Flux'] = np.array(yShow)
+            t['Flux Err'] = np.array(mcObj.yerr)
+            cleanFile = os.path.join(cleanDir,'tser_'+waveString+'.txt')
+            ascii.write(t,cleanFile,delimiter=' ')
+            
             yModel = yModel - yBaseline + 1.
         else:
             yShow = mcObj.y
@@ -892,16 +914,24 @@ def tser_plots(src='2mass_1821',removeBaselines=True):
     
     ax.set_ylim(0.14,1.1)
     ax.set_xlim(np.min(mcObj.x) - 0.5,np.max(mcObj.x)+1.8)
-    if src == '2mass_1821':
-        yLabel='JD - 2457565 (hr)'
-    elif src == '2mass_0835':
-        yLabel='JD - 2457388 (hr)'
-    else:
-        yLabel = 'Time'
+
     
-    ax.set_xlabel(yLabel)
+    ax.set_xlabel(xLabel)
     ax.set_ylabel('Flux Ratio + Offset')
     fig.savefig('plots/'+src+'_tser.pdf',bbox_inches='tight')
+    
+def checkCleaned(src='2mass_1821'):
+    """ Check the cleaned time series """
+    fileL = glob.glob(os.path.join('cleaned_tser',src,'tser*.txt'))
+    plt.close('all')
+    fig, ax = plt.subplots(figsize=(7,10))
+    offset = 0.03
+    for ind, oneFile in enumerate(fileL):
+        t = ascii.read(oneFile)
+        tKey = 'JD - 2457565 (hr)'
+        
+        ax.errorbar(t[tKey],t['Norm Flux'] - offset * ind,yerr=t['Flux Err'])
+    fig.show()
     
 
 def bdPaperSpecFits(src='2mass_1821'):
