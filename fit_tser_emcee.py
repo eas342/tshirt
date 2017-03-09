@@ -929,9 +929,19 @@ def checkCleaned(src='2mass_1821'):
     for ind, oneFile in enumerate(fileL):
         t = ascii.read(oneFile)
         tKey = 'JD - 2457565 (hr)'
+        baseName = os.path.basename(oneFile)
+        basePrefix = os.path.splitext(baseName)
+        waveString = basePrefix[0].split("_")[1]
         
-        ax.errorbar(t[tKey],t['Norm Flux'] - offset * ind,yerr=t['Flux Err'])
-    fig.show()
+        bars = ax.errorbar(t[tKey],t['Norm Flux'] - offset * ind,yerr=t['Flux Err'])
+        
+        ax.text(np.max(t[tKey]) + 0.2,np.median(t['Norm Flux']) - offset * ind,
+                       waveString,color=bars[0].get_color())
+    
+    ax.set_xlabel(tKey)
+    ax.set_ylabel('Normalized Flux')
+    ax.set_xlim(np.min(t[tKey]) - 0.2,np.max(t[tKey]) + 1.)
+    fig.savefig('plots/tser_w_errors.pdf')
     
 
 def bdPaperSpecFits(src='2mass_1821'):
