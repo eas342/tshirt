@@ -68,11 +68,27 @@ class tdiffModel:
 
 class mieModel:
     """ A Mie extinction model for the brown dwarf rotation curves
+    composition = Simple - use a Enstatite single complex index of refraction
+    logNorm - whether to use a log-normal distribution of particles
+    maxRad - a prior for the maximum particle radius
+    variableSigma: bool
+        Whether to vary the log-normal sigma parameter
     """
-    def __init__(self,composition='simple',logNorm=False,maxRad = 5.):
+    def __init__(self,composition='simple',logNorm=True,maxRad = 5.,
+                 variableSigma=False):
         self.name = "Mie extinction model for flux amplitude"
         self.pnames = [r'B','r']
-        self.formula = ("B * Qext(wavel,tau)")
+        self.formula = "B * Qext(wavel,tau)"
+        
+        if (logNorm == True) & (variableSigma == True):
+            ## Add a sigma free parameter
+            ## Only works for Log-normal particle distribution
+            self.pnames.append('$\sigma$')
+            self.formula = "B * Qext(wavel,tau,sigma)"
+            self.variableSigma = True
+        else:
+            self.variableSigma = False
+            
         self.logNorm = logNorm
         self.ndim = len(self.pnames)
         self.maxRad = maxRad
@@ -81,15 +97,25 @@ class mieModel:
         """ Evaluates the Mie extinction model assuming 
         that the wavelength and radius are the same parameters
         see obj.pnames for parameter names"""
-        #Qext = mie_model.extinct(x,p[1],logNorm=self.logNorm)
-        Qext = mie_model.polyExtinct(x,rad=p[1])
+        if (self.variableSigma == True) & (self.logNorm == True):
+            Qext = mie_model.extinct(x,p[1],logNorm=self.logNorm,s=p[2])
+        elif self.logNorm == True:
+            Qext = mie_model.polyExtinct(x,rad=p[1])
+        else:
+            Qext = mie_model.extinct(x,p[1],logNorm=self.logNorm)
+        
         return p[0] * Qext
     
     def lnprior(self,inputP):
         p = sanitize_param(inputP)
         zeroCheck = inputP > 0
         maxRadCheck = p[1] < self.maxRad
-        if np.all(zeroCheck & maxRadCheck):
+        if self.variableSigma == True:
+            sigCheck = (p[2] > 0.) & (p[2] < 1e3)
+        else:
+            sigCheck = True
+        
+        if np.all(zeroCheck & maxRadCheck & sigCheck):
             return 0
         else:
             return -np.inf
@@ -812,7 +838,8 @@ def compareMultiTerms(maxTerms = 3):
     fig.savefig('plots/best_fit_comparison.pdf')
     return mcArray
 
-def prepEmceeSpec(method='tdiff',logNorm=False,useIDLspec=False,src='2mass_1821'):
+def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
+                  variableSigma=False):
     """ Prepares Emcee run for fitting spectra
     
     Parameters
@@ -839,9 +866,13 @@ def prepEmceeSpec(method='tdiff',logNorm=False,useIDLspec=False,src='2mass_1821'
         guess = [0.0013,1e-4,2300,1500]
         spread = [0.001,5e-5,200,200]
     elif method == 'mie':
-        model = mieModel(logNorm=logNorm)
-        guess = [0.5,0.2]
-        spread = [0.1,0.1]
+        model = mieModel(logNorm=logNorm,variableSigma=variableSigma)
+        if variableSigma == True:
+            guess = [0.5, 0.2, 0.5]
+            spread = [0.1, 0.1, 0.1]
+        else:
+            guess = [0.5,0.2]
+            spread = [0.1,0.1]
     else:
         print('Unrecognized model')
         return 0

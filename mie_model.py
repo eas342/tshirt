@@ -16,6 +16,20 @@ def polyExtinct(wavel,rad=1.0,type=r'Simple n=(1.67-0.006j)'):
     Carr = coeff[type]['coefficients']
     return np.polyval(Carr,normWave)
 
+def polyExtinctMatrix(wavel,rad=1.0,type=r'Simple n=(1.67-0.006j)'):
+    """
+    Extinction function using a high order polynomial fit
+    """
+    normWave = wavel/rad
+    Carr = np.array(coeff[type]['coefficients'])
+    nOrder = len(Carr)
+    #nX = normWave.size[0]
+    
+    x2D = np.tile(normWave,(nOrder,1)).transpose()
+    xPowers = x2D**np.arange(nOrder)
+    
+    return np.dot(xPowers,np.flip(Carr,0))
+
 def extinct(wavel,rad=1.0,n=complex(1.825,-1e-4),logNorm=False,
             npoint=128,lowMult=0.2,highMult=5.,s=0.5):
     """
