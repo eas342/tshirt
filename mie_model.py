@@ -91,7 +91,7 @@ def lognorm(x,s,med):
         The median particle size
     """
     mu = np.log(med)
-    y = 1. / (s*x*np.sqrt(2.*np.pi)) * np.exp(-0.5*(np.log(x-mu)/s)**2)
+    y = 1. / (s*np.sqrt(2.*np.pi)) * np.exp(-0.5*(np.log(x-mu)/s)**2)
     return y
     
 def compareTest():
