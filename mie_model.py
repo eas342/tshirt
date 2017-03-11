@@ -31,7 +31,7 @@ def polyExtinctMatrix(wavel,rad=1.0,type=r'Simple n=(1.67-0.006j)'):
     return np.dot(xPowers,np.flip(Carr,0))
 
 def extinct(wavel,rad=1.0,n=complex(1.825,-1e-4),logNorm=False,
-            npoint=128,lowMult=0.2,highMult=5.,s=0.5):
+            npoint=128,pdfThreshold=0.001,s=0.5):
     """
     Calculates the Mie extinction cross section Q_ext as a function of wavelength
     
@@ -49,15 +49,21 @@ def extinct(wavel,rad=1.0,n=complex(1.825,-1e-4),logNorm=False,
         ## Size multiplier
         nwav = sz.size
         ## Size to evaluate lognormal weights
-        sizeEval = np.linspace(lowMult,highMult,npoint)
+        ## Make a linear space from threshold to threshold in the PDF
+        lowEval, highEval = invLognorm(s,rad,pdfThreshold)
+        sizeEval = np.linspace(lowEval,highEval,npoint)
         weights = lognorm(sizeEval,s,1.)
+        sumWeights = np.sum(weights) * (sizeEval[1] - sizeEval[0])
+        if (sumWeights < 0.8) | (sumWeights > 1.001):
+            print('Warning, PDF weights not properly sampling PDF')
+        weights = weights / sumWeights
         ## Arrange the array into 2D for multiplication of the grids
         sizeMult = (np.tile(sizeEval,(nwav,1))).transpose()
         sizeArr = np.tile(sz,(npoint,1))
         
         eval2D = sizeMult * sizeArr
         finalEval = eval2D.ravel() ## Evaluate a 1D array
-        
+        pdb.set_trace()
     else:
         finalEval = np.array(sz)
         
@@ -77,6 +83,26 @@ def extinct(wavel,rad=1.0,n=complex(1.825,-1e-4),logNorm=False,
         
     return finalQext
 
+def invLognorm(s,med,pdfThreshold):
+    """ 
+    Calculates the X values for a Log-normal distribution evaluated at specific PDF values
+    
+    Arguments
+    ------------------
+    s: float
+        The sigma (scale value) of the log-normal distribution
+    med: float
+        The median particle size
+    pdfThreshold: float
+        The PDF threshold at which to find the x values
+    """
+    mu = np.log(med)
+    sqrtPart = np.sqrt(-2. * s**2 * np.log(s * np.sqrt(2. * np.pi) * pdfThreshold))
+    lowEval = np.exp(mu - sqrtPart)
+    highEval = np.exp(mu + sqrtPart)
+    
+    return lowEval, highEval
+
 def lognorm(x,s,med):
     """
     Calculates a log-normal size distribution
@@ -91,9 +117,24 @@ def lognorm(x,s,med):
         The median particle size
     """
     mu = np.log(med)
-    y = 1. / (s*x*np.sqrt(2.*np.pi)) * np.exp(-0.5*(np.log(x-mu)/s)**2)
+    y = 1. / (s*np.sqrt(2.*np.pi)) * np.exp(-0.5*(np.log(x-mu)/s)**2)
     return y
-    
+
+def showLognorm():
+    """ Shows example log-normal distributions"""
+    rad = 0.5
+    #sArray = [0.4,0.5,0.6]
+    sArray = [1.0,0.5,0.25]
+    plt.close('all')
+    fig, ax = plt.subplots()
+    for oneS in sArray:
+        lowEval, highEval = invLognorm(oneS,rad,0.005)
+        x = np.linspace(lowEval,highEval,1024)
+        y = lognorm(x,oneS,rad)
+        ax.plot(x,y,label='s='+str(oneS))
+    ax.set_xlim(0,3)
+    fig.show()
+
 def compareTest():
     """
     Compares the Single Particle and Log-normal distributions
