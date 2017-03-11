@@ -117,7 +117,7 @@ def lognorm(x,s,med):
         The median particle size
     """
     mu = np.log(med)
-    y = 1. / (s*np.sqrt(2.*np.pi)) * np.exp(-0.5*(np.log(x-mu)/s)**2)
+    y = 1. / (s*np.sqrt(2.*np.pi)) * np.exp(-0.5*((np.log(x)-mu)/s)**2)
     return y
 
 def showLognorm():
@@ -131,8 +131,10 @@ def showLognorm():
         lowEval, highEval = invLognorm(oneS,rad,0.005)
         x = np.linspace(lowEval,highEval,1024)
         y = lognorm(x,oneS,rad)
-        ax.plot(x,y,label='s='+str(oneS))
+        ax.plot(x,y,label='$\sigma$='+str(oneS)+', mu='+"{:.3f}".format(np.log(rad)))
+        print(lognorm(highEval,oneS,rad))
     ax.set_xlim(0,3)
+    ax.legend(loc='best')
     fig.show()
 
 def compareTest():
