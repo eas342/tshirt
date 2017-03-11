@@ -111,7 +111,7 @@ class mieModel:
         zeroCheck = inputP > 0
         maxRadCheck = p[1] < self.maxRad
         if self.variableSigma == True:
-            sigCheck = (p[2] > 0.) & (p[2] < 1e3)
+            sigCheck = (p[2] > 0.) & (p[2] < 2.5)
         else:
             sigCheck = True
         
