@@ -7,6 +7,7 @@ from astropy.io import ascii
 from astropy.table import Table
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
+from matplotlib.collections import LineCollection
 import corner
 import yaml
 import re
@@ -975,9 +976,52 @@ def checkCleaned(src='2mass_1821'):
     fig.savefig('plots/tser_w_errors.pdf')
     
 
+def showDistributions(src='2mass_1821',fig=None,ax=None):
+    """ Shows the particle size distributions from the fit """
+    mcObj = pickle.load(open('mcmcRuns/mie_model/2mass_1821_mcmc_free_sigma.pic'))
+    totChains = mcObj.cleanFlatChain.shape[0]
+    randSet = np.random.randint(totChains,size=150)
+    plt.close('all')
+    if ax == None:
+        fig, ax = plt.subplots()
+    lineData = []
+    for oneSet in randSet:
+        b, rad, sig = mcObj.cleanFlatChain[oneSet,:]
+        x, y, dx = mie_model.xyLogNorm(sig,rad)
+        thisLine = []
+        for ind in np.arange(x.size):
+            thisLine.append((x[ind],y[ind]))
+        lineData.append(thisLine)
+        #ax.plot(x,y,rasterized=True,alpha=1.0,color='blue',linewidth=1.)
+    lines = LineCollection(lineData,linewidths=1,alpha=0.2)
+    ## Show the maximum Likelihood line
+    x, y, dx = mie_model.xyLogNorm(mcObj.maxLparam[2],mcObj.maxLparam[1])
+    ax.plot(x,y,color='red',linewidth=3)
+    ax.add_collection(lines)
+    ax.set_xlim(0,0.8)
+    ax.set_ylim(0,15)
+    ax.set_xlabel('Radius ($\mu$m)')
+    ax.set_ylabel('Relative Number')
+    fig.canvas.draw()
+    ax.set_xticklabels(ax.xaxis.get_majorticklabels(), rotation=45)
+    fig.show()
+    fig.savefig('plots/rad_distribution.pdf',bbox_inches='tight')
+
+def distributionCorner(src='2mass_1821'):
+    """ 
+    Plots the MCMC corner plot and as an inset shows the particle size distribution
+    """
+    mcObj = pickle.load(open('mcmcRuns/mie_model/2mass_1821_mcmc_free_sigma.pic'))
+    
+    fig = corner.corner(mcObj.cleanFlatChain,labels=mcObj.model.pnames,auto_bars=True,
+                        quantiles=[0.159,0.841],show_titles=True)
+    ax2 = fig.add_axes([0.7,0.7,0.3,0.3])
+    showDistributions(fig=fig,ax=ax2)
+    fig.show()
+
 def bdPaperSpecFits(src='2mass_1821'):
     """ Makes the spectral fits for the Brown Dwarf paper """
-    emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc.pic'
+    emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc_free_sigma.pic'
     if os.path.exists(emceeDir) == False:
         mcObj = prepEmceeSpec(method='mie',src=src)
         mcObj.runMCMC()
