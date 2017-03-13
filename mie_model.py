@@ -124,6 +124,19 @@ def lognorm(x,s,med):
     y = 1. / (s* x * np.sqrt(2.*np.pi)) * np.exp(-0.5*((np.log(x)-mu)/s)**2)
     return y
 
+def xyLogNorm(s,rad,npoint=1024,pdfThresh=0.001,verbose=False):
+    """
+    Generates x and y coordinates and delta-xs for a log-normal distribution
+    """
+    lowEval, highEval = invLognorm(s,rad,pdfThresh)
+    xExtra = np.logspace(np.log(lowEval),np.log(highEval),num=npoint+1,base=np.e)
+    x = xExtra[0:-1]
+    dx = np.diff(xExtra)
+    y = lognorm(x,s,rad)
+    if verbose == True:
+        print('Low, High='+str(lognorm(np.array([lowEval,highEval]),s,rad)))
+    return x,y,dx
+
 def showLognorm():
     """ Shows example log-normal distributions"""
     rad = 1.0
@@ -132,15 +145,11 @@ def showLognorm():
     plt.close('all')
     fig, ax = plt.subplots()
     for oneS in sArray:
-        lowEval, highEval = invLognorm(oneS,rad,0.001)
-        xExtra = np.logspace(np.log(lowEval),np.log(highEval),num=1025,base=np.e)
-        x = xExtra[0:-1]
-        dx = np.diff(xExtra)
-        y = lognorm(x,oneS,rad)
+        x, y, dx = xyLogNorm(oneS,rad,verbose=True)
         ax.plot(x,y,label='$\sigma$='+str(oneS)+', mu='+"{:.2f}".format(np.log(rad)))
         
         print('Integral='+str(np.sum(y * dx)))
-        print('Low, High='+str(lognorm(np.array([lowEval,highEval]),oneS,rad)))
+        
     #ax.set_xscale('log')
     ax.set_xlim(-0.1,3)
     ax.legend(loc='best')
