@@ -12,7 +12,7 @@ procDir = '/data1/tso_analysis/kic1255/UT2016_06_12_proc/'
 fileL = glob.glob(rawDir+'zero*.fits')
 
 ccdList = []
-for oneFile in fileL[0:2]:
+for oneFile in fileL:
     HDUList = fits.open(oneFile)
     data = HDUList[0].data
     head = HDUList[0].header
