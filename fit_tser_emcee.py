@@ -883,12 +883,20 @@ def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
                    yLabel='Amplitude (%)')
     return mcObj
 
-def tser_plots(src='2mass_1821',removeBaselines=True):
+def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
     """ Shows the time series for each wavelength"""
+    
+    
     fileList = glob.glob('mcmcRuns/fSeries/'+src+'/*.pic')
+    if abbreviated == True:
+        newList = np.array(fileList)
+        fileList = newList[np.mod(np.arange(len(fileList)),3) == 2]
     
     plt.close('all')
-    fig, ax = plt.subplots(figsize=(7,10))
+    if abbreviated == True:
+        fig, ax = plt.subplots(figsize=(7,5))
+    else:
+        fig, ax = plt.subplots(figsize=(7,10))
     
     ## Create a directory for baseline-removed time series
     ## These are useful for Theodora's spot models
@@ -944,7 +952,10 @@ def tser_plots(src='2mass_1821',removeBaselines=True):
                 np.median(yShow - offset * waveInd),waveString+'$\mu$m',
                 color=plotPoints[0].get_color(),rasterized=True)
     
-    ax.set_ylim(0.14,1.1)
+    if abbreviated == True:
+        ax.set_ylim(0.7,1.07)
+    else:
+        ax.set_ylim(0.14,1.1)
     ax.set_xlim(np.min(mcObj.x) - 0.5,np.max(mcObj.x)+1.8)
 
     
@@ -1019,7 +1030,7 @@ def distributionCorner(src='2mass_1821'):
     showDistributions(fig=fig,ax=ax2)
     fig.show()
 
-def bdPaperSpecFits(src='2mass_1821'):
+def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     """ Makes the spectral fits for the Brown Dwarf paper """
     emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc_free_sigma.pic'
     if os.path.exists(emceeDir) == False:
@@ -1030,7 +1041,10 @@ def bdPaperSpecFits(src='2mass_1821'):
     else:
         mcObj = pickle.load(open(emceeDir))
     
-    fig, (ax1,ax2) = plt.subplots(2,figsize=(6,7),sharex=True)
+    if abbreviated == True:
+        fig, ax1 = plt.subplots(figsize=(7,5))
+    else:
+        fig, (ax1,ax2) = plt.subplots(2,figsize=(6,7),sharex=True)
     
     ## Make a spectrum object
     specObj = getSpectrum(src)
@@ -1056,9 +1070,10 @@ def bdPaperSpecFits(src='2mass_1821'):
     ax1.legend(loc='best',frameon=False)
     
     ## Show the phase spectrum
-    specObj.plotSpectrum(r"t$_1$",ax=ax2,fig=fig,legLabel='')
-    fig.subplots_adjust(hspace=0)
-    plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+    if abbreviated == False:
+        specObj.plotSpectrum(r"t$_1$",ax=ax2,fig=fig,legLabel='')
+        fig.subplots_adjust(hspace=0)
+        plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
     
     fig.savefig('plots/best_fit_'+src+'.pdf',bbox_inches="tight")
     
