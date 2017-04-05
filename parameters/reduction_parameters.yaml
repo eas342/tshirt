@@ -1,0 +1,6 @@
+rawDir: /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg
+biasFiles: zero*.fits ## Bias files
+flatFiles: flat*.fits ## Flat field files
+sciFiles: k1255*.fits ## Science files
+nSkip: 2 ## number of files to skip at the beginning
+
