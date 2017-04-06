@@ -65,7 +65,7 @@ def makeMasterCals(testMode=False):
             outName = 'flat'
         HDUList.writeto(os.path.join(procDir,'master_'+outName+'.fits'),overwrite=True)
 
-def procSciFiles(testMode=True):
+def procSciFiles():
     """ Process the science images """
     fileL = glob.glob(os.path.join(rawDir,pipePrefs['sciFiles']))
     if testMode == True:
@@ -90,3 +90,5 @@ def procSciFiles(testMode=True):
 
 if __name__ == "__main__":
     makeMasterCals()
+    procSciFiles()
+    
