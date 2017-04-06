@@ -89,6 +89,8 @@ def procSciFiles():
         
 
 if __name__ == "__main__":
+    print("Making Master Cals")
     makeMasterCals()
+    print("Processing Science Files")
     procSciFiles()
     
