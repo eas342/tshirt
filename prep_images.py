@@ -84,7 +84,7 @@ def procSciFiles(testMode=False):
         HDUList[0].header = head
         HDUList[0].data = nccd
         newFile = os.path.basename(oneFile)
-        HDUList.writeto(os.path.join(procDir,newFile),overwrite=False)
+        HDUList.writeto(os.path.join(procDir,newFile),overwrite=True)
         
         
 
