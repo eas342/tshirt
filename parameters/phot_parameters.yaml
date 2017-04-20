@@ -1,0 +1,15 @@
+procFiles: /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg/proc/k1255*.fits ## files on which to do Phot
+srcName: KIC 12557548
+srcNameShort: kic1255
+nightName: UT2016_06_12
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [750.7, 682.4]
+   - [843.3, 681.8]
+   - [918.5, 731.6]
+   - [877.4, 589.8]
+   - [483.3, 580.6]
+   - [552.8, 421.8]
+   - [193.87, 499.77]
+apRadius: 4.
+backStart: 5.
+backEnd: 8.
