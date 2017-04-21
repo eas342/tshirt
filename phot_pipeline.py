@@ -2,10 +2,10 @@ import photutils
 from ccdproc import CCDData, Combiner
 from astropy.io import fits, ascii
 import matplotlib.pyplot as plt
+from matplotlib import patches
 import glob
 from photutils import CircularAperture, CircularAnnulus
 from photutils import centroid_2dg
-from photutils import aperture_photometry
 import numpy as np
 from astropy.time import Time
 import pdb
@@ -44,35 +44,61 @@ class phot:
         self.yCoors = self.srcApertures.positions[:,1]
         self.bkgApertures = CircularAnnulus(positions,r_in=5.,r_out=8.)
 
+    def getImg(self,path,ext=0):
+        """ Load an image from a given path and extensions"""
+        HDUList = fits.open(self.fileL[self.nImg /2])
+        img = HDUList[ext].data
+        head = HDUList[ext].header
+        HDUList.close()
+        return img, head
+
     def showStarChoices(self):
         """ Show the star choices for photometry """
         plt.close('all')
         fig, ax = plt.subplots()
         
-        HDUList = fits.open(self.fileL[self.nImg /2])
-        img = HDUList[0].data
-        head = HDUList[0].header
+        img, head = self.getImg(self.fileL[self.nImg/2])
         #t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
         
-        imData = ax.imshow(img,cmap='viridis',vmin=0,vmax=1.2e4,interpolation='nearest')
+        imData = ax.imshow(img,cmap='viridis',vmin=0,vmax=1.0e4,interpolation='nearest')
+        ax.invert_yaxis()
+        rad, txtOffset = 50, 20
+        ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
         for ind, onePos in enumerate(self.srcApertures.positions):
-            self.srcApertures.plot(indices=ind,color='red')
+            
+            #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
+            #ax.add_patch(circ)
             if ind == 0:
                 name='src'
             else:
                 name=str(ind)
-            ax.text(onePos[0],onePos[1],name,color='white')
+            ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color='white')
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
         fig.colorbar(imData,label='Counts')
         fig.show()
         fig.savefig('plots/photometry/star_labels/st_labels.pdf')
 
-    def showFixedAps(img):
-        """Shows the fixed apertures on the image""" 
+    def showStamps(img):
+        """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
+        ##  Calculate approximately square numbers of X & Y positions in the grid
+        numGridY = int(np.floor(np.sqrt(self.nrc)))
+        numGridX = int(np.ceil(float(self.nrc) / float(numGridY)))
+        fig, axArr = plt.subplots((numGridY, numGridX))
         
-        fig, ax = plt.subplots()
+        ## Get the data
+        img, head = self.getImg(self.fileL[self.nImg/2])
+        
+        boxsize = self.param['boxFindSize']
+        for ind, onePos in enumerate(self.srcApertures.positions):
+            ax = axArr[ind]
+            imData = ax.imshow(img,cmap='viridis',vmin=0,vmax=1.2e4,interpolation='nearest')
+            self.srcApertures.plot(indices=ind,color='red')
+            ax.set_xlim(onePos[0] - boxsize,onePos[0] + boxsize)
+            ax.set_ylim(onePos[1] - boxsize,onePos[1] + boxsize)
+        fig.show()
+            
         #     ax.set_xlim(xCoors[0] - 10.,xCoors[0] + 10.)
         #     ax.set_ylim(yCoors[0] - 10.,yCoors[0] + 10.)
         #     srcApertures.plot(color='cyan')
