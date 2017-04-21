@@ -109,6 +109,8 @@ class phot:
                               self.param['apRadius'],edgecolor='red',facecolor='none')
             ax.add_patch(circ)
         
+        fig.colorbar(imData,label='Counts')
+        
         totStamps = numGridY * numGridX
         
         for ind in np.arange(self.nrc,totStamps):
@@ -121,6 +123,8 @@ class phot:
             #self.srcApertures.plot(indices=ind,color='red')
             #ax.set_xlim(onePos[0] - boxsize,onePos[0] + boxsize)
             #ax.set_ylim(onePos[1] - boxsize,onePos[1] + boxsize)
+        
+            
         fig.show()
         fig.savefig('plots/photometry/postage_stamps/postage_stamps.pdf')
             
