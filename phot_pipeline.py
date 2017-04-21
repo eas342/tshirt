@@ -43,6 +43,8 @@ class phot:
         self.xCoors = self.srcApertures.positions[:,0]
         self.yCoors = self.srcApertures.positions[:,1]
         self.bkgApertures = CircularAnnulus(positions,r_in=5.,r_out=8.)
+        self.srcNames = np.array(np.arange(self.nrc),dtype=np.str)
+        self.srcNames[0] = 'src'
 
     def getImg(self,path,ext=0):
         """ Load an image from a given path and extensions"""
@@ -79,25 +81,48 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/star_labels/st_labels.pdf')
 
-    def showStamps(img):
+    def showStamps(self):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
         numGridY = int(np.floor(np.sqrt(self.nrc)))
         numGridX = int(np.ceil(float(self.nrc) / float(numGridY)))
-        fig, axArr = plt.subplots((numGridY, numGridX))
+        fig, axArr = plt.subplots(numGridY, numGridX)
         
         ## Get the data
         img, head = self.getImg(self.fileL[self.nImg/2])
         
         boxsize = self.param['boxFindSize']
         for ind, onePos in enumerate(self.srcApertures.positions):
-            ax = axArr[ind]
-            imData = ax.imshow(img,cmap='viridis',vmin=0,vmax=1.2e4,interpolation='nearest')
-            self.srcApertures.plot(indices=ind,color='red')
-            ax.set_xlim(onePos[0] - boxsize,onePos[0] + boxsize)
-            ax.set_ylim(onePos[1] - boxsize,onePos[1] + boxsize)
+            ax = axArr.ravel()[ind]
+            
+            yStamp = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=np.int)
+            xStamp = np.array(onePos[0] + np.array([-1,1]) * boxsize,dtype=np.int)
+            
+            stamp = img[yStamp[0]:yStamp[1],xStamp[0]:xStamp[1]]
+            
+            imData = ax.imshow(stamp,cmap='viridis',vmin=0,vmax=1.2e4,interpolation='nearest')
+            ax.set_title(self.srcNames[ind])
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            circ = plt.Circle((onePos[0] - xStamp[0],onePos[1] - yStamp[0]),
+                              self.param['apRadius'],edgecolor='red',facecolor='none')
+            ax.add_patch(circ)
+        
+        totStamps = numGridY * numGridX
+        
+        for ind in np.arange(self.nrc,totStamps):
+            ## Make any extra postage stamps blank
+            ax = axArr.ravel()[ind]
+            
+            ax.set_frame_on(False)
+            ax.axes.get_xaxis().set_visible(False)
+            ax.axes.get_yaxis().set_visible(False)
+            #self.srcApertures.plot(indices=ind,color='red')
+            #ax.set_xlim(onePos[0] - boxsize,onePos[0] + boxsize)
+            #ax.set_ylim(onePos[1] - boxsize,onePos[1] + boxsize)
         fig.show()
+        fig.savefig('plots/photometry/postage_stamps/postage_stamps.pdf')
             
         #     ax.set_xlim(xCoors[0] - 10.,xCoors[0] + 10.)
         #     ax.set_ylim(yCoors[0] - 10.,yCoors[0] + 10.)
