@@ -73,7 +73,7 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/star_labels/st_labels.pdf')
 
-    def showStamps(self):
+    def showStamps(self,img=None,custPos=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
@@ -82,10 +82,17 @@ class phot:
         fig, axArr = plt.subplots(numGridY, numGridX)
         
         ## Get the data
-        img, head = getImg(self.fileL[self.nImg/2])
+        if img is None:
+            img, head = getImg(self.fileL[self.nImg/2])
         
         boxsize = self.param['boxFindSize']
-        for ind, onePos in enumerate(self.srcApertures.positions):
+        
+        if custPos is None:
+            showApPos = self.srcApertures.positions
+        else:
+            showApPos = custPos
+        
+        for ind, onePos in enumerate(showApPos):
             ax = axArr.ravel()[ind]
             
             yStamp = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=np.int)
@@ -120,20 +127,37 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/postage_stamps/postage_stamps.pdf')
         
+    
+    def get_allcen_img(self,img,showStamp=False):
+        """ Gets the centroids for all sources in one image """
+        allX, allY = [], []
+        for ind, onePos in enumerate(self.srcApertures.positions):
+            xcen, ycen = self.get_centroid(img,onePos[0],onePos[1])
+            allX.append(xcen)
+            allY.append(ycen)
         
-        def get_centroid(img,xGuess,yGuess,boxSize=10):
-            shape = img.shape
-            minX = int(np.max([xGuess - boxSize,0.]))
-            maxX = int(np.min([xGuess + boxSize,shape[1]-1]))
-            minY = int(np.max([yGuess - boxSize,0.]))
-            maxY = int(np.min([yGuess + boxSize,shape[1]-1]))
-            subimg = img[minY:maxY,minX:maxX]
-
-            xcenSub,ycenSub = centroid_2dg(subimg)
-            xcen = xcenSub + minX
-            ycen = ycenSub + minY
-
-            return xcen, ycen, subimg
+        if showStamp == True:
+            posArr = np.vstack((allX,allY)).transpose()
+            self.showStamps(img=img,custPos=posArr)
+            
+    
+    def get_centroid(self,img,xGuess,yGuess):
+        """ Get the centroid of a source given an x and y guess 
+        Takes the self.param['boxFindSize'] to define the search box
+        """
+        boxSize=self.param['boxFindSize']
+        shape = img.shape
+        minX = int(np.max([xGuess - boxSize,0.]))
+        maxX = int(np.min([xGuess + boxSize,shape[1]-1]))
+        minY = int(np.max([yGuess - boxSize,0.]))
+        maxY = int(np.min([yGuess + boxSize,shape[1]-1]))
+        subimg = img[minY:maxY,minX:maxX]
+        
+        xcenSub,ycenSub = centroid_2dg(subimg)
+        xcen = xcenSub + minX
+        ycen = ycenSub + minY
+        
+        return xcen, ycen
         
 
 def getImg(path,ext=0):
@@ -144,6 +168,7 @@ def getImg(path,ext=0):
     HDUList.close()
     return img, head
 #
+
 
 #
 #
