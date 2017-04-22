@@ -46,20 +46,12 @@ class phot:
         self.srcNames = np.array(np.arange(self.nrc),dtype=np.str)
         self.srcNames[0] = 'src'
 
-    def getImg(self,path,ext=0):
-        """ Load an image from a given path and extensions"""
-        HDUList = fits.open(self.fileL[self.nImg /2])
-        img = HDUList[ext].data
-        head = HDUList[ext].header
-        HDUList.close()
-        return img, head
-
     def showStarChoices(self):
         """ Show the star choices for photometry """
         plt.close('all')
         fig, ax = plt.subplots()
         
-        img, head = self.getImg(self.fileL[self.nImg/2])
+        img, head = getImg(self.fileL[self.nImg/2])
         #t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
         
         imData = ax.imshow(img,cmap='viridis',vmin=0,vmax=1.0e4,interpolation='nearest')
@@ -90,7 +82,7 @@ class phot:
         fig, axArr = plt.subplots(numGridY, numGridX)
         
         ## Get the data
-        img, head = self.getImg(self.fileL[self.nImg/2])
+        img, head = getImg(self.fileL[self.nImg/2])
         
         boxsize = self.param['boxFindSize']
         for ind, onePos in enumerate(self.srcApertures.positions):
@@ -127,64 +119,32 @@ class phot:
             
         fig.show()
         fig.savefig('plots/photometry/postage_stamps/postage_stamps.pdf')
-            
-        #     ax.set_xlim(xCoors[0] - 10.,xCoors[0] + 10.)
-        #     ax.set_ylim(yCoors[0] - 10.,yCoors[0] + 10.)
-        #     srcApertures.plot(color='cyan')
-        # fig.colorbar(imData)
-        # return fig, ax
+        
+        
+        def get_centroid(img,xGuess,yGuess,boxSize=10):
+            shape = img.shape
+            minX = int(np.max([xGuess - boxSize,0.]))
+            maxX = int(np.min([xGuess + boxSize,shape[1]-1]))
+            minY = int(np.max([yGuess - boxSize,0.]))
+            maxY = int(np.min([yGuess + boxSize,shape[1]-1]))
+            subimg = img[minY:maxY,minX:maxX]
 
+            xcenSub,ycenSub = centroid_2dg(subimg)
+            xcen = xcenSub + minX
+            ycen = ycenSub + minY
 
-# In[82]:
+            return xcen, ycen, subimg
+        
+
+def getImg(path,ext=0):
+    """ Load an image from a given path and extensions"""
+    HDUList = fits.open(path)
+    img = HDUList[ext].data
+    head = HDUList[ext].header
+    HDUList.close()
+    return img, head
 #
-# img1 = fits.getdata(fileL[20])
-# fig, ax = showFixedAps(img1)
-#
-#
-# # In[83]:
-#
-# img1 = fits.getdata(fileL[0])
-# fig, ax = showFixedAps(img1)
-#
-#
-# # ## All apertures
-#
-# # In[88]:
-#
-# help(srcApertures.plot)
-#
-#
-# # In[94]:
-#
-# len(srcApertures)
-#
-#
-# # In[95]:
-#
-# srcApertures.positions[0]
-#
-#
-# # In[84]:
-#
-# img1 = fits.getdata(fileL[0])
-# fig, ax = showFixedAps(img1,fullFrame=True)
-#
-#
-# # In[12]:
-#
-# def get_centroid(img,xGuess,yGuess,boxSize=10):
-#     shape = img.shape
-#     minX = int(np.max([xGuess - boxSize,0.]))
-#     maxX = int(np.min([xGuess + boxSize,shape[1]-1]))
-#     minY = int(np.max([yGuess - boxSize,0.]))
-#     maxY = int(np.min([yGuess + boxSize,shape[1]-1]))
-#     subimg = img[minY:maxY,minX:maxX]
-#
-#     xcenSub,ycenSub = centroid_2dg(subimg)
-#     xcen = xcenSub + minX
-#     ycen = ycenSub + minY
-#
-#     return xcen, ycen, subimg
+
 #
 #
 # # In[13]:
