@@ -12,6 +12,7 @@ import pdb
 import es_gen
 from copy import deepcopy
 import yaml
+import os
 
 class phot:
     def __init__(self,paramFile='parameters/phot_parameters.yaml'):
@@ -38,12 +39,12 @@ class phot:
         self.nImg = len(self.fileL)
         xCoors, yCoors = [], []
         positions = self.param['refStarPos']
-        self.nrc = len(positions)
+        self.nsrc = len(positions)
         self.srcApertures = CircularAperture(positions,r=4.)
         self.xCoors = self.srcApertures.positions[:,0]
         self.yCoors = self.srcApertures.positions[:,1]
         self.bkgApertures = CircularAnnulus(positions,r_in=5.,r_out=8.)
-        self.srcNames = np.array(np.arange(self.nrc),dtype=np.str)
+        self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
 
     def showStarChoices(self):
@@ -77,8 +78,8 @@ class phot:
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
-        numGridY = int(np.floor(np.sqrt(self.nrc)))
-        numGridX = int(np.ceil(float(self.nrc) / float(numGridY)))
+        numGridY = int(np.floor(np.sqrt(self.nsrc)))
+        numGridX = int(np.ceil(float(self.nsrc) / float(numGridY)))
         fig, axArr = plt.subplots(numGridY, numGridX)
         
         ## Get the data
@@ -112,7 +113,7 @@ class phot:
         
         totStamps = numGridY * numGridX
         
-        for ind in np.arange(self.nrc,totStamps):
+        for ind in np.arange(self.nsrc,totStamps):
             ## Make any extra postage stamps blank
             ax = axArr.ravel()[ind]
             
@@ -128,6 +129,34 @@ class phot:
         fig.savefig('plots/photometry/postage_stamps/postage_stamps.pdf')
         
     
+    def get_allimg_cen(self,recenter=False):
+        cendata = 'centroids/phot_cent.fits'
+        if os.path.exists(cendata) and (recenter == False):
+            cenArr, head = getImg(cendata)
+        else:
+            ndim=2
+            cenArr = np.zeros((self.nImg,self.nsrc,ndim))
+            #for ind, oneFile in enumerate(self.fileL):
+            for ind, oneFile in enumerate(self.fileL):
+                img, head = getImg(oneFile)
+                allX, allY = self.get_allcen_img(img)
+                cenArr[ind,:,0] = allX
+                cenArr[ind,:,1] = allY
+            hdu = fits.PrimaryHDU(cenArr)
+            hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
+            hdu.header['NIMG'] = (self.nImg,'Number of images')
+            hdu.header['AXIS1'] = ('dimension','dimension axis X=0,Y=1')
+            hdu.header['AXIS2'] = ('src','source axis')
+            hdu.header['AXIS3'] = ('image','image axis')
+            
+            
+            
+            for ind, oneFile in enumerate(self.fileL):
+                hdu.header['FIL'+str(ind)] = (os.path.basename(oneFile),'file name')
+            HDUList = fits.HDUList([hdu])
+            HDUList.writeto(cendata,overwrite=True)
+                
+    
     def get_allcen_img(self,img,showStamp=False):
         """ Gets the centroids for all sources in one image """
         allX, allY = [], []
@@ -139,7 +168,7 @@ class phot:
         if showStamp == True:
             posArr = np.vstack((allX,allY)).transpose()
             self.showStamps(img=img,custPos=posArr)
-            
+        return allX, allY
     
     def get_centroid(self,img,xGuess,yGuess):
         """ Get the centroid of a source given an x and y guess 
