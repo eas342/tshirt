@@ -14,4 +14,4 @@ apRadius: 2. ## Source aperture radius
 backStart: 5. ## Background annulus start radius
 backEnd: 8. ## Background annulus end radius
 boxFindSize: 18 ## the half-width of the box used for source centroiding
-jdRef: 2457551 ## JD reference offset to subtrace
+jdRef: 2457551 ## JD reference offset to subtract
