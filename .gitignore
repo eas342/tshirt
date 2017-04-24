@@ -10,3 +10,4 @@ mcmcRuns/*/*.pic
 parameters/mie_params/simplePoly.yaml
 cleaned_tser/*/*.txt
 centroids/*.fits
+tser_data/phot/*.fits

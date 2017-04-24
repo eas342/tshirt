@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 import glob
 from photutils import CircularAperture, CircularAnnulus
-from photutils import centroid_2dg
+from photutils import centroid_2dg, aperture_photometry
 import numpy as np
 from astropy.time import Time
 import pdb
@@ -149,13 +149,13 @@ class phot:
             hdu.header['AXIS2'] = ('src','source axis')
             hdu.header['AXIS3'] = ('image','image axis')
             
-            
-            
-            for ind, oneFile in enumerate(self.fileL):
-                hdu.header['FIL'+str(ind)] = (os.path.basename(oneFile),'file name')
+            self.add_filenames_to_header(hdu)
             HDUList = fits.HDUList([hdu])
             HDUList.writeto(cendata,overwrite=True)
-                
+            head = hdu.header
+            
+        self.cenArr = cenArr
+        self.cenHead = head
     
     def get_allcen_img(self,img,showStamp=False):
         """ Gets the centroids for all sources in one image """
@@ -187,7 +187,57 @@ class phot:
         ycen = ycenSub + minY
         
         return xcen, ycen
+    
+    def add_filenames_to_header(self,hdu):
+        """ Uses fits header cards to list the files"""
+        for ind, oneFile in enumerate(self.fileL):
+            hdu.header['FIL'+str(ind)] = (os.path.basename(oneFile),'file name')
         
+    
+    def do_phot(self):
+        """ Does photometry using the centroids found in get_allimg_cen 
+        """
+        self.get_allimg_cen()
+        
+        photArr = np.zeros((self.nImg,self.nsrc))
+        
+        jdArr = []
+        
+        for ind,oneImg in enumerate(self.fileL):
+            if np.mod(ind,15) == 0:
+                print("On "+str(ind)+' of '+str(len(self.fileL)))
+            
+            img, head = getImg(oneImg)
+            t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
+            jdArr.append(t.jd)
+            
+            self.srcApertures.positions = self.cenArr[ind]
+            self.bkgApertures.positions = self.cenArr[ind]
+            
+            rawPhot = aperture_photometry(img,self.srcApertures)
+            bkgPhot = aperture_photometry(img,self.bkgApertures)
+            bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
+
+            ## Background subtracted fluxes
+            srcPhot = rawPhot['aperture_sum'] - bkgVals
+            photArr[ind,:] = srcPhot
+        
+        ## Save the photometry results
+        hdu = fits.PrimaryHDU(photArr)
+        hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with photometry')
+        hdu.header['NIMG'] = (self.nImg,'Number of images')
+        hdu.header['AXIS1'] = ('src','source axis')
+        hdu.header['AXIS2'] = ('image','image axis')
+        
+        self.add_filenames_to_header(hdu)
+        
+        photFile = 'tser_data/phot/photdata.fits'
+        HDUList = fits.HDUList([hdu])
+        HDUList.writeto(photFile,overwrite=True)
+        head = hdu.header
+        
+
+
 
 def getImg(path,ext=0):
     """ Load an image from a given path and extensions"""
@@ -196,94 +246,8 @@ def getImg(path,ext=0):
     head = HDUList[ext].header
     HDUList.close()
     return img, head
-#
 
 
-#
-#
-# # In[13]:
-#
-# xcen, ycen, subimg = get_centroid(img,xCoors[0],yCoors[0])
-#
-#
-# # In[14]:
-#
-# subimg.shape
-#
-#
-# # In[15]:
-#
-# xcenSub,ycenSub = centroid_2dg(subimg)
-#
-#
-# # In[16]:
-#
-# xcen, ycen, subimg = get_centroid(img,xCoors[0],yCoors[0])
-# newAp = CircularAperture([xcen,ycen],r=4)
-# (xcen, ycen)
-#
-#
-# # In[17]:
-#
-# img1 = fits.getdata(fileL[0])
-# fig, ax = showFixedAps(img)
-# newAp.plot(ax=ax,color='red')
-# fig.savefig('centering.pdf',interpolation='nearest')
-#
-#
-# # ## Now re-do photometry with centroiding built-in
-#
-# # In[18]:
-#
-# srcApertures.positions[1] = [843.301,681.8426]
-#
-#
-# # In[19]:
-#
-# srcApertures.r
-#
-#
-# # In[20]:
-#
-# originalApertures = deepcopy(srcApertures)
-#
-#
-# # In[21]:
-#
-# onePos = originalApertures.positions[0]
-# onePos[0]
-# img.shape
-#
-#
-# # In[22]:
-#
-# photArr = np.zeros((nImg,nSrc))
-# xPos, yPos = [], []
-# jdArr = []
-# for ind,oneImg in enumerate(fileL):
-#     if np.mod(ind,15) == 0:
-#         print("On "+str(ind)+' of '+str(len(fileL)))
-#     HDUList = fits.open(oneImg)
-#     img = HDUList[0].data
-#     head = HDUList[0].header
-#     t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
-#     jdArr.append(t.jd)
-#
-#     for cenInd,onePos in enumerate(originalApertures.positions):
-#         xcen, ycen, subimg = get_centroid(img,onePos[0],onePos[1],boxSize=18)
-#
-#         srcApertures.positions[cenInd] = [xcen,ycen]
-#         bkgApertures.positions[cenInd] = [xcen,ycen]
-#
-#     rawPhot = aperture_photometry(img,srcApertures)
-#     bkgPhot = aperture_photometry(img,bkgApertures)
-#     bkgVals = bkgPhot['aperture_sum'] / bkgApertures.area() * srcApertures.area()
-#
-#     ## Background subtracted fluxes
-#     srcPhot = rawPhot['aperture_sum'] - bkgVals
-#     photArr[ind,:] = srcPhot
-#
-#
 #
 #
 # # In[23]:
