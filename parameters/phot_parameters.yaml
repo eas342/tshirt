@@ -10,7 +10,7 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [483.3, 580.6]
    - [552.8, 421.8]
    - [193.87, 499.77]
-apRadius: 4. ## Source aperture radius
+apRadius: 2. ## Source aperture radius
 backStart: 5. ## Background annulus start radius
 backEnd: 8. ## Background annulus end radius
 boxFindSize: 18 ## the half-width of the box used for source centroiding

@@ -40,10 +40,10 @@ class phot:
         xCoors, yCoors = [], []
         positions = self.param['refStarPos']
         self.nsrc = len(positions)
-        self.srcApertures = CircularAperture(positions,r=4.)
+        self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
         self.xCoors = self.srcApertures.positions[:,0]
         self.yCoors = self.srcApertures.positions[:,1]
-        self.bkgApertures = CircularAnnulus(positions,r_in=5.,r_out=8.)
+        self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
         self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
 
