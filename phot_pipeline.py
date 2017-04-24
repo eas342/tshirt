@@ -148,7 +148,7 @@ class phot:
             hdu.header['AXIS1'] = ('dimension','dimension axis X=0,Y=1')
             hdu.header['AXIS2'] = ('src','source axis')
             hdu.header['AXIS3'] = ('image','image axis')
-            
+            hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroiding')
             
             self.add_filenames_to_header(hdu)
             HDUList = fits.HDUList([hdu])
