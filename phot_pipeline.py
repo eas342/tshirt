@@ -148,7 +148,7 @@ class phot:
             hdu.header['AXIS1'] = ('dimension','dimension axis X=0,Y=1')
             hdu.header['AXIS2'] = ('src','source axis')
             hdu.header['AXIS3'] = ('image','image axis')
-            hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroiding')
+            hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
             
             self.add_filenames_to_header(hdu)
             HDUList = fits.HDUList([hdu])
@@ -229,6 +229,13 @@ class phot:
         hdu.header['NIMG'] = (self.nImg,'Number of images')
         hdu.header['AXIS1'] = ('src','source axis')
         hdu.header['AXIS2'] = ('image','image axis')
+        hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
+        hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
+        hdu.header['APRADIUS'] = (self.param['apRadius'], 'Aperture radius (px)')
+        hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px)')
+        hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px)')
+        hdu.header['BOXSZ'] = (self.cenHead['BOXSZ'], 'half-width of the box used for source centroiding')
+        hdu.header['JDREF'] = (self.param['jdRef'], ' JD reference offset to subtract for plots')
         
         self.add_filenames_to_header(hdu)
         
@@ -237,7 +244,9 @@ class phot:
         hduTime = fits.ImageHDU(jdArr)
         hduTime.header['UNITS'] = ('days','JD time, UT')
         
-        HDUList = fits.HDUList([hdu,hduTime])
+        hduCen = fits.ImageHDU(data=self.cenArr,header=self.cenHead)
+        
+        HDUList = fits.HDUList([hdu,hduTime,hduCen])
         
         HDUList.writeto(photFile,overwrite=True)
         
