@@ -149,6 +149,7 @@ class phot:
             hdu.header['AXIS2'] = ('src','source axis')
             hdu.header['AXIS3'] = ('image','image axis')
             
+            
             self.add_filenames_to_header(hdu)
             HDUList = fits.HDUList([hdu])
             HDUList.writeto(cendata,overwrite=True)
@@ -212,7 +213,7 @@ class phot:
             jdArr.append(t.jd)
             
             self.srcApertures.positions = self.cenArr[ind]
-            self.bkgApertures.positions = self.cenArr[ind]
+            self.bkgApertures.positions = self.cenArr[ind]  
             
             rawPhot = aperture_photometry(img,self.srcApertures)
             bkgPhot = aperture_photometry(img,self.bkgApertures)
@@ -232,11 +233,38 @@ class phot:
         self.add_filenames_to_header(hdu)
         
         photFile = 'tser_data/phot/photdata.fits'
-        HDUList = fits.HDUList([hdu])
-        HDUList.writeto(photFile,overwrite=True)
-        head = hdu.header
         
+        hduTime = fits.ImageHDU(jdArr)
+        hduTime.header['UNITS'] = ('days','JD time, UT')
+        
+        HDUList = fits.HDUList([hdu,hduTime])
+        
+        HDUList.writeto(photFile,overwrite=True)
+        
+        
+    def plot_phot(self):
+        """ Plots previously calculated photometry """
+        photFile = 'tser_data/phot/photdata.fits'
+        photArr, head = getImg(photFile)
+        jdArr, timeHead = getImg(photFile,ext=1)
+        jdRef = self.param['jdRef']
+        
+        fig, ax = plt.subplots()
+        for oneSrc in range(self.nsrc):
+            yFlux = photArr[:,oneSrc]
+            yNorm = yFlux / np.median(yFlux)
+            if oneSrc == 0:
+                pLabel = 'Src'
+            else:
+                pLabel = 'Ref '+str(oneSrc)
+            yplot = yNorm - 0.03 * oneSrc
+            yplot = yNorm
+            ax.plot(jdArr - jdRef,yNorm,label=pLabel)
 
+        ax.set_xlabel('JD - '+str(jdRef))
+        ax.set_ylabel('Normalized Flux + Offset')
+        ax.legend(loc='best',fontsize=10)
+        fig.show()
 
 
 def getImg(path,ext=0):
