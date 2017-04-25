@@ -251,7 +251,7 @@ class phot:
         HDUList.writeto(photFile,overwrite=True)
         
         
-    def plot_phot(self):
+    def plot_phot(self,offset=0.,refCorrect=False):
         """ Plots previously calculated photometry """
         photFile = 'tser_data/phot/photdata.fits'
         photArr, head = getImg(photFile)
@@ -259,22 +259,61 @@ class phot:
         jdRef = self.param['jdRef']
         
         fig, ax = plt.subplots()
-        for oneSrc in range(self.nsrc):
-            yFlux = photArr[:,oneSrc]
-            yNorm = yFlux / np.median(yFlux)
-            if oneSrc == 0:
-                pLabel = 'Src'
-            else:
-                pLabel = 'Ref '+str(oneSrc)
-            yplot = yNorm - 0.03 * oneSrc
-            yplot = yNorm
-            ax.plot(jdArr - jdRef,yNorm,label=pLabel)
-
+        
+        if refCorrect == True:
+            yCorrected = self.refSeries(photArr)
+            ax.plot(jdArr - jdRef,yCorrected,label='data')
+        else:
+            for oneSrc in range(self.nsrc):
+                yFlux = photArr[:,oneSrc]
+                yNorm = yFlux / np.median(yFlux)
+                if oneSrc == 0:
+                    pLabel = 'Src'
+                else:
+                    pLabel = 'Ref '+str(oneSrc)
+                yplot = yNorm - offset * oneSrc
+                ax.plot(jdArr - jdRef,yplot,label=pLabel)
+        
+            ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
+                         str(head['BKGEND'])+']')
         ax.set_xlabel('JD - '+str(jdRef))
         ax.set_ylabel('Normalized Flux + Offset')
+        #ax.set_ylim(0.94,1.06)
         ax.legend(loc='best',fontsize=10)
         fig.show()
-
+        if refCorrect == True:
+            fig.savefig('plots/photometry/tser_refcor/refcor_01.pdf')
+    
+    def refSeries(self,photArr,reNorm=False,custSrc=None):
+        """ Average together the reference stars
+        Parameters
+        -------------
+        reNorm: bool
+            Re-normalize all stars before averaging? If set all stars have equal weight
+            Otherwise, the stars are summed together, which weights by flux
+        custSrc: arr
+            Custom sources to use in the averaging (to include/exclude specific sources)
+        """
+        combRef = []
+        if custSrc == None:
+            refArray = np.arange(1,self.nsrc)
+        else:
+            refArray = custSrc
+        
+        for oneSrc in refArray:
+            if reNorm == True:
+                refSeries = photArr[:,oneSrc]
+                refSeries = refSeries / np.median(refSeries)
+            else:
+                refSeries = photArr[:,oneSrc]
+            
+            if oneSrc == 1:
+                combRef = refSeries
+            else:
+                combRef = combRef + refSeries
+        yCorrected = photArr[:,0] / combRef
+        yCorrNorm = yCorrected / np.median(yCorrected)
+        return yCorrNorm
 
 def getImg(path,ext=0):
     """ Load an image from a given path and extensions"""
@@ -284,90 +323,6 @@ def getImg(path,ext=0):
     HDUList.close()
     return img, head
 
-
-#
-#
-# # In[23]:
-#
-# fig, ax = plt.subplots()
-# for oneSrc in range(nSrc):
-#     yFlux = photArr[:,oneSrc]
-#     yNorm = yFlux / np.median(yFlux)
-#     if oneSrc == 0:
-#         pLabel = 'Src'
-#     else:
-#         pLabel = 'Ref '+str(oneSrc)
-#     yplot = yNorm - 0.03 * oneSrc
-#     yplot = yNorm
-#     ax.plot(jdArr - jdRef,yNorm,label=pLabel)
-#
-# ax.set_xlabel('JD - '+str(jdRef))
-# ax.set_ylabel('Normalized Flux + Offset')
-# ax.legend(loc='best',fontsize=10)
-# fig.savefig('second_t_series.pdf')
-#
-#
-# # In[37]:
-#
-# def refSeries(photArr,reNorm=False,custSrc=None):
-#     combRef = []
-#     if custSrc == None:
-#         refArray = np.arange(1,nSrc)
-#     else:
-#         refArray = custSrc
-#
-#     for oneSrc in refArray:
-#         if reNorm == True:
-#             refSeries = photArr[:,oneSrc]
-#             refSeries = refSeries / np.median(refSeries)
-#         else:
-#             refSeries = photArr[:,oneSrc]
-#
-#         if oneSrc == 1:
-#             combRef = refSeries
-#         else:
-#             combRef = combRef + refSeries
-#     yCorrected = photArr[:,0] / combRef
-#     yCorrNorm = yCorrected / np.median(yCorrected)
-#     return yCorrNorm
-#
-#
-# # In[38]:
-#
-# yCorrNorm = refSeries(photArr)
-#
-#
-# # In[39]:
-#
-# fig, ax = plt.subplots()
-# ax.plot(jdArr - jdRef,yCorrNorm)
-#
-#
-# # In[41]:
-#
-# goodRef = [1,3,4,5,6]
-# yCorrNorm2 = refSeries(photArr,custSrc=goodRef)
-#
-#
-# # In[49]:
-#
-# yCorrNorm3 = refSeries(photArr,custSrc=goodRef,reNorm=True)
-# yCorrNorm4 = refSeries(photArr,custSrc=None,reNorm=True)
-#
-#
-# # In[52]:
-#
-# fig, ax = plt.subplots()
-# ax.plot(jdArr - jdRef,yCorrNorm,label='All Ref Sum')
-# ax.plot(jdArr - jdRef,yCorrNorm2,label='Choice Ref')
-# ax.plot(jdArr - jdRef,yCorrNorm3,label='Choice Ref Norm Sum')
-# ax.plot(jdArr - jdRef,yCorrNorm4,label='All Ref Norm Sum')
-# ax.legend(loc='lower right')
-# ax.set_xlabel('JD - '+str(jdRef))
-# ax.set_ylabel('Normalized Flux')
-# fig.savefig('reference_method.pdf')
-#
-#
 # # ## Compare to SLC curve
 #
 # # In[63]:
