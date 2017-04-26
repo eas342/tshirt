@@ -247,10 +247,12 @@ class phot:
         
         hduCen = fits.ImageHDU(data=self.cenArr,header=self.cenHead)
         
+        hdu.name = 'Photometry'
+        hduTime.name = 'Time'
+        hduCen.name = 'Centroids'
         HDUList = fits.HDUList([hdu,hduTime,hduCen])
         
         HDUList.writeto(self.photFile,overwrite=True)
-        
         
     def plot_phot(self,offset=0.,refCorrect=False):
         """ Plots previously calculated photometry """
