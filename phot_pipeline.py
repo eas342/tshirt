@@ -275,7 +275,7 @@ class phot:
                     pLabel = 'Ref '+str(oneSrc)
                 yplot = yNorm - offset * oneSrc
                 ## To avoid repeat colors, switch to dashed lins
-                if oneSrc > 10: linestyle='dashed'
+                if oneSrc >= 10: linestyle='dashed'
                 else: linestyle= 'solid'
                 ax.plot(jdArr - jdRef,yplot,label=pLabel,linestyle=linestyle)
         
