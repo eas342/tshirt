@@ -8,13 +8,25 @@ import numpy as np
 import pdb
 
 class prep():
-    """ Class for reducing images """
-    def __init__(self,testMode=False):
+    """ Class for reducing images
+    Parameters are located in parameters/reduction_parameters
+     """
+    def __init__(self,testMode=False,rawIndex=0):
         self.pipePrefs = yaml.load(open('parameters/reduction_parameters.yaml'))
-        self.rawDir = self.pipePrefs['rawDir']
+        rawDirInput = self.pipePrefs['rawDir']
+        if type(rawDirInput) == list:
+            ## If the parameter file is list, choose one of those indices
+            self.rawDir = rawDirInput[rawIndex]
+            self.nRawDirs = len(rawDirInput)
+        elif type(rawDirInput) == str:
+            self.rawDir = rawDirInput
+            self.nRawDirs = 1
+        else:
+            print('Unrecognized input file directory/list')
+        
         self.testMode = testMode
         if testMode == True:
-            self.procDir = os.path.join(self.rawDir,'proc_test')
+            self.procDir = os.path.join(self.rawDir,'test_proc')
         else:
             self.procDir = os.path.join(self.rawDir,'proc')
         
@@ -96,9 +108,17 @@ def getData(fileName):
     outData = CCDData(data,unit=outUnit)
     return head, outData
 
+def reduce_all(testMode=False):
+    """ Reduce all files listed in reduction parameters """
+    pipeObj = prep()
+    for rawIndex in range(pipeObj.nRawDirs):
+        pipeObj = prep(rawIndex=rawIndex,testMode=testMode)
+        print("Making Master Cals")
+        pipeObj.makeMasterCals()
+        print("Processing Science Files")
+        pipeObj.procSciFiles()
+        
+
 if __name__ == "__main__":
-    print("Making Master Cals")
-    makeMasterCals()
-    print("Processing Science Files")
-    procSciFiles()
+    reduce_all()
     
