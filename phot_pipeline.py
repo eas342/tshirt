@@ -46,7 +46,9 @@ class phot:
         self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
         self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
-        self.dataFileDescrip = self.param['srcNameShort'] + self.param['nightName'] 
+        self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
+        self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
+        self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
 
     def showStarChoices(self):
         """ Show the star choices for photometry """
@@ -131,9 +133,9 @@ class phot:
         
     
     def get_allimg_cen(self,recenter=False):
-        cendata = 'centroids/cen+'+self.dataFileDescrip+'.fits'
-        if os.path.exists(cendata) and (recenter == False):
-            cenArr, head = getImg(cendata)
+        
+        if os.path.exists(self.centroidFile) and (recenter == False):
+            cenArr, head = getImg(self.centroidFile)
         else:
             ndim=2
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
@@ -153,7 +155,7 @@ class phot:
             
             self.add_filenames_to_header(hdu)
             HDUList = fits.HDUList([hdu])
-            HDUList.writeto(cendata,overwrite=True)
+            HDUList.writeto(self.centroidFile,overwrite=True)
             head = hdu.header
             
         self.cenArr = cenArr
@@ -240,8 +242,6 @@ class phot:
         
         self.add_filenames_to_header(hdu)
         
-        photFile = 'tser_data/phot/phot'+self.dataFileDescrip+'.fits'
-        
         hduTime = fits.ImageHDU(jdArr)
         hduTime.header['UNITS'] = ('days','JD time, UT')
         
@@ -249,13 +249,12 @@ class phot:
         
         HDUList = fits.HDUList([hdu,hduTime,hduCen])
         
-        HDUList.writeto(photFile,overwrite=True)
+        HDUList.writeto(self.photFile,overwrite=True)
         
         
     def plot_phot(self,offset=0.,refCorrect=False):
         """ Plots previously calculated photometry """
-        photFile = 'tser_data/phot/photdata_ut2016_06_14.fits'
-        photArr, head = getImg(photFile)
+        photArr, head = getImg(self.photFile)
         jdArr, timeHead = getImg(photFile,ext=1)
         
         jdRef = self.param['jdRef']
