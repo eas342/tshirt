@@ -257,7 +257,7 @@ class phot:
     def plot_phot(self,offset=0.,refCorrect=False):
         """ Plots previously calculated photometry """
         photArr, head = getImg(self.photFile)
-        jdArr, timeHead = getImg(photFile,ext=1)
+        jdArr, timeHead = getImg(self.photFile,ext=1)
         
         jdRef = self.param['jdRef']
         
