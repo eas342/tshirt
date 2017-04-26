@@ -1,4 +1,6 @@
-rawDir: /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg
+rawDir: 
+   - /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg
+   - /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_14
 biasFiles: zero*.fits ## Bias files
 flatFiles: flat*.fits ## Flat field files
 sciFiles: k1255*.fits ## Science files
