@@ -274,7 +274,10 @@ class phot:
                 else:
                     pLabel = 'Ref '+str(oneSrc)
                 yplot = yNorm - offset * oneSrc
-                ax.plot(jdArr - jdRef,yplot,label=pLabel)
+                ## To avoid repeat colors, switch to dashed lins
+                if oneSrc > 10: linestyle='dashed'
+                else: linestyle= 'solid'
+                ax.plot(jdArr - jdRef,yplot,label=pLabel,linestyle=linestyle)
         
             ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
                          str(head['BKGEND'])+']')
