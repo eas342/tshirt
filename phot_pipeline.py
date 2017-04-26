@@ -35,7 +35,7 @@ class phot:
         """
         self.paramFile = paramFile
         self.param = yaml.load(open(paramFile))
-        self.fileL = glob.glob(self.param['procFiles'])
+        self.fileL = np.sort(glob.glob(self.param['procFiles']))
         self.nImg = len(self.fileL)
         xCoors, yCoors = [], []
         positions = self.param['refStarPos']
@@ -46,6 +46,7 @@ class phot:
         self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
         self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
+        self.dataFileDescrip = self.param['srcNameShort'] + self.param['nightName'] 
 
     def showStarChoices(self):
         """ Show the star choices for photometry """
@@ -130,7 +131,7 @@ class phot:
         
     
     def get_allimg_cen(self,recenter=False):
-        cendata = 'centroids/phot_cent.fits'
+        cendata = 'centroids/cen+'+self.dataFileDescrip+'.fits'
         if os.path.exists(cendata) and (recenter == False):
             cenArr, head = getImg(cendata)
         else:
@@ -239,7 +240,7 @@ class phot:
         
         self.add_filenames_to_header(hdu)
         
-        photFile = 'tser_data/phot/photdata.fits'
+        photFile = 'tser_data/phot/phot'+self.dataFileDescrip+'.fits'
         
         hduTime = fits.ImageHDU(jdArr)
         hduTime.header['UNITS'] = ('days','JD time, UT')
@@ -253,9 +254,10 @@ class phot:
         
     def plot_phot(self,offset=0.,refCorrect=False):
         """ Plots previously calculated photometry """
-        photFile = 'tser_data/phot/photdata.fits'
+        photFile = 'tser_data/phot/photdata_ut2016_06_14.fits'
         photArr, head = getImg(photFile)
         jdArr, timeHead = getImg(photFile,ext=1)
+        
         jdRef = self.param['jdRef']
         
         fig, ax = plt.subplots()
