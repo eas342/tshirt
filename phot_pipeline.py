@@ -52,7 +52,6 @@ class phot:
 
     def showStarChoices(self):
         """ Show the star choices for photometry """
-        plt.close('all')
         fig, ax = plt.subplots()
         
         img, head = getImg(self.fileL[self.nImg/2])
