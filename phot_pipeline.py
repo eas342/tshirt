@@ -320,6 +320,47 @@ class phot:
         yCorrNorm = yCorrected / np.median(yCorrected)
         return yCorrNorm
 
+class prevPhot(phot):
+    """ Loads in previous photometry from FITS data. Inherits functions from the phot class
+    
+    Parameters:
+    ---------------
+    photFile: str
+        Directory of the photometry file
+    """
+    def __init__(self,photFile='tser_data/phot/phot_kic1255_UT2016_06_12.fits'):
+        self.photFile = photFile
+        HDUList = fits.open(self.photFile)
+        photHead = HDUList[0].header
+        
+        self.fileL = 'origProcFiles'
+        
+        self.nImg = photHead['NIMG']
+        
+        #xCoors, yCoors = [], []
+        #positions = self.param['refStarPos']
+        self.nsrc = photHead['NSOURCE']
+        
+        #self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
+        #self.xCoors = self.srcApertures.positions[:,0]
+        #self.yCoors = self.srcApertures.positions[:,1]
+        #self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
+        self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
+        self.srcNames[0] = 'src'
+        
+        self.dataFileDescrip = os.path.splitext(os.path.basename(self.photFile))
+        self.param = {}
+        self.param['srcName'] = photHead['SRCNAME']
+        self.param['nightName'] = photHead['NIGHT']
+        self.param['apRadius'] = photHead['APRADIUS']
+        self.param['backStart'] = photHead['BKGSTART']
+        self.param['backEnd'] = photHead['BKGEND']
+        self.param['jdRef'] = photHead['JDREF']
+        self.param['boxFindSize'] = photHead['BOXSZ']
+        self.centroidFile = self.photFile
+        
+        HDUList.close()
+
 def getImg(path,ext=0):
     """ Load an image from a given path and extensions"""
     HDUList = fits.open(path)
