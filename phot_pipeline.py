@@ -49,19 +49,40 @@ class phot:
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
         self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
         self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
-
-    def showStarChoices(self):
+        
+        
+        
+    def get_default_im(self,img=None,head=None):
+        """ Get the default image for postage stamps or star identification maps"""
+        ## Get the data
+        if img is None:
+            img, head = getImg(self.fileL[self.nImg/2])
+        
+        return img, head
+    
+    def get_default_cen(self,custPos=None):
+        """ Get the default centroids for postage stamps or star identification maps"""
+        if custPos is None:
+            showApPos = self.srcApertures.positions
+        else:
+            showApPos = custPos
+        
+        return showApPos
+    
+    def showStarChoices(self,img=None,head=None,custPos=None):
         """ Show the star choices for photometry """
         fig, ax = plt.subplots()
         
-        img, head = getImg(self.fileL[self.nImg/2])
-        #t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
+        img, head = self.get_default_im(img=img,head=None)
         
         imData = ax.imshow(img,cmap='viridis',vmin=0,vmax=1.0e4,interpolation='nearest')
         ax.invert_yaxis()
         rad, txtOffset = 50, 20
         ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
-        for ind, onePos in enumerate(self.srcApertures.positions):
+        
+        showApPos = self.get_default_cen(custPos=custPos)
+        
+        for ind, onePos in enumerate(showApPos):
             
             #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
             #ax.add_patch(circ)
@@ -76,7 +97,7 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/star_labels/st_labels.pdf')
 
-    def showStamps(self,img=None,custPos=None):
+    def showStamps(self,img=None,head=None,custPos=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
@@ -84,16 +105,11 @@ class phot:
         numGridX = int(np.ceil(float(self.nsrc) / float(numGridY)))
         fig, axArr = plt.subplots(numGridY, numGridX)
         
-        ## Get the data
-        if img is None:
-            img, head = getImg(self.fileL[self.nImg/2])
+        img, head = self.get_default_im(img=img,head=head)
         
         boxsize = self.param['boxFindSize']
         
-        if custPos is None:
-            showApPos = self.srcApertures.positions
-        else:
-            showApPos = custPos
+        showApPos = self.get_default_cen(custPos=custPos)
         
         for ind, onePos in enumerate(showApPos):
             ax = axArr.ravel()[ind]
@@ -130,6 +146,37 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/postage_stamps/postage_stamps.pdf')
         
+    def showCustSet(self,index=None,ptype='Stamps',defaultCen=False):
+        """ Show a custom stamp or star identification plot for a given image index 
+        
+        Parameters
+        --------------
+        index: int
+            Index of the image/centroid to show
+        ptype: str
+            Plot type - 'Stamps' for postage stamps
+                        'Map' for star identification map
+        defaultCen: bool
+            Use the default centroid? If true, it will use the guess centroids
+        """
+        self.get_allimg_cen()
+        if index == None:
+            index = self.nImg / 2
+        
+        img, head = getImg(self.fileL[index])
+        
+        if defaultCen == True:
+            cen = self.srcApertures.positions
+        else:
+            cen = self.cenArr[index]
+        
+        if ptype == 'Stamps':
+            self.showStamps(custPos=cen,img=img,head=head)
+        elif ptype == 'Map':
+            self.showStarChoices(custPos=cen,img=img,head=head)
+        else:
+            print('Unrecognized plot type')
+            
     
     def get_allimg_cen(self,recenter=False):
         
