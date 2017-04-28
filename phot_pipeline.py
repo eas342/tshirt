@@ -3,6 +3,7 @@ from ccdproc import CCDData, Combiner
 from astropy.io import fits, ascii
 import matplotlib.pyplot as plt
 from matplotlib import patches
+from matplotlib import gridspec
 import glob
 from photutils import CircularAperture, CircularAnnulus
 from photutils import centroid_2dg, aperture_photometry
@@ -299,15 +300,16 @@ class phot:
         HDUList = fits.HDUList([hdu,hduTime,hduCen])
         
         HDUList.writeto(self.photFile,overwrite=True)
-        
-    def plot_phot(self,offset=0.,refCorrect=False):
+    
+    def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True):
         """ Plots previously calculated photometry """
         photArr, head = getImg(self.photFile)
         jdArr, timeHead = getImg(self.photFile,ext=1)
         
         jdRef = self.param['jdRef']
         
-        fig, ax = plt.subplots()
+        if ax == None:
+            fig, ax = plt.subplots()
         
         if refCorrect == True:
             yCorrected = self.refSeries(photArr)
@@ -331,7 +333,8 @@ class phot:
         ax.set_xlabel('JD - '+str(jdRef))
         ax.set_ylabel('Normalized Flux + Offset')
         #ax.set_ylim(0.94,1.06)
-        ax.legend(loc='best',fontsize=10)
+        if showLegend == True:
+            ax.legend(loc='best',fontsize=10)
         fig.show()
         if refCorrect == True:
             fig.savefig('plots/photometry/tser_refcor/refcor_01.pdf')
@@ -364,7 +367,7 @@ class phot:
             else:
                 combRef = combRef + refSeries
         yCorrected = photArr[:,0] / combRef
-        yCorrNorm = yCorrected / np.median(yCorrected)
+        yCorrNorm = yCorrected / np.nanmedian(yCorrected)
         return yCorrNorm
 
 class prevPhot(phot):
@@ -415,6 +418,51 @@ def getImg(path,ext=0):
     head = HDUList[ext].header
     HDUList.close()
     return img, head
+
+def allTser(refCorrect=False):
+    """ Plot all time series for KIC 1255 """
+    
+    allFits = glob.glob('tser_data/phot/phot_kic1255_UT????_??_??.fits')
+    epochs = [2457551.822808,  2457553.7834694,  2457581.8862828,
+              2457583.8469442,  2457585.8076056]
+    
+    nNights = len(allFits)
+    
+    fig = plt.figure(figsize=(8,6))
+    nY, nX = (3,2)
+    gs = gridspec.GridSpec(nY,nX,wspace=0.0,hspace=0.7)
+    yArr, xArr = np.mgrid[0:nY,0:nX]
+    yRavel = yArr.ravel()
+    xRavel = xArr.ravel()
+    
+    for ind, oneFits in enumerate(allFits):
+        phot = prevPhot(photFile=oneFits)
+        thisAx = plt.subplot(gs[ind])        
+        phot.plot_phot(ax=thisAx,fig=fig,showLegend=False,refCorrect=refCorrect)
+        if refCorrect == True:
+            thisAx.set_ylim(0.985,1.015)
+        else: thisAx.set_ylim(0.9,1.1)
+        thisAx.set_xlim(0.65,0.99)
+        
+        thisAx.set_title(phot.param['nightName'].replace('_','-'))
+        ## Hide the y labels for stars not on the left. Also shorten title
+        if xRavel[ind] == 0:
+            thisAx.set_ylabel('Norm Fl')
+        else:
+            thisAx.yaxis.set_visible(False)
+        ## Show a legend with the last one
+        if ind == len(allFits) - 1:
+            thisAx.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,ncol=2)
+        
+        ## Show transits for reference corrected photometry
+        if refCorrect == True:
+            thisAx.axvline(x=epochs[ind] - phot.param['jdRef'],linewidth=2,color='red',alpha=0.5)
+        
+    fig.show()
+    if refCorrect == True:
+        fig.savefig('plots/photometry/tser_refcor/all_kic1255.pdf')
+    else:
+        fig.savefig('plots/photometry/tser_allstar/all_kic1255.pdf')
 
 # # ## Compare to SLC curve
 #
