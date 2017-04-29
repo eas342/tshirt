@@ -313,7 +313,7 @@ class phot:
         
         if refCorrect == True:
             yCorrected = self.refSeries(photArr)
-            ax.plot(jdArr - jdRef,yCorrected,label='data')
+            ax.plot(jdArr - jdRef,yCorrected,label='data',marker='o',linestyle='',markersize=3.)
         else:
             for oneSrc in range(self.nsrc):
                 yFlux = photArr[:,oneSrc]
