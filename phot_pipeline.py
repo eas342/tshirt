@@ -145,7 +145,7 @@ class phot:
         
             
         fig.show()
-        fig.savefig('plots/photometry/postage_stamps/postage_stamps.pdf')
+        fig.savefig('plots/photometry/postage_stamps/stamps'+self.dataFileDescrip+'.pdf')
         
     def showCustSet(self,index=None,ptype='Stamps',defaultCen=False):
         """ Show a custom stamp or star identification plot for a given image index 
