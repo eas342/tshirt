@@ -350,22 +350,29 @@ class phot:
             Custom sources to use in the averaging (to include/exclude specific sources)
         """
         combRef = []
-        if custSrc == None:
-            refArray = np.arange(1,self.nsrc)
-        else:
-            refArray = custSrc
         
-        for oneSrc in refArray:
-            if reNorm == True:
-                refSeries = photArr[:,oneSrc]
-                refSeries = refSeries / np.median(refSeries)
-            else:
-                refSeries = photArr[:,oneSrc]
-            
-            if oneSrc == 1:
-                combRef = refSeries
-            else:
-                combRef = combRef + refSeries
+        srcArray = np.arange(self.nsrc,dtype=np.int)
+        
+        if custSrc == None:
+            refArrayTruth = (srcArray == 0)
+        else:
+            refArrayTruth = np.ones(self.nrc,dtype=np.bool)
+            for ind, oneSrc in enumerate(custSrc):
+                if oneSrc in srcArray:
+                    refArrayTruth[ind] = False
+        
+        refMask = np.tile(refArrayTruth,(self.nImg,1))
+        maskPhot = np.ma.array(photArr,mask=refMask)
+        
+        if reNorm == True:
+            norm1D = np.nanmedian(photArr,axis=1)
+            norm2D = np.tile(norm1D,(self,nImg,1))
+            photForSum = maskPhot / norm2D
+        else:
+            photForSum = maskPhot
+        
+        combRef = np.nansum(photForSum,axis=1)
+        pdb.set_trace()
         yCorrected = photArr[:,0] / combRef
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
         return yCorrNorm
