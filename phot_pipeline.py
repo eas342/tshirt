@@ -251,6 +251,7 @@ class phot:
         self.get_allimg_cen()
         
         photArr = np.zeros((self.nImg,self.nsrc))
+        errArr = np.zeros_like(photArr)
         
         jdArr = []
         
@@ -265,13 +266,24 @@ class phot:
             self.srcApertures.positions = self.cenArr[ind]
             self.bkgApertures.positions = self.cenArr[ind]  
             
-            rawPhot = aperture_photometry(img,self.srcApertures)
-            bkgPhot = aperture_photometry(img,self.bkgApertures)
+            if 'RDNOISE1' in head:
+                readNoise = float(head['RDNOISE1'])
+            else:
+                readNoise = 0.
+                print('Warning, no read noise specified')
+            
+            err = np.sqrt(img + readNoise**2) ## Should already be gain-corrected
+            
+            rawPhot = aperture_photometry(img,self.srcApertures,error=err)
+            bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
             bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
-
+            bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+            
             ## Background subtracted fluxes
             srcPhot = rawPhot['aperture_sum'] - bkgVals
+            srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
             photArr[ind,:] = srcPhot
+            errArr[ind,:] = srcPhotErr
         
         ## Save the photometry results
         hdu = fits.PrimaryHDU(photArr)
@@ -292,12 +304,14 @@ class phot:
         hduTime = fits.ImageHDU(jdArr)
         hduTime.header['UNITS'] = ('days','JD time, UT')
         
+        hduErr = fits.ImageHDU(data=errArr)
+        hduErr.name = 'Phot Err'
         hduCen = fits.ImageHDU(data=self.cenArr,header=self.cenHead)
         
         hdu.name = 'Photometry'
         hduTime.name = 'Time'
         hduCen.name = 'Centroids'
-        HDUList = fits.HDUList([hdu,hduTime,hduCen])
+        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen])
         
         HDUList.writeto(self.photFile,overwrite=True)
     
@@ -403,6 +417,7 @@ class phot:
         yCorrected = photArr[:,0] / combRef
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
         return yCorrNorm
+
 
 class prevPhot(phot):
     """ Loads in previous photometry from FITS data. Inherits functions from the phot class
