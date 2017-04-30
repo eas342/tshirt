@@ -84,6 +84,7 @@ class prep():
             head['ZEROFILE'] = 'master_zero.fits'
             head['FLATFILE'] = 'master_flat.fits'
             head['GAINCOR'] = ('T','Gain correction applied (units are e)')
+            head['BUNIT'] = ('electron','Physical unit of array values')
             hdu = fits.PrimaryHDU(data=nccd,header=head)
             HDUList = fits.HDUList([hdu])
             newFile = os.path.basename(oneFile)
