@@ -314,6 +314,7 @@ class phot:
         if refCorrect == True:
             yCorrected = self.refSeries(photArr)
             ax.plot(jdArr - jdRef,yCorrected,label='data',marker='o',linestyle='',markersize=3.)
+        
         else:
             for oneSrc in range(self.nsrc):
                 yFlux = photArr[:,oneSrc]
@@ -339,7 +340,7 @@ class phot:
         if refCorrect == True:
             fig.savefig('plots/photometry/tser_refcor/refcor_01.pdf')
     
-    def refSeries(self,photArr,reNorm=False,custSrc=None):
+    def refSeries(self,photArr,reNorm=False,custSrc=None,sigRej=5.):
         """ Average together the reference stars
         Parameters
         -------------
@@ -348,6 +349,8 @@ class phot:
             Otherwise, the stars are summed together, which weights by flux
         custSrc: arr
             Custom sources to use in the averaging (to include/exclude specific sources)
+        sigRej: int
+            Sigma rejection threshold
         """
         combRef = []
         
@@ -362,17 +365,41 @@ class phot:
                     refArrayTruth[ind] = False
         
         refMask = np.tile(refArrayTruth,(self.nImg,1))
-        maskPhot = np.ma.array(photArr,mask=refMask)
+        refPhot = np.ma.array(photArr,mask=refMask)
+        
+        ## Normalize all time series
+        norm1D = np.nanmedian(photArr,axis=0)
+        norm2D = np.tile(norm1D,(self.nImg,1))
+        
+        normPhot = refPhot / norm2D
+        
+        ## Find outliers
+        # Median time series
+        medTimSeries1D = np.nanmedian(normPhot,axis=1)
+        medTimSeries2D = np.tile(medTimSeries1D,(self.nsrc,1)).transpose()
+        
+        # Absolute deviation
+        absDeviation = np.abs(normPhot - medTimSeries2D)
+        # Median abs deviation of all reference photometry
+        MADphot = np.nanmedian(absDeviation)
+        # Points that deviate above threshold
+        badP = (absDeviation > sigRej * np.ones((self.nImg,self.nsrc),dtype=np.float) * MADphot)
+        
+        normPhot.mask = refMask | badP
+        refPhot.mask = refMask | badP
         
         if reNorm == True:
-            norm1D = np.nanmedian(photArr,axis=1)
-            norm2D = np.tile(norm1D,(self,nImg,1))
-            photForSum = maskPhot / norm2D
+            ## Weight all stars equally
+            combRef = np.nanmean(normPhot,axis=1)
         else:
-            photForSum = maskPhot
+            ## Weight by the flux, but only for the valid points left
+            weights = np.ma.array(norm2D,mask=normPhot.mask)
+            ## Make sure weights sum to 1.0 for each time point (since some sources are missing)
+            weightSums1D = np.nansum(weights,axis=1)
+            weightSums2D = np.tile(weightSums1D,(self.nsrc,1)).transpose()
+            weights = weights / weightSums2D
+            combRef = np.nansum(normPhot * weights,axis=1)
         
-        combRef = np.nansum(photForSum,axis=1)
-        pdb.set_trace()
         yCorrected = photArr[:,0] / combRef
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
         return yCorrNorm
