@@ -490,6 +490,11 @@ def allTser(refCorrect=False):
     yRavel = yArr.ravel()
     xRavel = xArr.ravel()
     
+    kepHDUList = fits.open('tser_data/reference_dat/avg_bin_kep.fits')
+    kepLC = kepHDUList[1].data
+    tKepler = kepLC['BINMID'] * kepHDUList[1].header['PERIOD'] ## time in days
+    fKepler = kepLC['YBIN']
+    
     for ind, oneFits in enumerate(allFits):
         phot = prevPhot(photFile=oneFits)
         thisAx = plt.subplot(gs[ind])        
@@ -512,7 +517,9 @@ def allTser(refCorrect=False):
         ## Show transits for reference corrected photometry
         if refCorrect == True:
             thisAx.axvline(x=epochs[ind] - phot.param['jdRef'],linewidth=2,color='red',alpha=0.5)
-        
+            ## Over-plot Kepler Avg SC Light curves
+            thisAx.plot(tKepler + epochs[ind] - phot.param['jdRef'],fKepler,color='blue',linewidth=2,alpha=0.5)
+    
     fig.show()
     if refCorrect == True:
         fig.savefig('plots/photometry/tser_refcor/all_kic1255.pdf')
