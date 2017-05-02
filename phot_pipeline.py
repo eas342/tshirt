@@ -317,8 +317,14 @@ class phot:
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True):
         """ Plots previously calculated photometry """
-        photArr, head = getImg(self.photFile)
-        jdArr, timeHead = getImg(self.photFile,ext=1)
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        head = photHDU.header
+        
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        timeHead = jdHDU.header
         
         jdRef = self.param['jdRef']
         
