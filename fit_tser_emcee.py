@@ -839,6 +839,20 @@ def compareMultiTerms(maxTerms = 3):
     fig.savefig('plots/best_fit_comparison.pdf')
     return mcArray
 
+def showTDiff():
+    """ Shows some example TDiff models """
+    mc = prepEmceeSpec()
+    paramset = [0,0.05,1450,1400]
+    fig, ax = plt.subplots()
+    mc.showGuess(showParamset=paramset,fig=fig,ax=ax)
+    xtemp = np.linspace(0.8,2.4,1024)
+    for oneTemp in [1425,1450,1475,1500]:
+        paramset[2] = oneTemp
+        y = mc.model.evaluate(xtemp,paramset)
+        ax.plot(xtemp,y,label='T1='+str(oneTemp))
+    ax.legend()
+    fig.show()
+
 def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
                   variableSigma=False):
     """ Prepares Emcee run for fitting spectra
