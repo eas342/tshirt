@@ -878,6 +878,7 @@ def showTDiff(paramVary='temp'):
             titleStr = titleStr + str(paramset[oneParam])
             
     ax.set_title(titleStr)
+    fig.savefig('tser_data/model_parameter_explorations/'+paramVary+'_varied.pdf')
     fig.show()
 
 def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
