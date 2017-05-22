@@ -839,10 +839,14 @@ def compareMultiTerms(maxTerms = 3):
     fig.savefig('plots/best_fit_comparison.pdf')
     return mcArray
 
-def showTDiff(paramVary='temp'):
+def showTDiff(paramVary='temp',pset='normal'):
     """ Shows some example TDiff models """
     mc = prepEmceeSpec()
-    paramset = [0,0.05,1450,1400]
+    if pset == 'normal':
+        paramset = [0,0.05,1450,1400]
+    else:
+        paramset = [0,1.5e-3,1800,1400]
+    
     nparam = len(paramset)
     fig, ax = plt.subplots()
     ax.errorbar(mc.xplot,mc.y,yerr=mc.yerr,fmt='o')
@@ -854,14 +858,23 @@ def showTDiff(paramVary='temp'):
     
     if paramVary == 'temp':
         paramInd = 2
-        paramTry = [1425,1450,1475,1500]
+        if pset == 'normal':
+            paramTry = [1425,1450,1475,1500]
+        else:
+            paramTry = np.linspace(1500,2000,5)
     elif paramVary == 'alpha_1':
         paramInd = 0
-        paramTry = np.linspace(0,0.9,5)
+        if pset == 'normal':
+            paramTry = np.linspace(0,0.9,5)
+        else:
+            paramTry = np.linspace(0,0.4,5)
     else:
         paramVary = 'beta'
         paramInd = 1
-        paramTry = np.linspace(0,0.1,5)
+        if pset == 'normal':
+            paramTry = np.linspace(0,0.1,5)
+        else:
+            paramTry = np.linspace(0,4e-3,5)
     
     for oneValue in paramTry:
         paramset[paramInd] = oneValue
@@ -878,7 +891,12 @@ def showTDiff(paramVary='temp'):
             titleStr = titleStr + str(paramset[oneParam])
             
     ax.set_title(titleStr)
-    fig.savefig('tser_data/model_parameter_explorations/'+paramVary+'_varied.pdf')
+    if pset == 'normal':
+        outName = 'normal_'+paramVary
+    else:
+        outName = 'extreme_'+paramVary
+        
+    fig.savefig('tser_data/model_parameter_explorations/'+outName+'_varied.pdf')
     fig.show()
 
 def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
