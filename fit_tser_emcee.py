@@ -839,18 +839,45 @@ def compareMultiTerms(maxTerms = 3):
     fig.savefig('plots/best_fit_comparison.pdf')
     return mcArray
 
-def showTDiff():
+def showTDiff(paramVary='temp'):
     """ Shows some example TDiff models """
     mc = prepEmceeSpec()
     paramset = [0,0.05,1450,1400]
+    nparam = len(paramset)
     fig, ax = plt.subplots()
-    mc.showGuess(showParamset=paramset,fig=fig,ax=ax)
+    ax.errorbar(mc.xplot,mc.y,yerr=mc.yerr,fmt='o')
+    ax.set_xlabel(mc.xLabel)
+    ax.set_ylabel(mc.yLabel)
+    
+    #mc.showGuess(showParamset=paramset,fig=fig,ax=ax)
     xtemp = np.linspace(0.8,2.4,1024)
-    for oneTemp in [1425,1450,1475,1500]:
-        paramset[2] = oneTemp
+    
+    if paramVary == 'temp':
+        paramInd = 2
+        paramTry = [1425,1450,1475,1500]
+    elif paramVary == 'alpha_1':
+        paramInd = 0
+        paramTry = np.linspace(0,0.9,5)
+    else:
+        paramVary = 'beta'
+        paramInd = 1
+        paramTry = np.linspace(0,0.1,5)
+    
+    for oneValue in paramTry:
+        paramset[paramInd] = oneValue
+        
         y = mc.model.evaluate(xtemp,paramset)
-        ax.plot(xtemp,y,label='T1='+str(oneTemp))
+        ax.plot(xtemp,y,label=mc.model.pnames[paramInd]+'='+str(oneValue))
     ax.legend()
+    titleStr = ''
+    for oneParam in np.arange(nparam):
+        if oneParam != paramInd:
+            if titleStr != '':
+                titleStr = titleStr + ','
+            titleStr = titleStr + mc.model.pnames[oneParam]+'='
+            titleStr = titleStr + str(paramset[oneParam])
+            
+    ax.set_title(titleStr)
     fig.show()
 
 def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
