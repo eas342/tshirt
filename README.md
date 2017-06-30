@@ -22,7 +22,7 @@ The `jdRef` parameter specifies a reference epoch for time series plots.
 Run the following commands in either an iPython session or in a python script:
 
 ```python
-phot = phot_pipeline.phot(paramFile='parameters/aug2016_corot1_parameters.yaml'
+phot = phot_pipeline.phot(paramFile='parameters/aug2016_corot1_parameters.yaml')
 phot.do_phot()
 phot.showCustSet()
 ```
