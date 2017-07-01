@@ -41,7 +41,10 @@ class phot:
         xCoors, yCoors = [], []
         positions = self.param['refStarPos']
         self.nsrc = len(positions)
-        self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
+        if 'srcGeometry' not in self.param:
+            self.geometry = 'Circular'
+        if self.geomety == 'Circular':
+            self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
         self.xCoors = self.srcApertures.positions[:,0]
         self.yCoors = self.srcApertures.positions[:,1]
         self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
