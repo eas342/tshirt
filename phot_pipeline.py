@@ -10,6 +10,7 @@ from matplotlib import patches
 from matplotlib import gridspec
 import glob
 from photutils import CircularAperture, CircularAnnulus
+from photutils import RectangularAperture
 from photutils import centroid_2dg, aperture_photometry
 import numpy as np
 from astropy.time import Time
