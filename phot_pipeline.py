@@ -2,7 +2,9 @@ import photutils
 from ccdproc import CCDData, Combiner
 from astropy.io import fits, ascii
 import matplotlib as mpl
-mpl.use('TkAgg')
+import os
+if 'DISPLAY' not in os.environ:
+    mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import patches
 from matplotlib import gridspec
