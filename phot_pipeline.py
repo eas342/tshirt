@@ -19,6 +19,7 @@ import es_gen
 from copy import deepcopy
 import yaml
 import os
+import warnings
 
 class phot:
     def __init__(self,paramFile='parameters/phot_parameters.yaml'):
@@ -218,6 +219,23 @@ class phot:
             print('Unrecognized plot type')
             
     
+    def save_centroids(self,cenArr):
+        """ Saves the image centroid data"""
+        hdu = fits.PrimaryHDU(cenArr)
+        hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
+        hdu.header['NIMG'] = (self.nImg,'Number of images')
+        hdu.header['AXIS1'] = ('dimension','dimension axis X=0,Y=1')
+        hdu.header['AXIS2'] = ('src','source axis')
+        hdu.header['AXIS3'] = ('image','image axis')
+        hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
+        
+        self.add_filenames_to_header(hdu)
+        HDUList = fits.HDUList([hdu])
+        HDUList.writeto(self.centroidFile,overwrite=True)
+        
+        head = hdu.header
+        return head
+    
     def get_allimg_cen(self,recenter=False):
         """ Get all image centroids
         If self.param['doCentering'] is False, it will just use the input aperture positions 
@@ -225,16 +243,17 @@ class phot:
         
         ndim=2 ## Number of dimensions in image (assuming 2D)
         
-        if self.param['doCentering'] == False:
+            
+        if os.path.exists(self.centroidFile) and (recenter == False):
+            cenArr, head = self.getImg(self.centroidFile)
+        elif self.param['doCentering'] == False:
             img, head = self.get_default_im()
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
             pos = self.get_default_cen()
             for ind, oneFile in enumerate(self.fileL):
                 cenArr[ind,:,0] = pos[:,0]
                 cenArr[ind,:,1] = pos[:,1]
-            
-        elif os.path.exists(self.centroidFile) and (recenter == False):
-            cenArr, head = self.getImg(self.centroidFile)
+            head = save_centroids(cenArr)
         else:
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
             #for ind, oneFile in enumerate(self.fileL):
@@ -243,18 +262,7 @@ class phot:
                 allX, allY = self.get_allcen_img(img)
                 cenArr[ind,:,0] = allX
                 cenArr[ind,:,1] = allY
-            hdu = fits.PrimaryHDU(cenArr)
-            hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
-            hdu.header['NIMG'] = (self.nImg,'Number of images')
-            hdu.header['AXIS1'] = ('dimension','dimension axis X=0,Y=1')
-            hdu.header['AXIS2'] = ('src','source axis')
-            hdu.header['AXIS3'] = ('image','image axis')
-            hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
-            
-            self.add_filenames_to_header(hdu)
-            HDUList = fits.HDUList([hdu])
-            HDUList.writeto(self.centroidFile,overwrite=True)
-            head = hdu.header
+            head = save_centroids(cenArr)
             
         self.cenArr = cenArr
         self.cenHead = head
