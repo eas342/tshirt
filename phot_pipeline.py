@@ -315,7 +315,6 @@ class phot:
             jdArr.append(t.jd)
             
             self.srcApertures.positions = self.cenArr[ind]
-            self.bkgApertures.positions = self.cenArr[ind]  
             
             if 'RDNOISE1' in head:
                 readNoise = float(head['RDNOISE1'])
@@ -327,6 +326,7 @@ class phot:
             
             rawPhot = aperture_photometry(img,self.srcApertures,error=err)
             if self.param['bkgSub'] == True:
+                self.bkgApertures.positions = self.cenArr[ind]  
                 bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
                 bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
                 bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
