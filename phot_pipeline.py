@@ -46,7 +46,7 @@ class phot:
         
         if self.param['srcGeometry'] == 'Circular':
             self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
-        elif self.param['srcGeometry'] == 'Square'
+        elif self.param['srcGeometry'] == 'Square':
             self.srcApertures = RectangularAperture(positions,w=self.param['apRadius'],h=self.param['apRadius'],theta=0)
         else:
             print('Unrecognized aperture')
