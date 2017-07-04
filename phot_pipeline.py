@@ -327,11 +327,12 @@ class phot:
             if 'RDNOISE1' in head:
                 readNoise = float(head['RDNOISE1'])
             else:
-                readNoise = 0.
+                readNoise = 1.0
                 print('Warning, no read noise specified')
             
-            err = np.sqrt(img + readNoise**2) ## Should already be gain-corrected
+            err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
             
+            pdb.set_trace()
             rawPhot = aperture_photometry(img,self.srcApertures,error=err)
             if self.param['bkgSub'] == True:
                 self.bkgApertures.positions = self.cenArr[ind]  
