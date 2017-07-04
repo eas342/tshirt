@@ -219,8 +219,19 @@ class phot:
             
     
     def get_allimg_cen(self,recenter=False):
+        """ Get all image centroids
+        If self.param['doCentering'] is False, it will just use the input aperture positions 
+        """
         
-        if os.path.exists(self.centroidFile) and (recenter == False):
+        if self.param['doCentering'] == False:
+            img, head = self.get_default_im()
+            cenArr = np.zeros((self.nImg,self.nsrc,ndim))
+            pos = self.get_default_cen()
+            for ind, oneFile in enumerate(self.fileL):
+                cenArr[ind,:,0] = pos[:,0]
+                cenArr[ind,:,1] = pos[:,1]
+            
+        elif os.path.exists(self.centroidFile) and (recenter == False):
             cenArr, head = self.getImg(self.centroidFile)
         else:
             ndim=2
