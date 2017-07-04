@@ -71,13 +71,18 @@ class phot:
         self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
         self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         
+        ## If the image data is cubes (not just 2D images)
+        if 'isCube' not in self.param:
+            self.param['isCube'] = True
         
+        if self.param['cubePlane'] not in self.param:
+            self.param['cubePlane'] = 0
         
     def get_default_im(self,img=None,head=None):
         """ Get the default image for postage stamps or star identification maps"""
         ## Get the data
         if img is None:
-            img, head = getImg(self.fileL[self.nImg/2])
+            img, head = self.getImg(self.fileL[self.nImg/2])
         
         return img, head
     
@@ -184,7 +189,7 @@ class phot:
         if index == None:
             index = self.nImg / 2
         
-        img, head = getImg(self.fileL[index])
+        img, head = self.getImg(self.fileL[index])
         
         if defaultCen == True:
             cen = self.srcApertures.positions
@@ -202,13 +207,13 @@ class phot:
     def get_allimg_cen(self,recenter=False):
         
         if os.path.exists(self.centroidFile) and (recenter == False):
-            cenArr, head = getImg(self.centroidFile)
+            cenArr, head = self.getImg(self.centroidFile)
         else:
             ndim=2
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
             #for ind, oneFile in enumerate(self.fileL):
             for ind, oneFile in enumerate(self.fileL):
-                img, head = getImg(oneFile)
+                img, head = self.getImg(oneFile)
                 allX, allY = self.get_allcen_img(img)
                 cenArr[ind,:,0] = allX
                 cenArr[ind,:,1] = allY
@@ -279,7 +284,7 @@ class phot:
             if np.mod(ind,15) == 0:
                 print("On "+str(ind)+' of '+str(len(self.fileL)))
             
-            img, head = getImg(oneImg)
+            img, head = self.getImg(oneImg)
             t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
             jdArr.append(t.jd)
             
@@ -450,6 +455,18 @@ class phot:
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
         return yCorrNorm
 
+    def getImg(self,path,ext=0):
+        """ Load an image from a given path and extensions"""
+        HDUList = fits.open(path)
+        data = HDUList[ext].data
+        if self.param['isCube'] == True:
+            img = data[0,:,:]
+        else:
+            img = data
+        
+        head = HDUList[ext].header
+        HDUList.close()
+        return img, head
 
 class prevPhot(phot):
     """ Loads in previous photometry from FITS data. Inherits functions from the phot class
@@ -491,14 +508,6 @@ class prevPhot(phot):
         self.centroidFile = self.photFile
         
         HDUList.close()
-
-def getImg(path,ext=0):
-    """ Load an image from a given path and extensions"""
-    HDUList = fits.open(path)
-    img = HDUList[ext].data
-    head = HDUList[ext].header
-    HDUList.close()
-    return img, head
 
 def allTser(refCorrect=False):
     """ Plot all time series for KIC 1255 """
