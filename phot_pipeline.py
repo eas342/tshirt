@@ -253,7 +253,7 @@ class phot:
             for ind, oneFile in enumerate(self.fileL):
                 cenArr[ind,:,0] = pos[:,0]
                 cenArr[ind,:,1] = pos[:,1]
-            head = save_centroids(cenArr)
+            head = self.save_centroids(cenArr)
         else:
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
             #for ind, oneFile in enumerate(self.fileL):
@@ -262,7 +262,7 @@ class phot:
                 allX, allY = self.get_allcen_img(img)
                 cenArr[ind,:,0] = allX
                 cenArr[ind,:,1] = allY
-            head = save_centroids(cenArr)
+            head = self.save_centroids(cenArr)
             
         self.cenArr = cenArr
         self.cenHead = head
