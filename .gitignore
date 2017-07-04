@@ -11,3 +11,11 @@ parameters/mie_params/simplePoly.yaml
 cleaned_tser/*/*.txt
 centroids/*.fits
 tser_data/phot/*.fits
+allk1255_phot.py
+nohup.out
+parameters/phot_param_2016_06_12.yaml
+parameters/phot_param_2016_06_14.yaml
+parameters/phot_param_2016_07_12.yaml
+parameters/phot_param_2016_07_14.yaml
+parameters/phot_param_2016_07_16.yaml
+parameters/reduction_parameters_all_kic1255.yaml
