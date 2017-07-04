@@ -42,12 +42,24 @@ class phot:
         positions = self.param['refStarPos']
         self.nsrc = len(positions)
         if 'srcGeometry' not in self.param:
-            self.geometry = 'Circular'
-        if self.geomety == 'Circular':
+            self.param['srcGeometry'] = 'Circular'
+        
+        if self.param['srcGeometry'] == 'Circular':
             self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
+        elif self.param['srcGeometry'] == 'Square'
+            self.srcApertures = RectangularAperture(positions,w=self.param['apRadius'],h=self.param['apRadius'],theta=0)
+        else:
+            print('Unrecognized aperture')
+        
         self.xCoors = self.srcApertures.positions[:,0]
         self.yCoors = self.srcApertures.positions[:,1]
-        self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
+        
+        if 'bkgSub' not in self.param:
+            self.param['bkgSub'] = True
+        
+        if self.param['bkgSub'] == True:
+            self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
+        
         self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
@@ -278,12 +290,18 @@ class phot:
             err = np.sqrt(img + readNoise**2) ## Should already be gain-corrected
             
             rawPhot = aperture_photometry(img,self.srcApertures,error=err)
-            bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
-            bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
-            bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+            if self.param['bkgSub'] == True:
+                bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
+                bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
+                bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
             
-            ## Background subtracted fluxes
-            srcPhot = rawPhot['aperture_sum'] - bkgVals
+                ## Background subtracted fluxes
+                srcPhot = rawPhot['aperture_sum'] - bkgVals
+            else:
+                ## No background subtraction
+                srcPhot = rawPhot['aperture_sum'] - bkgVals
+                bkgValsErr = 0.
+                
             srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
             photArr[ind,:] = srcPhot
             errArr[ind,:] = srcPhotErr
