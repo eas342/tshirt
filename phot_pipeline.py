@@ -245,7 +245,9 @@ class phot:
         
             
         if os.path.exists(self.centroidFile) and (recenter == False):
-            cenArr, head = self.getImg(self.centroidFile)
+            HDUList = fits.open(path)
+            cenArr, head = HDUList[0].data, HDUList[0].header
+            HDUList.close()
         elif self.param['doCentering'] == False:
             img, head = self.get_default_im()
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
