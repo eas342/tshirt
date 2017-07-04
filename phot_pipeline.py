@@ -223,6 +223,8 @@ class phot:
         If self.param['doCentering'] is False, it will just use the input aperture positions 
         """
         
+        ndim=2 ## Number of dimensions in image (assuming 2D)
+        
         if self.param['doCentering'] == False:
             img, head = self.get_default_im()
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
@@ -234,7 +236,6 @@ class phot:
         elif os.path.exists(self.centroidFile) and (recenter == False):
             cenArr, head = self.getImg(self.centroidFile)
         else:
-            ndim=2
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
             #for ind, oneFile in enumerate(self.fileL):
             for ind, oneFile in enumerate(self.fileL):
