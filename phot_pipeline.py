@@ -95,28 +95,47 @@ class phot:
         
         return showApPos
     
-    def showStarChoices(self,img=None,head=None,custPos=None):
-        """ Show the star choices for photometry """
+    def showStarChoices(self,img=None,head=None,custPos=None,showAps=False):
+        """ Show the star choices for photometry
+        Parameters
+        ------------------
+        img: numpy 2D array
+            (optional) An image to plot
+        head: astropy FITS header
+            (optional) hader for image
+        custPos: numpy 2D array or list of tuple coordinates
+            (optional) Custom positions
+        showAps: bool
+            (optional) Show apertures rather than circle stars
+        """
         fig, ax = plt.subplots()
         
         img, head = self.get_default_im(img=img,head=None)
         
-        imData = ax.imshow(img,cmap='viridis',vmin=0,vmax=1.0e4,interpolation='nearest')
+        lowVmin = np.percentile(img,1)
+        highVmin = np.percentile(img,99)
+
+        imData = ax.imshow(img,cmap='viridis',vmin=lowVmin,vmax=highVmin,interpolation='nearest')
         ax.invert_yaxis()
         rad, txtOffset = 50, 20
-        ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
+
+        if showAps == True:
+            self.srcApertures.plot(ax=ax)
         
-        showApPos = self.get_default_cen(custPos=custPos)
-        
-        for ind, onePos in enumerate(showApPos):
+        else:
+            ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
             
-            #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
-            #ax.add_patch(circ)
-            if ind == 0:
-                name='src'
-            else:
-                name=str(ind)
-            ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color='white')
+            showApPos = self.get_default_cen(custPos=custPos)
+            for ind, onePos in enumerate(showApPos):
+                
+                #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
+                #ax.add_patch(circ)
+                if ind == 0:
+                    name='src'
+                else:
+                    name=str(ind)
+                ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color='white')
+        
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
         fig.colorbar(imData,label='Counts')
