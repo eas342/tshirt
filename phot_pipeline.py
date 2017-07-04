@@ -46,8 +46,13 @@ class phot:
         xCoors, yCoors = [], []
         positions = self.param['refStarPos']
         self.nsrc = len(positions)
-        if 'srcGeometry' not in self.param:
-            self.param['srcGeometry'] = 'Circular'
+        
+        defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
+                        'doCentering': True}
+        
+        for oneKey in defaultParams.keys():
+            if oneKey not in self.param:
+                self.param[oneKey] = defaultParams[oneKey]
         
         if self.param['srcGeometry'] == 'Circular':
             self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
@@ -59,9 +64,6 @@ class phot:
         self.xCoors = self.srcApertures.positions[:,0]
         self.yCoors = self.srcApertures.positions[:,1]
         
-        if 'bkgSub' not in self.param:
-            self.param['bkgSub'] = True
-        
         if self.param['bkgSub'] == True:
             self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
         
@@ -70,13 +72,6 @@ class phot:
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
         self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
         self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
-        
-        ## If the image data is cubes (not just 2D images)
-        if 'isCube' not in self.param:
-            self.param['isCube'] = True
-        
-        if self.param['cubePlane'] not in self.param:
-            self.param['cubePlane'] = 0
         
     def get_default_im(self,img=None,head=None):
         """ Get the default image for postage stamps or star identification maps"""

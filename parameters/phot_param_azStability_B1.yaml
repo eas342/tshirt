@@ -15,3 +15,4 @@ boxFindSize: None ## the half-width of the box used for source centroiding
 jdRef: 2457816.6 ## JD reference offset to subtract
 isCube: True
 cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
