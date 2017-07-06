@@ -5,6 +5,8 @@ import os
 import glob
 from astropy.io import ascii
 from astropy.table import Table
+import matplotlib
+matplotlib.style.use('classic')
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from matplotlib.collections import LineCollection
@@ -943,8 +945,20 @@ def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
                    yLabel='Amplitude (%)')
     return mcObj
 
-def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
-    """ Shows the time series for each wavelength"""
+def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False,
+               showTelluric=False):
+    """ Shows the time series for each wavelength
+    Parameters
+    ---------------------
+    src: str
+        Source name
+    removeBaselines: bool
+        Take out the baselines fit to the light curves
+    abbreviated: bool
+        Show a smaller y range
+    showTelluric: bool
+        Show the regions where telluric absorption is strong
+    """
     
     
     fileList = glob.glob('mcmcRuns/fSeries/'+src+'/*.pic')
@@ -973,12 +987,15 @@ def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
         xLabel = 'Time'
     
     offset = 0.035
+    waveList = []
+    
 #    for waveInd,oneFile in enumerate(fileList):
     for waveInd,oneFile in enumerate(fileList):
         baseName = os.path.basename(oneFile)
         basePrefix = os.path.splitext(baseName)
         thisWave = float(basePrefix[0].split("_")[1].split("um")[0])
         waveString = "{:.2f}".format(thisWave)
+        waveList.append(thisWave)
         
         mcObj = pickle.load(open(oneFile))
         yModel = mcObj.model.evaluate(mcObj.x,mcObj.maxLparam)
@@ -997,7 +1014,7 @@ def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
             t['Norm Flux'] = np.array(yShow)
             t['Flux Err'] = np.array(mcObj.yerr)
             cleanFile = os.path.join(cleanDir,'tser_'+waveString+'.txt')
-            ascii.write(t,cleanFile,delimiter=' ')
+            ascii.write(t,cleanFile,delimiter=' ',overwrite=True)
             
             yModel = yModel - yBaseline + 1.
         else:
@@ -1017,7 +1034,31 @@ def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
     else:
         ax.set_ylim(0.14,1.1)
     ax.set_xlim(np.min(mcObj.x) - 0.5,np.max(mcObj.x)+1.8)
-
+    
+    if showTelluric == True:
+        with open('parameters/telluric_bands.yaml') as tellFile:
+            telluricData = yaml.load(tellFile)
+        waveList = np.array(waveList)
+        diff = np.diff(waveList)
+        waveWidths = np.insert(diff,0,diff[0])
+        waveStarts = waveList - waveWidths
+        waveEnds = waveList + waveWidths
+        
+        nWaves = len(waveList)
+        waveIndices = np.arange(nWaves)
+        
+        for oneLine in telluricData['SpeX IRTF']:
+            minWaveInd = np.min(waveIndices[waveEnds >= oneLine[0]])
+            maxWaveInd = np.max(waveIndices[waveStarts <= oneLine[1]])
+            minWavePos = (minWaveInd - 0.4) * offset
+            maxWavePos = (maxWaveInd + 0.4) * offset
+            xLimits = ax.get_xlim()
+            xGap = np.mean([xLimits[0],np.min(mcObj.xplot)])
+            quartGap = (xGap - xLimits[0])* 0.25 ## size of bracket tick
+            bracketX = [xGap + quartGap,xGap,xGap, xGap + quartGap]
+            bracketY = 1. - np.array([minWavePos,minWavePos,maxWavePos,maxWavePos])
+            plt.plot(bracketX,bracketY,linewidth=3,
+                     color='green')
     
     ax.set_xlabel(xLabel)
     ax.set_ylabel('Flux Ratio + Offset')
