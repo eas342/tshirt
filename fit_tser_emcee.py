@@ -5,8 +5,8 @@ import os
 import glob
 from astropy.io import ascii
 from astropy.table import Table
-import matplotlib
-matplotlib.style.use('classic')
+from matplotlib import style as mplStyle
+mplStyle.use('classic')
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from matplotlib.collections import LineCollection
@@ -1132,7 +1132,14 @@ def distributionCorner(src='2mass_1821'):
     fig.show()
 
 def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
-    """ Makes the spectral fits for the Brown Dwarf paper """
+    """ Makes the spectral fits for the Brown Dwarf paper 
+    Parameters
+    -------------
+    src: str
+        Source. For initial paper, either '2mass_1821' or '2mass_0835'
+    abbreviated: bool
+        If true, only show the top panel. Good for presentations/proposals
+    """
     emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc_free_sigma.pic'
     if os.path.exists(emceeDir) == False:
         mcObj = prepEmceeSpec(method='mie',src=src)
@@ -1147,6 +1154,7 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     else:
         fig, (ax1,ax2) = plt.subplots(2,figsize=(6,7),sharex=True)
     
+    
     ## Make a spectrum object
     specObj = getSpectrum(src)
     specObj.plotSpectrum(r"A$_1$",ax=ax1,fig=fig,legLabel='IRTF Amp')
@@ -1155,11 +1163,18 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     specTable = specObj.getSpectrum(r"A$_1$")
     xmodel = np.linspace(np.min(specTable['Wavel']),
                          np.max(specTable['Wavel']),512.)
-    ymodel = mcObj.model.evaluate(xmodel,mcObj.maxLparam)
-    
-    radString = str(np.round(mcObj.maxLparam[1],2))
-    modelLabel = 'Mie r='+radString+' $\mu$m'
+    if src == '2mass_0835':
+        ## Show a Zero amplitude line for 2MASS 0835 since we don't find any significant variability
+        ymodel = np.zeros_like(xmodel)
+        modelLabel = 'A$_1$=0'
+    else:
+        ymodel = mcObj.model.evaluate(xmodel,mcObj.maxLparam)
+        #label
+        radString = str(np.round(mcObj.maxLparam[1],2))
+        modelLabel = 'Mie r='+radString+' $\mu$m'
+        
     ax1.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
+    ax1.set_ylabel('A$_1$ (%)')
     
     ax1.set_ylim(-0.9,2.)
     if src == '2mass_1821':
@@ -1175,6 +1190,14 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
         specObj.plotSpectrum(r"t$_1$",ax=ax2,fig=fig,legLabel='')
         fig.subplots_adjust(hspace=0)
         plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+    
+    ## Show the telluric-affected regions
+    with open('parameters/telluric_bands.yaml') as tellFile:
+        telluricData = yaml.load(tellFile)
+    
+    for oneAx in [ax1,ax2]:
+        for oneLine in telluricData['SpeX IRTF']:
+            oneAx.axvspan(oneLine[0],oneLine[1],alpha=0.2,color='salmon')
     
     fig.savefig('plots/best_fit_'+src+'.pdf',bbox_inches="tight")
     
