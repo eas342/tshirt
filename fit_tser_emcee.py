@@ -1131,7 +1131,8 @@ def distributionCorner(src='2mass_1821'):
     showDistributions(fig=fig,ax=ax2)
     fig.show()
 
-def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
+def bdPaperSpecFits(src='2mass_1821',abbreviated=False,
+                    ampParameter=r"A$_1$",phaseParameter=r"t$_1$"):
     """ Makes the spectral fits for the Brown Dwarf paper 
     Parameters
     -------------
@@ -1139,6 +1140,10 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
         Source. For initial paper, either '2mass_1821' or '2mass_0835'
     abbreviated: bool
         If true, only show the top panel. Good for presentations/proposals
+    ampParameter: str
+        Amplitude parameter. Options include r"A$_1$" and r"A$_2$"
+    phaseParameter: str
+        Phase offset parameter. Options include 
     """
     emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc_free_sigma.pic'
     if os.path.exists(emceeDir) == False:
@@ -1157,24 +1162,26 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     
     ## Make a spectrum object
     specObj = getSpectrum(src)
-    specObj.plotSpectrum(r"A$_1$",ax=ax1,fig=fig,legLabel='IRTF Amp')
+    specObj.plotSpectrum(ampParameter,ax=ax1,fig=fig,legLabel='IRTF Amp')
     
     ## Show the model
-    specTable = specObj.getSpectrum(r"A$_1$")
+    specTable = specObj.getSpectrum(ampParameter)
     xmodel = np.linspace(np.min(specTable['Wavel']),
                          np.max(specTable['Wavel']),512.)
     if src == '2mass_0835':
         ## Show a Zero amplitude line for 2MASS 0835 since we don't find any significant variability
         ymodel = np.zeros_like(xmodel)
-        modelLabel = 'A$_1$=0'
+        modelLabel = ampParameter+'=0'
     else:
         ymodel = mcObj.model.evaluate(xmodel,mcObj.maxLparam)
         #label
         radString = str(np.round(mcObj.maxLparam[1],2))
         modelLabel = 'Mie r='+radString+' $\mu$m'
-        
-    ax1.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
-    ax1.set_ylabel('A$_1$ (%)')
+    
+    ## Only show the model for A1
+    if ampParameter == r"A$_1$":
+        ax1.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
+    ax1.set_ylabel(ampParameter+' (%)')
     
     ax1.set_ylim(-0.9,2.)
     if src == '2mass_1821':
@@ -1187,9 +1194,10 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     
     ## Show the phase spectrum
     if abbreviated == False:
-        specObj.plotSpectrum(r"t$_1$",ax=ax2,fig=fig,legLabel='')
+        specObj.plotSpectrum(phaseParameter,ax=ax2,fig=fig,legLabel='')
         fig.subplots_adjust(hspace=0)
         plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+    ax2.set_ylabel(phaseParameter+' (hr)')
     
     ## Show the telluric-affected regions
     with open('parameters/telluric_bands.yaml') as tellFile:
@@ -1197,7 +1205,7 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     
     for oneAx in [ax1,ax2]:
         for oneLine in telluricData['SpeX IRTF']:
-            oneAx.axvspan(oneLine[0],oneLine[1],alpha=0.2,color='salmon')
+            oneAx.axvspan(oneLine[0],oneLine[1],alpha=0.2,color='green')
     
     fig.savefig('plots/best_fit_'+src+'.pdf',bbox_inches="tight")
     
