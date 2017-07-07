@@ -662,8 +662,9 @@ def allBins(src='2mass_0835',wavelSearch=r"*"):
     """ Goes through each wavelength bin and does an MCMC fit, saving results
     """
     fileList = glob.glob('tser_data/'+src+'/'+wavelSearch+'.txt')
-    ## Make a directory for spectra if there isn't one yet
+    
     specDir = os.path.join('spectra',src)
+    ## Make a directory for spectra if there isn't one yet
     chisqDir = os.path.join('chisquare',src)
     plotDir = os.path.join('plots','individual_fits',src)
     mcmcDir = os.path.join('mcmcRuns','fSeries',src)
@@ -902,7 +903,7 @@ def showTDiff(paramVary='temp',pset='normal'):
     fig.show()
 
 def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
-                  variableSigma=False):
+                  variableSigma=False,ampParameter=r"A$_1$"):
     """ Prepares Emcee run for fitting spectra
     
     Parameters
@@ -918,7 +919,7 @@ def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
         yerr = np.array(dat['Amp_Err']) * 100.        
     else:
         specObj = getSpectrum(src)
-        t = specObj.getSpectrum(r"A$_1$")
+        t = specObj.getSpectrum(ampParameter)
         x = np.array(t['Wavel'])
         y = np.array(t['Median'])
         yerr = np.array(t['yerrAverage'])
