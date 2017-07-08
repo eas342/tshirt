@@ -1186,7 +1186,7 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False,
     
     ax1.set_ylim(-0.9,2.)
     if src == '2mass_1821':
-        otherDat = ascii.read('spectra/specific/fratio_yang2016.csv')
+        otherDat = ascii.read('existing_dat/spectra/fratio_yang2016.csv')
         YangAmp = (otherDat['fratio'] - 1.)/(otherDat['fratio'] + 1.)
         ax1.plot(otherDat['wavelength'],YangAmp * 100.,color='black',label='WFC3 Amp')
         #ax1.text(np.mean(otherDat['wavelength']),np.mean(YangAmp * 100.)*1.05,
