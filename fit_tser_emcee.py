@@ -5,6 +5,8 @@ import os
 import glob
 from astropy.io import ascii
 from astropy.table import Table
+from matplotlib import style as mplStyle
+mplStyle.use('classic')
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from matplotlib.collections import LineCollection
@@ -660,8 +662,9 @@ def allBins(src='2mass_0835',wavelSearch=r"*"):
     """ Goes through each wavelength bin and does an MCMC fit, saving results
     """
     fileList = glob.glob('tser_data/'+src+'/'+wavelSearch+'.txt')
-    ## Make a directory for spectra if there isn't one yet
+    
     specDir = os.path.join('spectra',src)
+    ## Make a directory for spectra if there isn't one yet
     chisqDir = os.path.join('chisquare',src)
     plotDir = os.path.join('plots','individual_fits',src)
     mcmcDir = os.path.join('mcmcRuns','fSeries',src)
@@ -900,7 +903,7 @@ def showTDiff(paramVary='temp',pset='normal'):
     fig.show()
 
 def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
-                  variableSigma=False):
+                  variableSigma=False,ampParameter=r"A$_1$"):
     """ Prepares Emcee run for fitting spectra
     
     Parameters
@@ -916,7 +919,7 @@ def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
         yerr = np.array(dat['Amp_Err']) * 100.        
     else:
         specObj = getSpectrum(src)
-        t = specObj.getSpectrum(r"A$_1$")
+        t = specObj.getSpectrum(ampParameter)
         x = np.array(t['Wavel'])
         y = np.array(t['Median'])
         yerr = np.array(t['yerrAverage'])
@@ -943,8 +946,20 @@ def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
                    yLabel='Amplitude (%)')
     return mcObj
 
-def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
-    """ Shows the time series for each wavelength"""
+def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False,
+               showTelluric=False):
+    """ Shows the time series for each wavelength
+    Parameters
+    ---------------------
+    src: str
+        Source name
+    removeBaselines: bool
+        Take out the baselines fit to the light curves
+    abbreviated: bool
+        Show a smaller y range
+    showTelluric: bool
+        Show the regions where telluric absorption is strong
+    """
     
     
     fileList = glob.glob('mcmcRuns/fSeries/'+src+'/*.pic')
@@ -973,12 +988,15 @@ def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
         xLabel = 'Time'
     
     offset = 0.035
+    waveList = []
+    
 #    for waveInd,oneFile in enumerate(fileList):
     for waveInd,oneFile in enumerate(fileList):
         baseName = os.path.basename(oneFile)
         basePrefix = os.path.splitext(baseName)
         thisWave = float(basePrefix[0].split("_")[1].split("um")[0])
         waveString = "{:.2f}".format(thisWave)
+        waveList.append(thisWave)
         
         mcObj = pickle.load(open(oneFile))
         yModel = mcObj.model.evaluate(mcObj.x,mcObj.maxLparam)
@@ -997,7 +1015,7 @@ def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
             t['Norm Flux'] = np.array(yShow)
             t['Flux Err'] = np.array(mcObj.yerr)
             cleanFile = os.path.join(cleanDir,'tser_'+waveString+'.txt')
-            ascii.write(t,cleanFile,delimiter=' ')
+            ascii.write(t,cleanFile,delimiter=' ',overwrite=True)
             
             yModel = yModel - yBaseline + 1.
         else:
@@ -1017,7 +1035,31 @@ def tser_plots(src='2mass_1821',removeBaselines=True,abbreviated=False):
     else:
         ax.set_ylim(0.14,1.1)
     ax.set_xlim(np.min(mcObj.x) - 0.5,np.max(mcObj.x)+1.8)
-
+    
+    if showTelluric == True:
+        with open('parameters/telluric_bands.yaml') as tellFile:
+            telluricData = yaml.load(tellFile)
+        waveList = np.array(waveList)
+        diff = np.diff(waveList)
+        waveWidths = np.insert(diff,0,diff[0])
+        waveStarts = waveList - waveWidths
+        waveEnds = waveList + waveWidths
+        
+        nWaves = len(waveList)
+        waveIndices = np.arange(nWaves)
+        
+        for oneLine in telluricData['SpeX IRTF']:
+            minWaveInd = np.min(waveIndices[waveEnds >= oneLine[0]])
+            maxWaveInd = np.max(waveIndices[waveStarts <= oneLine[1]])
+            minWavePos = (minWaveInd - 0.4) * offset
+            maxWavePos = (maxWaveInd + 0.4) * offset
+            xLimits = ax.get_xlim()
+            xGap = np.mean([xLimits[0],np.min(mcObj.xplot)])
+            quartGap = (xGap - xLimits[0])* 0.25 ## size of bracket tick
+            bracketX = [xGap + quartGap,xGap,xGap, xGap + quartGap]
+            bracketY = 1. - np.array([minWavePos,minWavePos,maxWavePos,maxWavePos])
+            plt.plot(bracketX,bracketY,linewidth=3,
+                     color='green')
     
     ax.set_xlabel(xLabel)
     ax.set_ylabel('Flux Ratio + Offset')
@@ -1090,8 +1132,20 @@ def distributionCorner(src='2mass_1821'):
     showDistributions(fig=fig,ax=ax2)
     fig.show()
 
-def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
-    """ Makes the spectral fits for the Brown Dwarf paper """
+def bdPaperSpecFits(src='2mass_1821',abbreviated=False,
+                    ampParameter=r"A$_1$",phaseParameter=r"t$_1$"):
+    """ Makes the spectral fits for the Brown Dwarf paper 
+    Parameters
+    -------------
+    src: str
+        Source. For initial paper, either '2mass_1821' or '2mass_0835'
+    abbreviated: bool
+        If true, only show the top panel. Good for presentations/proposals
+    ampParameter: str
+        Amplitude parameter. Options include r"A$_1$" and r"A$_2$"
+    phaseParameter: str
+        Phase offset parameter. Options include 
+    """
     emceeDir = 'mcmcRuns/mie_model/'+src+'_mcmc_free_sigma.pic'
     if os.path.exists(emceeDir) == False:
         mcObj = prepEmceeSpec(method='mie',src=src)
@@ -1106,23 +1160,33 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     else:
         fig, (ax1,ax2) = plt.subplots(2,figsize=(6,7),sharex=True)
     
+    
     ## Make a spectrum object
     specObj = getSpectrum(src)
-    specObj.plotSpectrum(r"A$_1$",ax=ax1,fig=fig,legLabel='IRTF Amp')
+    specObj.plotSpectrum(ampParameter,ax=ax1,fig=fig,legLabel='IRTF Amp')
     
     ## Show the model
-    specTable = specObj.getSpectrum(r"A$_1$")
+    specTable = specObj.getSpectrum(ampParameter)
     xmodel = np.linspace(np.min(specTable['Wavel']),
                          np.max(specTable['Wavel']),512.)
-    ymodel = mcObj.model.evaluate(xmodel,mcObj.maxLparam)
+    if src == '2mass_0835':
+        ## Show a Zero amplitude line for 2MASS 0835 since we don't find any significant variability
+        ymodel = np.zeros_like(xmodel)
+        modelLabel = ampParameter+'=0'
+    else:
+        ymodel = mcObj.model.evaluate(xmodel,mcObj.maxLparam)
+        #label
+        radString = str(np.round(mcObj.maxLparam[1],2))
+        modelLabel = 'Mie r='+radString+' $\mu$m'
     
-    radString = str(np.round(mcObj.maxLparam[1],2))
-    modelLabel = 'Mie r='+radString+' $\mu$m'
-    ax1.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
+    ## Only show the model for A1
+    if ampParameter == r"A$_1$":
+        ax1.plot(xmodel,ymodel,color='green',linewidth=3.,label=modelLabel)
+    ax1.set_ylabel(ampParameter+' (%)')
     
     ax1.set_ylim(-0.9,2.)
     if src == '2mass_1821':
-        otherDat = ascii.read('spectra/specific/fratio_yang2016.csv')
+        otherDat = ascii.read('existing_dat/spectra/fratio_yang2016.csv')
         YangAmp = (otherDat['fratio'] - 1.)/(otherDat['fratio'] + 1.)
         ax1.plot(otherDat['wavelength'],YangAmp * 100.,color='black',label='WFC3 Amp')
         #ax1.text(np.mean(otherDat['wavelength']),np.mean(YangAmp * 100.)*1.05,
@@ -1131,9 +1195,18 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False):
     
     ## Show the phase spectrum
     if abbreviated == False:
-        specObj.plotSpectrum(r"t$_1$",ax=ax2,fig=fig,legLabel='')
+        specObj.plotSpectrum(phaseParameter,ax=ax2,fig=fig,legLabel='')
         fig.subplots_adjust(hspace=0)
         plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+    ax2.set_ylabel(phaseParameter+' (hr)')
+    
+    ## Show the telluric-affected regions
+    with open('parameters/telluric_bands.yaml') as tellFile:
+        telluricData = yaml.load(tellFile)
+    
+    for oneAx in [ax1,ax2]:
+        for oneLine in telluricData['SpeX IRTF']:
+            oneAx.axvspan(oneLine[0],oneLine[1],alpha=0.2,color='green')
     
     fig.savefig('plots/best_fit_'+src+'.pdf',bbox_inches="tight")
     
