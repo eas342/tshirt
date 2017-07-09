@@ -245,7 +245,7 @@ class phot:
         
             
         if os.path.exists(self.centroidFile) and (recenter == False):
-            HDUList = fits.open(path)
+            HDUList = fits.open(self.centroidFile)
             cenArr, head = HDUList[0].data, HDUList[0].header
             HDUList.close()
         elif self.param['doCentering'] == False:
@@ -330,11 +330,10 @@ class phot:
                 readNoise = float(head['RDNOISE1'])
             else:
                 readNoise = 1.0
-                print('Warning, no read noise specified')
+                warnings.warn('Warning, no read noise specified')
             
             err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
             
-            pdb.set_trace()
             rawPhot = aperture_photometry(img,self.srcApertures,error=err)
             if self.param['bkgSub'] == True:
                 self.bkgApertures.positions = self.cenArr[ind]  
