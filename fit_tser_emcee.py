@@ -783,8 +783,20 @@ def plotSpectra(src='2mass_0835'):
         specObj.plotSpectrum(oneParam)
 
 
-def flatLineTest(src='2mass_1821',param='t$_1$',comparePhase=False):
-    """ Tests if the phase offset is consistent with a flat line"""
+def flatLineTest(src='2mass_1821',param='t$_1$',comparePhase=False,waverage=False):
+    """ Tests if the phase offset is consistent with a flat line
+    Parameters
+    ---------------
+    src: str
+        Source target
+    param: str
+        Parameter (for example r"t$_1"$)
+    comparePhase: bool
+        Plots offset versus amplitude
+    waverage: bool
+        Instead of doing a flat line test, find the weighted average of the 
+        given parameter
+    """
     specObj = getSpectrum(src)
     t = specObj.getSpectrum(param)
     
@@ -804,7 +816,10 @@ def flatLineTest(src='2mass_1821',param='t$_1$',comparePhase=False):
         ax.set_xlabel('Phase Offset (hr)')
         ax.set_ylabel('Amplitude (%)')
         fig.savefig(os.path.join(specObj.plotPath,'offset_vs_amplitude.pdf'))
-        
+    elif waverage == True:
+        sigmaAvg = 1./np.sqrt(np.sum(weights))
+        print('Average '+param+':')
+        print(avg,' +/- ',sigmaAvg)
     else:
         specObj.plotSpectrum(param)
         specObj.ax.plot(t['Wavel'],avg * np.ones(len(t)),label='Flat')
