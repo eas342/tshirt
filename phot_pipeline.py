@@ -2,6 +2,7 @@ import photutils
 from ccdproc import CCDData, Combiner
 from astropy.io import fits, ascii
 import matplotlib as mpl
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
 if 'DISPLAY' not in os.environ:
     mpl.use('Agg')
@@ -134,9 +135,12 @@ class phot:
         
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
-        fig.colorbar(imData,label='Counts')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(imData,label='Counts',cax=cax)
         fig.show()
-        fig.savefig('plots/photometry/star_labels/st_labels.pdf')
+        fig.savefig('plots/photometry/star_labels/st_labels.pdf',
+                    bbox_inches='tight')
 
     def showStamps(self,img=None,head=None,custPos=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
