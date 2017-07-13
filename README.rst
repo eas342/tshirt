@@ -1,14 +1,14 @@
 Time Series Tools README
-=============================
+==========================================
 This repository contains code for analyzing and reducing time series data.
 Example usage includes:
 
  - Using `emcee` to fit light curves with sinusoidal models (`fit_tser_emcee.py`).
- - A photometric pipeline to reduce photometric data: flat field, bias subtract, gain correct, etc. (`prep_images.py`)
+ - A photometric pipeline to reduce photometric data: flat field, bias subtract, gain correct, etc. (`prep_images.py`). Tested to work with merged CCD images from the Mont4K imager on the Kuiper-61 inch telescope on Mt Bigelow, AZ.
  - Extract photometry from reduced images. (`phot_pipeline.py`)
 
 Installation
-=============================
+==========================================
  - Clone this git repository and `pip install` any dependencies.
 
 Dependencies
@@ -20,12 +20,12 @@ Dependencies
  - `photutils` - needed for photometric extraction on images
 
 Usage for Data Reduction
-=============================
+==========================================
 Edit `parameters/reduction_parameters.yaml`. You can specify any number of directories for reducing data.
 Execute `nohup python prep_images.py &` to run the reduction in the background.
 
 Usage for Time Series Aperture Photometry
-=============================
+==========================================
 Create a photometry parameters file from the example in `parameters/phot_parameters.yaml`.
 You will need to specify a list of files, source name and a list of source coordinates in pixels [x,y].
 The first source should be the target and the rest will be reference stars.
