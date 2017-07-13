@@ -1,7 +1,7 @@
 # Welcome to Time Series Tools!
 
 ## Installation
- - Clone this git repository and `pip install` any dependencies.
+ - Clone this git repository and `pip install` any dependencies (see next section).
 
 ### Dependencies
  - `astropy`, `numpy`
