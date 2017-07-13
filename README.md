@@ -1,4 +1,10 @@
 # Welcome to Time Series Tools!
+This repository contains code for analyzing and reducing time series data.
+Example usage includes:
+
+ - Using `emcee` to fit light curves with sinusoidal models (`fit_tser_emcee.py`).
+ - A photometric pipeline to reduce photometric data: flat field, bias subtract, gain correct, etc. (`prep_images.py`)
+ - Extract photometry from reduced images. (`phot_pipeline.py`)
 
 ## Installation
  - Clone this git repository and `pip install` any dependencies.
@@ -8,6 +14,7 @@
  - `ccdphot` - only needed for data reduction of photometric data
  - `emcee` - only needed for time series analysis and model fitting
  - `miescatter` - only needed for fitting Mie extinction to spectra
+ - `photutils` - needed for photometric extraction on images
 
 ## Usage for Data Reduction
 Edit `parameters/reduction_parameters.yaml`. You can specify any number of directories for reducing data.
