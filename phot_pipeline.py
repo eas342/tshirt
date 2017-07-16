@@ -49,7 +49,7 @@ class phot:
         self.nsrc = len(positions)
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
-                        'doCentering': True}
+                        'doCentering': True, 'bkgGeometry': 'CircularAnnulus'}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -58,7 +58,8 @@ class phot:
         if self.param['srcGeometry'] == 'Circular':
             self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
         elif self.param['srcGeometry'] == 'Square':
-            self.srcApertures = RectangularAperture(positions,w=self.param['apRadius'],h=self.param['apRadius'],theta=0)
+            self.srcApertures = RectangularAperture(positions,w=self.param['apRadius'],
+                                                    h=self.param['apRadius'],theta=0)
         else:
             print('Unrecognized aperture')
         
@@ -66,7 +67,14 @@ class phot:
         self.yCoors = self.srcApertures.positions[:,1]
         
         if self.param['bkgSub'] == True:
-            self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
+            if self.param['bkgGeometry'] == 'CircularAnnulus':
+                self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],
+                                                    r_out=self.param['backEnd'])
+            elif self.param['bkgGeometry'] == 'Rectangle':
+                self.bkgApertures = RectangularAperture(positions,w=self.param['backWidth'],
+                                                    h=self.param['backHeight'],theta=0)
+            else:
+                raise ValueError('Unrecognized background geometry')
         
         self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
