@@ -783,7 +783,8 @@ def plotSpectra(src='2mass_0835'):
         specObj.plotSpectrum(oneParam)
 
 
-def flatLineTest(src='2mass_1821',param='t$_1$',comparePhase=False,waverage=False):
+def flatLineTest(src='2mass_1821',param='t$_1$',comparePhase=False,waverage=False,
+                waveRange=None):
     """ Tests if the phase offset is consistent with a flat line
     Parameters
     ---------------
@@ -799,6 +800,9 @@ def flatLineTest(src='2mass_1821',param='t$_1$',comparePhase=False,waverage=Fals
     """
     specObj = getSpectrum(src)
     t = specObj.getSpectrum(param)
+    if waveRange is not None:
+        ind = (t['Wavel'] > waveRange[0]) & (t['Wavel'] < waveRange[1])
+        t = t[ind]
     
     weights = 1./t['yerrAverage']**2
     avg = np.sum(t['Median'] * weights)/np.sum(weights)
