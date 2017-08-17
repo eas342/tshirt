@@ -1113,7 +1113,7 @@ def showDistributions(src='2mass_1821',fig=None,ax=None):
     mcObj = pickle.load(open('mcmcRuns/mie_model/2mass_1821_mcmc_free_sigma.pic'))
     totChains = mcObj.cleanFlatChain.shape[0]
     randSet = np.random.randint(totChains,size=150)
-    plt.close('all')
+    #plt.close('all')
     if ax == None:
         fig, ax = plt.subplots()
     lineData = []
@@ -1145,7 +1145,11 @@ def distributionCorner(src='2mass_1821'):
     """
     mcObj = pickle.load(open('mcmcRuns/mie_model/2mass_1821_mcmc_free_sigma.pic'))
     
-    fig = corner.corner(mcObj.cleanFlatChain,labels=mcObj.model.pnames,auto_bars=True,
+    labels = deepcopy(mcObj.model.pnames)
+    labels[0] = 'K'
+    labels[2] = '$\sigma_s$'
+    
+    fig = corner.corner(mcObj.cleanFlatChain,labels=labels,auto_bars=True,
                         quantiles=[0.159,0.841],show_titles=True)
     ax2 = fig.add_axes([0.7,0.7,0.3,0.3])
     showDistributions(fig=fig,ax=ax2)
