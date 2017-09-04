@@ -1222,13 +1222,16 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False,
         specObj.plotSpectrum(phaseParameter,ax=ax2,fig=fig,legLabel='')
         fig.subplots_adjust(hspace=0)
         plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
-    ax2.set_ylabel(phaseParameter+' (hr)')
+        ax2.set_ylabel(phaseParameter+' (hr)')
+        axList = [ax1,ax2]
+    else:
+        axList = [ax1]
     
     ## Show the telluric-affected regions
     with open('parameters/telluric_bands.yaml') as tellFile:
         telluricData = yaml.load(tellFile)
     
-    for oneAx in [ax1,ax2]:
+    for oneAx in axList:
         for oneLine in telluricData['SpeX IRTF']:
             oneAx.axvspan(oneLine[0],oneLine[1],alpha=0.2,color='green')
     
