@@ -17,6 +17,7 @@ import string
 import mie_model
 import pickle
 from copy import deepcopy
+from scipy import stats
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
@@ -1242,3 +1243,37 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False,
     
     return mcObj
 
+def mcmcSlope(src='2mass_1821',paramPair=[4,5],testCase=True):
+    """ Calculate the slope of the posterior distribution """
+    mcmcDir = os.path.join('mcmcRuns','fSeries',src)
+    fileL = glob.glob(os.path.join(mcmcDir,'*.pic'))
+    
+    if testCase == True:
+        fileL = [fileL[0]]
+    
+    allSlopes=[]
+    for oneFile in fileL:
+        mcObj = pickle.load(open(oneFile))
+        xName  = mcObj.model.pnames[paramPair[0]]
+        yName = mcObj.model.pnames[paramPair[1]]
+    
+        xData= mcObj.cleanFlatChain[:,paramPair[0]]
+        yData= mcObj.cleanFlatChain[:,paramPair[1]]
+    
+        polyFit,cov = np.polyfit(xData,yData,1,cov=True)
+        yModel = np.polyval(polyFit,xData)
+    
+        fig, ax = plt.subplots()
+        ax.plot(xData,yData,'o',rasterized=True,markersize=1)
+        ax.plot(xData,yModel,label='model')
+        ax.set_xlabel(xName)
+        ax.set_ylabel(yName)
+    
+        #slope, intercept, r_value, p_value, std_err = stats.linregress(xData,yData)
+        allSlopes.append(polyFit[0])
+        
+        print('Slope = ',polyFit[0],' +/- ',np.sqrt(cov[0,0]))
+        #print('R-squared = ',r_value**2)
+    
+    return allSlopes
+    
