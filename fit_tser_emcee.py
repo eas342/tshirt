@@ -1242,3 +1242,36 @@ def bdPaperSpecFits(src='2mass_1821',abbreviated=False,
     
     return mcObj
 
+def roughCovar(src='2mass_1821',fIndex=0):
+    """ Calculates an approximate covariance matrix.
+    Uses medians instead of mean so that it's more robust 
+    """
+    mcmcDir = os.path.join('mcmcRuns','fSeries',src)
+    fileL = glob.glob(os.path.join(mcmcDir,'*.pic'))
+    oneFile = fileL[fIndex]
+    mcObj = pickle.load(open(oneFile))
+    covR = np.zeros([mcObj.ndim,mcObj.ndim])
+    covTable = Table()
+    covTable['Parameter'] = mcObj.model.pnames
+    for i in range(mcObj.ndim):
+        for j in range(mcObj.ndim):
+            iData = mcObj.cleanFlatChain[:,i]
+            jData = mcObj.cleanFlatChain[:,j]
+            covR[j,i] = np.median((iData - np.median(iData)) * (jData - np.median(jData)))
+        covTable[mcObj.model.pnames[i]] = covR[:,i]
+    return covTable, covR
+    
+def checkAllCov(src='2mass_1821',paramNums=[4,5]):
+    mcmcDir = os.path.join('mcmcRuns','fSeries',src)
+    fileL = glob.glob(os.path.join(mcmcDir,'*.pic'))
+    for oneIndex in range(len(fileL)):
+        covTable, covR = roughCovar(src=src,fIndex=oneIndex)
+        mcObj = pickle.load(open(fileL[oneIndex]))
+        name1 = mcObj.model.pnames[paramNums[0]]
+        name2 = mcObj.model.pnames[paramNums[1]]
+        print(oneIndex, fileL[oneIndex])
+        print('Var ',name1,covR[paramNums[0],paramNums[0]])
+        print('Var ',name2,covR[paramNums[1],paramNums[1]])
+        print('Co-Var ',name1,' ',name2,covR[paramNums[0],paramNums[1]])
+        print(' ')
+        
