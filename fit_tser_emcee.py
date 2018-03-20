@@ -17,6 +17,11 @@ import string
 import mie_model
 import pickle
 from copy import deepcopy
+import warnings
+try:
+    import spiderman
+except importError:
+    warnings.warn('Could not load spiderman models.')
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
@@ -123,6 +128,52 @@ class mieModel:
         else:
             return -np.inf
 
+class windModel:
+    """ A simple wrapper about the Spiderman Phase-curve model
+    For now, it's hard-coded for HD 189733
+    """
+    def __init__(self):
+        spider_params = spiderman.ModelParams(brightness_model="zhang")
+        spider_params.n_layers= 8
+        spider_params.t0= -2.21857567/2.               # Central time of PRIMARY transit [days]
+        spider_params.per= 2.21857567       # Period [days]
+        spider_params.a_abs= 0.03099        # The absolute value of the semi-major axis [AU]
+        spider_params.inc= 85.58            # Inclination [degrees]
+        spider_params.ecc= 0.0              # Eccentricity
+        spider_params.w= 90                 # Argument of periastron
+        spider_params.rp= 0.15463           # Planet to star radius ratio
+        spider_params.a= 8.81               # Semi-major axis scaled by stellar radius
+        spider_params.p_u1= 0               # Planetary limb darkening parameter
+        spider_params.p_u2= 0               # Planetary limb darkening parameter
+        spider_params.xi= 0.3       # Ratio of radiative to advective timescale
+        spider_params.T_n= 900      # Temperature of nightside
+        spider_params.delta_T= 500  # Day-night temperature contrast
+        spider_params.T_s = 5040    # Temperature of the star
+        spider_params.l1 = 4.0e-6       # The starting wavelength in meters
+        spider_params.l2 = 5.0e-6       # The ending wavelength in meters
+        
+        self.spider_params = spider_params
+        self.name = 'Spiderman Wind Model'
+        self.pnames = [r'$\xi$',r'T$_n$',r'$\Delta$T']
+        self.formula = "Zhang & Showman Analytic"
+        self.ndim = len(self.pnames)
+        
+    def evaluate(self,x,p):
+        """ Evaluates the Zhang & Showman simplified phase curve"""
+        self.spider_params.xi = p[0]
+        self.spider_params.T_n = p[1]
+        self.spider_params.delta_T = p[2]
+        return self.spider_params.lightcurve(x)
+    
+    def lnprior(self,inputP):
+        p = sanitize_param(inputP)
+        pCheck = []
+        pCheck.append(p[0] > 0)
+        pCheck.append(p[1] > 0)
+        if np.sum(pCheck) == len(pCheck):
+            return 0
+        else:
+            return -np.inf
 
 class sinModel:
     """ Simple sinusoidal model for fitting light curve.
