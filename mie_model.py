@@ -1,5 +1,9 @@
 import numpy as np
-import miescatter
+import warnings
+try:
+    import miescatter
+except ImportError:
+    warnings.warn("Unable to import miescatter, so scattering models won't work")
 import pdb
 import matplotlib.pyplot as plt
 import es_gen
