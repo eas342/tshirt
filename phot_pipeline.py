@@ -397,8 +397,25 @@ class phot:
         
         HDUList.writeto(self.photFile,overwrite=True)
     
-    def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True):
-        """ Plots previously calculated photometry """
+    def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
+                  normReg=None):
+        """ Plots previously calculated photometry 
+        Parameters
+        ---------------------
+        offset: float
+            y displacement for overlaying time series
+        refCorrect: bool
+            Use reference star-corrected photometry?
+        ax: matplotlib axis object
+            If the axis was created separately, use the input axis object
+        fig: matplotlib figure object
+            If the figure was created separately, use the input axis object
+        showLegend: bool
+            Show a legend?
+        normReg: list with two items or None
+            Relative region over which to fit a baseline and re-normalize
+            This only works on reference-corrected photometry for now
+        """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
@@ -415,7 +432,16 @@ class phot:
         
         if refCorrect == True:
             yCorrected = self.refSeries(photArr)
-            ax.plot(jdArr - jdRef,yCorrected,label='data',marker='o',linestyle='',markersize=3.)
+            x = jdArr - jdRef
+            if normReg == None:
+                yShow = yCorrected
+            else:
+                fitp = (x < normReg[0]) | (x > normReg[1])
+                polyBase = es_gen.robust_poly(x[fitp],yCorrected[fitp],2,sigreject=2)
+                yBase = np.polyval(polyBase,x)
+                
+                yShow = yCorrected / yBase
+            ax.plot(x,yShow,label='data',marker='o',linestyle='',markersize=3.)
         
         else:
             for oneSrc in range(self.nsrc):
@@ -583,8 +609,11 @@ def allTser(refCorrect=False):
     
     for ind, oneFits in enumerate(allFits):
         phot = prevPhot(photFile=oneFits)
-        thisAx = plt.subplot(gs[ind])        
-        phot.plot_phot(ax=thisAx,fig=fig,showLegend=False,refCorrect=refCorrect)
+        thisAx = plt.subplot(gs[ind])
+        normCen = epochs[ind] - phot.param['jdRef']
+        normReg = [normCen - 0.04,normCen+0.04]
+        phot.plot_phot(ax=thisAx,fig=fig,showLegend=False,refCorrect=refCorrect,
+                       normReg=normReg)
         if refCorrect == True:
             thisAx.set_ylim(0.985,1.015)
         else: thisAx.set_ylim(0.9,1.1)
