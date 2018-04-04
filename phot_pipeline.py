@@ -21,6 +21,7 @@ from copy import deepcopy
 import yaml
 import os
 import warnings
+from scipy.stats import binned_statistic
 
 class phot:
     def __init__(self,paramFile='parameters/phot_parameters.yaml'):
@@ -398,7 +399,7 @@ class phot:
         HDUList.writeto(self.photFile,overwrite=True)
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
-                  normReg=None):
+                  normReg=None,doBin=None):
         """ Plots previously calculated photometry 
         Parameters
         ---------------------
@@ -414,6 +415,9 @@ class phot:
             Show a legend?
         normReg: list with two items or None
             Relative region over which to fit a baseline and re-normalize
+            This only works on reference-corrected photometry for now
+        doBin: float or None
+            The bin size if showing binned data
             This only works on reference-corrected photometry for now
         """
         HDUList = fits.open(self.photFile)
@@ -442,7 +446,15 @@ class phot:
                 
                 yShow = yCorrected / yBase
             ax.plot(x,yShow,label='data',marker='o',linestyle='',markersize=3.)
-        
+            
+            if doBin is not None:
+                minValue, maxValue = 0.98, 1.02 ## clip for cosmic rays
+                goodP = (yShow > minValue) & (yShow < maxValue)
+                nBin = int(np.round((np.max(x[goodP]) - np.min(x[goodP]))/doBin))
+                ybin, xEdges, binNum = binned_statistic(x[goodP],yShow[goodP],statistic='mean',bins=nBin)
+                xbin = (xEdges[:-1] + xEdges[1:])/2.
+                ax.plot(xbin,ybin,marker='s')
+                
         else:
             for oneSrc in range(self.nsrc):
                 yFlux = photArr[:,oneSrc]
@@ -613,7 +625,7 @@ def allTser(refCorrect=False):
         normCen = epochs[ind] - phot.param['jdRef']
         normReg = [normCen - 0.04,normCen+0.04]
         phot.plot_phot(ax=thisAx,fig=fig,showLegend=False,refCorrect=refCorrect,
-                       normReg=normReg)
+                       normReg=normReg,doBin=20./(60. * 24))
         if refCorrect == True:
             thisAx.set_ylim(0.985,1.015)
         else: thisAx.set_ylim(0.9,1.1)
