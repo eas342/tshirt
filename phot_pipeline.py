@@ -22,6 +22,7 @@ import yaml
 import os
 import warnings
 from scipy.stats import binned_statistic
+from astropy.table import Table
 
 class phot:
     def __init__(self,paramFile='parameters/phot_parameters.yaml'):
@@ -451,9 +452,23 @@ class phot:
                 minValue, maxValue = 0.98, 1.02 ## clip for cosmic rays
                 goodP = (yShow > minValue) & (yShow < maxValue)
                 nBin = int(np.round((np.max(x[goodP]) - np.min(x[goodP]))/doBin))
-                ybin, xEdges, binNum = binned_statistic(x[goodP],yShow[goodP],statistic='mean',bins=nBin)
+                
+                yBins = Table()
+                for oneStatistic in ['mean','std','count']:
+                    if oneStatistic == 'std':
+                        statUse = np.std
+                    else: statUse = oneStatistic
+                    
+                    yBin, xEdges, binNum = binned_statistic(x[goodP],yShow[goodP],
+                                                            statistic=statUse,bins=nBin)
+                    yBins[oneStatistic] = yBin
+                
+                ## Standard error in the mean
+                stdErrM = yBins['std'] / np.sqrt(yBins['count'])
+                
                 xbin = (xEdges[:-1] + xEdges[1:])/2.
-                ax.plot(xbin,ybin,marker='s')
+                ax.errorbar(xbin,yBins['mean'],yerr=stdErrM,marker='s',markersize=3.,
+                            label='binned')
                 
         else:
             for oneSrc in range(self.nsrc):
@@ -637,21 +652,26 @@ def allTser(refCorrect=False):
             thisAx.set_ylabel('Norm Fl')
         else:
             thisAx.yaxis.set_visible(False)
-        ## Show a legend with the last one
-        if ind == len(allFits) - 1:
-            thisAx.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,ncol=2)
         
         ## Show transits for reference corrected photometry
         if refCorrect == True:
             thisAx.axvline(x=epochs[ind] - phot.param['jdRef'],linewidth=2,color='red',alpha=0.5)
             ## Over-plot Kepler Avg SC Light curves
-            thisAx.plot(tKepler + epochs[ind] - phot.param['jdRef'],fKepler,color='blue',linewidth=2,alpha=0.5)
+            thisAx.plot(tKepler + epochs[ind] - phot.param['jdRef'],fKepler,color='green',linewidth=2,alpha=0.5,
+                        label='Kepler SC')
+        
+        ## Show a legend with the last one
+        if ind == len(allFits) - 1:
+            thisAx.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,ncol=2)
+        
     
     fig.show()
     if refCorrect == True:
         fig.savefig('plots/photometry/tser_refcor/all_kic1255.pdf')
     else:
         fig.savefig('plots/photometry/tser_allstar/all_kic1255.pdf')
+
+
 
 # # ## Compare to SLC curve
 #
