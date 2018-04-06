@@ -642,7 +642,7 @@ def allTser(refCorrect=False):
         phot.plot_phot(ax=thisAx,fig=fig,showLegend=False,refCorrect=refCorrect,
                        normReg=normReg,doBin=20./(60. * 24))
         if refCorrect == True:
-            thisAx.set_ylim(0.985,1.015)
+            thisAx.set_ylim(0.99,1.01)
         else: thisAx.set_ylim(0.9,1.1)
         thisAx.set_xlim(0.65,0.99)
         
@@ -657,8 +657,8 @@ def allTser(refCorrect=False):
         if refCorrect == True:
             thisAx.axvline(x=epochs[ind] - phot.param['jdRef'],linewidth=2,color='red',alpha=0.5)
             ## Over-plot Kepler Avg SC Light curves
-            thisAx.plot(tKepler + epochs[ind] - phot.param['jdRef'],fKepler,color='green',linewidth=2,alpha=0.5,
-                        label='Kepler SC')
+            thisAx.plot(tKepler + epochs[ind] - phot.param['jdRef'],fKepler,color='green',linewidth=2,
+                        alpha=0.5,label='Kepler SC Avg')
         
         ## Show a legend with the last one
         if ind == len(allFits) - 1:
