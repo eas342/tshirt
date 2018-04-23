@@ -88,6 +88,8 @@ class phot:
         self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
         self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         
+        self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
+        
     def get_default_im(self,img=None,head=None):
         """ Get the default image for postage stamps or star identification maps"""
         ## Get the data
@@ -571,6 +573,39 @@ class phot:
         head = HDUList[ext].header
         HDUList.close()
         return img, head
+        
+    def save_phot(self):
+        """ Save a reference-corrected time series 
+        """
+        t = Table()
+        
+                
+        HDUList = fits.open(self.photFile)
+        ## Grab the metadata from the header
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        head = photHDU.header
+        head.pop('NAXIS')
+        head.pop('NAXIS1')
+        head.pop('NAXIS2')
+        head.pop('SIMPLE')
+        head.pop('BITPIX')
+        
+        t.meta = head
+        
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        
+        t['Time'] = jdArr
+        t['Y Corrected'] = self.refSeries(photArr)
+        
+        ## Error from the photometry point
+        hduErr = HDUList['Phot Err']
+        t['Y Corr Err'] = hduErr.data[:,0]
+        ## FOr now this ignores errors in the reference stars
+        ## To Do: add in error from reference stars
+        
+        t.write(self.refCorPhotFile)
 
 class prevPhot(phot):
     """ Loads in previous photometry from FITS data. Inherits functions from the phot class
@@ -600,7 +635,7 @@ class prevPhot(phot):
         self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
         
-        self.dataFileDescrip = os.path.splitext(os.path.basename(self.photFile))
+        self.dataFileDescrip = os.path.splitext(os.path.basename(self.photFile))[0]
         self.param = {}
         self.param['srcName'] = photHead['SRCNAME']
         self.param['nightName'] = photHead['NIGHT']
@@ -612,6 +647,8 @@ class prevPhot(phot):
         self.centroidFile = self.photFile
         
         HDUList.close()
+        
+        self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
 
 def allTser(refCorrect=False):
     """ Plot all time series for KIC 1255 """
