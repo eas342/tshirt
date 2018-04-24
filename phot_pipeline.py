@@ -655,7 +655,7 @@ class prevPhot(phot):
 
 def saveRefSeries():
     """ Saves the reference-corrected time series for all nights"""
-    fileL = glob.glob('tser_data/phot/phot_kic1255_UT????_07_??.fits')
+    fileL = glob.glob('tser_data/phot/phot_kic1255_UT????_??_??.fits')
     for oneFile in fileL:
         phot = prevPhot(photFile=oneFile)
         phot.save_phot()
