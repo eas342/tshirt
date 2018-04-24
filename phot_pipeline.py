@@ -599,9 +599,12 @@ class phot:
         t['Time'] = jdArr
         t['Y Corrected'] = self.refSeries(photArr)
         
-        ## Error from the photometry point
-        hduErr = HDUList['Phot Err']
-        t['Y Corr Err'] = hduErr.data[:,0] / photArr[:,0]
+        if 'PHOT ERR' in HDUList:
+            ## Error from the photometry point
+            hduErr = HDUList['PHOT ERR']
+            t['Y Corr Err'] = hduErr.data[:,0] / photArr[:,0]
+        else:
+            print("Warning, No Error recorded for {}".format(self.photFile))
         ## FOr now this ignores errors in the reference stars
         ## To Do: add in error from reference stars
         
@@ -649,6 +652,14 @@ class prevPhot(phot):
         HDUList.close()
         
         self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
+
+def saveRefSeries():
+    """ Saves the reference-corrected time series for all nights"""
+    fileL = glob.glob('tser_data/phot/phot_kic1255_UT????_07_??.fits')
+    for oneFile in fileL:
+        phot = prevPhot(photFile=oneFile)
+        phot.save_phot()
+    
 
 def allTser(refCorrect=False):
     """ Plot all time series for KIC 1255 """
