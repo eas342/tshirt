@@ -20,8 +20,10 @@ from copy import deepcopy
 import warnings
 try:
     import spiderman
-except importError:
+except ImportError:
     warnings.warn('Could not load spiderman models.')
+import phot_pipeline
+import fit_models
 
 def sanitize_param(inputP):
     """ Sanitizes the input parameters"""
@@ -613,6 +615,31 @@ class oEmcee():
         ax.set_ylabel('Probability')
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
+
+def prepEmcee_k1255():
+    """ Prepares Emcee for KIC 1255 data
+    
+    Parameters
+    -----------
+    """
+    dat = Table.read('tser_data/refcor_phot/refcor_phot_kic1255_UT2016_06_12.fits')
+    
+    guess = [1.0, 0.0]
+    spread = [0.5, 0.005]
+    
+    P = 0.6535538
+    T0 = 2454833.039
+    jd = dat['Time'] 
+    phase = np.mod((jd - T0)/P, 1.0)
+    highPt = phase > 0.5
+    phase[highPt] = phase[highPt] - 1.0
+    
+    model = fit_models.kic1255Model()
+    mcObj = oEmcee(model,phase,dat['Y Corrected'],dat['Y Corr Err'],
+                   guess,spread,xLabel='Orbital Phase',yLabel='Normalized Flux',
+                   title=dat.meta['NIGHT'])
+                   
+    return mcObj
 
 def prepEmcee(nterms=1,moris=False,src='original1821',specWavel=1.08):
     """ Prepares Emcee for run 

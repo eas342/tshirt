@@ -601,11 +601,11 @@ class phot:
         
         ## Error from the photometry point
         hduErr = HDUList['Phot Err']
-        t['Y Corr Err'] = hduErr.data[:,0]
+        t['Y Corr Err'] = hduErr.data[:,0] / photArr[:,0]
         ## FOr now this ignores errors in the reference stars
         ## To Do: add in error from reference stars
         
-        t.write(self.refCorPhotFile)
+        t.write(self.refCorPhotFile,overwrite=True)
 
 class prevPhot(phot):
     """ Loads in previous photometry from FITS data. Inherits functions from the phot class
