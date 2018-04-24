@@ -616,13 +616,35 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
-def prepEmcee_k1255():
+def run_k1255_nights():
+    """ Runs the nights for KIC 1255 data and saves the results to Pickle files
+    """
+    
+    photList = glob.glob('tser_data/refcor_phot/refcor_phot_kic1255_UT*.fits')
+    
+    mcmcDir = os.path.join('mcmcRuns','k1255_mod','kuiper')
+    specDir = os.path.join('spectra','kic1255')
+    for oneTSer in photList:
+        mcObj = prepEmcee_k1255(photPath=oneTSer)
+        mcObj.runMCMC()
+        
+        ## Save the MCMC run
+        emceePath = os.path.join(mcmcDir,'mcmc_'+mcObj.title+'.pic')
+        pdb.set_trace()
+        pickle.dump(mcObj,open(emceePath,'w'))
+        
+        ## save the fit parameters and uncertainties
+        resultPath = os.path.join(specDir,'fit_'+mcObj.title+'.csv')
+        mcObj.results.write(resultPath)
+    
+
+def prepEmcee_k1255(photPath='tser_data/refcor_phot/refcor_phot_kic1255_UT2016_06_12.fits'):
     """ Prepares Emcee for KIC 1255 data
     
     Parameters
     -----------
     """
-    dat = Table.read('tser_data/refcor_phot/refcor_phot_kic1255_UT2016_06_12.fits')
+    dat = Table.read(photPath)
     
     guess = [1.0, 0.0]
     spread = [0.5, 0.005]
