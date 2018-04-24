@@ -630,7 +630,7 @@ def run_k1255_nights():
         
         ## Save the MCMC run
         emceePath = os.path.join(mcmcDir,'mcmc_'+mcObj.title+'.pic')
-        pdb.set_trace()
+        
         pickle.dump(mcObj,open(emceePath,'w'))
         
         ## save the fit parameters and uncertainties
