@@ -10,6 +10,7 @@ mplStyle.use('classic')
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from matplotlib.collections import LineCollection
+from matplotlib import gridspec
 import corner
 import yaml
 import re
@@ -616,11 +617,58 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
-def show_k1255_results():
+def show_k1255_results(fullRange=False):
+    """ Show all KIC 1255 Results
+    Parameters
+    ------------
+    fullRange: bool
+        If true, show the full Y range. Otherwise it makes the range
+        the same for all plots.
+    """
     fileL = glob.glob('mcmcRuns/k1255_mod/kuiper/*.pic')
-    for oneFile in fileL:
+    totFigs = 6
+    totFiles = len(fileL)
+    #fig, axArr = plt.subplots(3,2,figsize=(12,8))
+    
+    if fullRange == True:
+        wspace = 0.2
+        fileDescrip = '_full_range'
+    else:
+        wspace = 0.0
+        fileDescrip = ''
+    
+    fig = plt.figure(figsize=(12,8))
+    nY, nX = (3,2)
+    gs = gridspec.GridSpec(nY,nX,wspace=wspace,hspace=0.7)
+    
+    yArr, xArr = np.mgrid[0:nY,0:nX]
+    yRavel = yArr.ravel()
+    xRavel = xArr.ravel()
+    
+    for ind,oneFile in enumerate(fileL):
         mcObj = pickle.load(open(oneFile))
-        mcObj.showResult(saveFile='plots/individual_fits/kic1255/best_fit{}.pdf'.format(mcObj.title))
+        #plotFile = 'plots/individual_fits/kic1255/best_fit{}.pdf'.format(mcObj.title)
+        #ax = axArr.ravel()[ind]
+        ax = fig.add_subplot(gs[ind])
+        
+        mcObj.showResult(fig=fig,ax=ax)
+        ax.set_xlim(-0.28,0.28)
+        
+        if fullRange == True:
+            if xRavel[ind] == 0:
+                ax.set_ylabel('Norm Fl')
+            else:
+                ax.set_ylabel('')
+        else:
+            ax.set_ylim(0.99,1.01)
+            if xRavel[ind] == 0:
+                ax.set_ylabel('Norm Fl')
+            else:
+                ax.yaxis.set_visible(False)
+    
+    
+    outName = 'plots/individual_fits/kic1255/best_fit_all{}.pdf'.format(fileDescrip)
+    fig.savefig(outName)
 
 def run_k1255_nights():
     """ Runs the nights for KIC 1255 data and saves the results to Pickle files
