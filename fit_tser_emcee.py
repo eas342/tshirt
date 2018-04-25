@@ -616,6 +616,12 @@ class oEmcee():
         ax.legend(loc='best')
         fig.savefig('plots/histo_resids.pdf')
 
+def show_k1255_results():
+    fileL = glob.glob('mcmcRuns/k1255_mod/kuiper/*.pic')
+    for oneFile in fileL:
+        mcObj = pickle.load(open(oneFile))
+        mcObj.showResult(saveFile='plots/individual_fits/kic1255/best_fit{}.pdf'.format(mcObj.title))
+
 def run_k1255_nights():
     """ Runs the nights for KIC 1255 data and saves the results to Pickle files
     """
