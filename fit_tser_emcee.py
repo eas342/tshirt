@@ -680,6 +680,9 @@ def run_k1255_nights():
     specDir = os.path.join('spectra','kic1255')
     for oneTSer in photList:
         mcObj = prepEmcee_k1255(photPath=oneTSer)
+        
+        print("Running MCMC for {}".format(mcObj.title))
+        
         mcObj.runMCMC()
         
         ## Save the MCMC run
