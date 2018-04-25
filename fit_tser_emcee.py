@@ -698,7 +698,11 @@ def prepEmcee_k1255(photPath='tser_data/refcor_phot/refcor_phot_kic1255_UT2016_0
     Parameters
     -----------
     """
-    dat = Table.read(photPath)
+    fullDat = Table.read(photPath)
+    
+    minValue, maxValue = 0.98, 1.02 ## clip for cosmic rays
+    goodP = (fullDat['Y Corrected'] < maxValue) & (fullDat['Y Corrected'] > minValue)
+    dat = fullDat[goodP]
     
     guess = [1.0, 0.0]
     spread = [0.5, 0.005]
