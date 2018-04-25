@@ -704,8 +704,8 @@ def prepEmcee_k1255(photPath='tser_data/refcor_phot/refcor_phot_kic1255_UT2016_0
     goodP = (fullDat['Y Corrected'] < maxValue) & (fullDat['Y Corrected'] > minValue)
     dat = fullDat[goodP]
     
-    guess = [1.0, 0.0]
-    spread = [0.5, 0.005]
+    guess = [1.0, 0.0,0.0]
+    spread = [0.5, 0.005,0.005]
     
     P = 0.6535538
     T0 = 2454833.039

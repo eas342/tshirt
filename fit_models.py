@@ -33,9 +33,9 @@ class kic1255Model:
     
     """
     def __init__(self):
-        self.name = "Kepler LC Model from Kepler SC data"
-        self.pnames = [r'A','B']
-        self.formula = "(A * f(phase) + 1.0) * (1.0 * B)"
+        self.name = "Kepler LC Model from Kepler SC data. Assuming x is in orbital phase"
+        self.pnames = [r'A','B','C']
+        self.formula = "(A * f(x) + 1.0) * (1.0 + B + C * x)"
         
         self.kepFile = 'tser_data/reference_dat/avg_bin_kep.fits'
         self.kepDat = Table.read(self.kepFile)
@@ -57,7 +57,7 @@ class kic1255Model:
             p[1] = linear baseline
         """
         p = np.array(inputP)
-        return (p[0] * self.finterp(x) + 1.0) * (1.0 + p[1])
+        return (p[0] * self.finterp(x) + 1.0) * (1.0 + p[1] + p[2] * x)
     
     
     def lnprior(self,inputP):
