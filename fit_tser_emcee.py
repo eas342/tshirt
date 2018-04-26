@@ -692,7 +692,7 @@ def run_k1255_nights():
         
         ## save the fit parameters and uncertainties
         resultPath = os.path.join(specDir,'fit_'+mcObj.title+'.csv')
-        mcObj.results.write(resultPath)
+        mcObj.results.write(resultPath,overwrite=True)
     
 
 def prepEmcee_k1255(photPath='tser_data/refcor_phot/refcor_phot_kic1255_UT2016_06_12.fits'):
