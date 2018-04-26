@@ -872,8 +872,15 @@ class getSpectrum():
         self.paramList = exampleFile['Parameter']
     
     
-    def getSpectrum(self,oneParam):
+    def getSpectrum(self,oneParam,timeVersion=False):
         """ Gathers a spectrum for a given file List of wavelength bin CSV files
+        Parameters
+        ----------
+        oneParam: string
+            Parameter name in model
+        timeVersion: bool
+            If true, it will look at time variations
+            Otherwise, it's organized by wavelength
         """
         lowLim, medLim, hiLim = [], [], []
         wavel = []
@@ -885,7 +892,10 @@ class getSpectrum():
             medLim.append(float(t['Median'][AmpRow]))
             hiLim.append(float(t['Upper'][AmpRow]))
             baseName = os.path.basename(oneFile)
-            thisWavel = float(os.path.splitext(baseName.split("_")[1])[0])
+            if timeVersion == True:
+                thisWavel = os.path.splitext(baseName)[0]
+            else:
+                thisWavel = float(os.path.splitext(baseName.split("_")[1])[0])
             wavel.append(thisWavel)
     
         
@@ -893,7 +903,10 @@ class getSpectrum():
         yerrHigh = np.array(hiLim) - np.array(medLim)
     
         specTable = Table()
-        specTable['Wavel'] = wavel
+        if timeVersion == True:
+            specTable['Time'] = wavel
+        else: 
+            specTable['Wavel'] = wavel
         specTable['Median'] = medLim
         specTable['yerrLow'] = yerrLow
         specTable['yerrHigh'] = yerrHigh
