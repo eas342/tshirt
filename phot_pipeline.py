@@ -665,9 +665,8 @@ def allTser(refCorrect=False):
     """ Plot all time series for KIC 1255 """
     
     allFits = glob.glob('tser_data/phot/phot_kic1255_UT????_??_??.fits')
-    epochs = [2457551.822808,  2457553.7834694,  2457581.8862828,
-              2457583.8469442,  2457585.8076056]
-    
+    epochs = [2457551.8250368, 2457553.785697 ,  2457581.8884932,
+              2457583.8491534,  2457585.8098136]
     nNights = len(allFits)
     
     fig = plt.figure(figsize=(8,6))
