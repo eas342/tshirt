@@ -19,3 +19,4 @@ parameters/phot_param_2016_07_14.yaml
 parameters/phot_param_2016_07_16.yaml
 parameters/reduction_parameters_all_kic1255.yaml
 tser_data/refcor_phot/*.fits
+tser_data/best_fit_models/kic1255/kic1255_best_fit*.csv

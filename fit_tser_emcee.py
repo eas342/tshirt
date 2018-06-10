@@ -665,7 +665,17 @@ def show_k1255_results(fullRange=False):
                 ax.set_ylabel('Norm Fl')
             else:
                 ax.yaxis.set_visible(False)
-    
+                
+        ## Save the best-fit model
+        xModel = np.linspace(np.min(mcObj.xplot),np.max(mcObj.xplot),1024)
+        yModel = mcObj.model.evaluate(xModel,mcObj.maxLparam)
+        t = Table()
+        t['Phase'] = xModel
+        t['Best Fit Y'] = yModel
+        
+        t.write('tser_data/best_fit_models/kic1255/kic1255_best_fit_{}.csv'.format(mcObj.title),
+                overwrite=True)
+        
     
     outName = 'plots/individual_fits/kic1255/best_fit_all{}.pdf'.format(fileDescrip)
     fig.savefig(outName)
