@@ -661,12 +661,23 @@ def saveRefSeries():
         phot.save_phot()
     
 
-def allTser(refCorrect=False):
-    """ Plot all time series for KIC 1255 """
+def allTser(refCorrect=False,showBestFit=False):
+    """ Plot all time series for KIC 1255 
+    Parameters
+    -----------
+    refCorrect: bool
+        Do the reference correction?
+    showBestFit: bool
+        Show the best fit? If true, shows the best fit.
+        If false, it shows the average Kepler light curve.
+        This only works after the best fits have been previously
+        calculated.
+    """
     
     allFits = glob.glob('tser_data/phot/phot_kic1255_UT????_??_??.fits')
     epochs = [2457551.8250368, 2457553.785697 ,  2457581.8884932,
               2457583.8491534,  2457585.8098136]
+    periodP = 0.6535534
     nNights = len(allFits)
     
     fig = plt.figure(figsize=(8,6))
@@ -681,19 +692,36 @@ def allTser(refCorrect=False):
     tKepler = kepLC['BINMID'] * kepHDUList[1].header['PERIOD'] ## time in days
     fKepler = kepLC['YBIN']
     
+    bestFitDir = 'tser_data/best_fit_models/kic1255/'
+    
     for ind, oneFits in enumerate(allFits):
         phot = prevPhot(photFile=oneFits)
         thisAx = plt.subplot(gs[ind])
         normCen = epochs[ind] - phot.param['jdRef']
-        normReg = [normCen - 0.04,normCen+0.04]
+        if showBestFit == True:
+            ## If showing the best fit, do not detredn to illustrtate the 
+            ## baseline fit & everything
+            normReg = None
+        else:
+            ## Remove the baseline
+            normReg = [normCen - 0.04,normCen+0.04]
+        
         phot.plot_phot(ax=thisAx,fig=fig,showLegend=False,refCorrect=refCorrect,
                        normReg=normReg,doBin=20./(60. * 24))
         if refCorrect == True:
-            thisAx.set_ylim(0.99,1.01)
+            if showBestFit == True:
+                ## leave enough room to show baseline fit
+                thisAx.set_ylim(0.99,1.015)
+            else:
+                thisAx.set_ylim(0.99,1.01)
         else: thisAx.set_ylim(0.9,1.1)
         thisAx.set_xlim(0.65,0.99)
         
-        thisAx.set_title(phot.param['nightName'].replace('_','-'))
+        fitsStyleTitle = phot.param['nightName'].replace('_','-')
+        aasStyleTitle = phot.param['nightName'].replace('_',' ')
+        aasStyleTitle = aasStyleTitle.replace('07','Jul')
+        aasStyleTitle = aasStyleTitle.replace('06','Jun')
+        thisAx.set_title(aasStyleTitle)
         ## Hide the y labels for stars not on the left. Also shorten title
         if xRavel[ind] == 0:
             thisAx.set_ylabel('Norm Fl')
@@ -703,9 +731,19 @@ def allTser(refCorrect=False):
         ## Show transits for reference corrected photometry
         if refCorrect == True:
             thisAx.axvline(x=epochs[ind] - phot.param['jdRef'],linewidth=2,color='red',alpha=0.5)
-            ## Over-plot Kepler Avg SC Light curves
-            thisAx.plot(tKepler + epochs[ind] - phot.param['jdRef'],fKepler,color='green',linewidth=2,
-                        alpha=0.5,label='Kepler SC Avg')
+            if showBestFit == True:
+                dat = ascii.read('{}kic1255_best_fit_{}.csv'.format(bestFitDir,phot.param['nightName']))
+                xReference = dat['Phase'] * periodP + epochs[ind] - phot.param['jdRef']
+                yReference = dat['Best Fit Y']
+                referenceName = 'Best Fit'
+            else:
+                ## Over-plot Kepler Avg SC Light curves
+                xReference = tKepler + epochs[ind] - phot.param['jdRef']
+                yReference = fKepler
+                referenceName = 'Kepler SC Avg'
+            
+            thisAx.plot(xReference,yReference,color='green',linewidth=2,
+                        alpha=0.5,label=referenceName)
         
         ## Show a legend with the last one
         if ind == len(allFits) - 1:
