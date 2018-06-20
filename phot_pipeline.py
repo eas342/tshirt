@@ -13,6 +13,7 @@ import glob
 from photutils import CircularAperture, CircularAnnulus
 from photutils import RectangularAperture
 from photutils import centroid_2dg, aperture_photometry
+import photutils
 import numpy as np
 from astropy.time import Time
 import pdb
@@ -238,7 +239,7 @@ class phot:
             print('Unrecognized plot type')
             
     
-    def save_centroids(self,cenArr):
+    def save_centroids(self,cenArr,fwhmArr):
         """ Saves the image centroid data"""
         hdu = fits.PrimaryHDU(cenArr)
         hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
@@ -277,12 +278,16 @@ class phot:
             head = self.save_centroids(cenArr)
         else:
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
+            fwhmArr = np.zeros((self.nImg,self.nsrc,ndim))
             #for ind, oneFile in enumerate(self.fileL):
             for ind, oneFile in enumerate(self.fileL):
                 img, head = self.getImg(oneFile)
-                allX, allY = self.get_allcen_img(img)
+                allX, allY, allfwhmX, allfwhmY = self.get_allcen_img(img)
                 cenArr[ind,:,0] = allX
                 cenArr[ind,:,1] = allY
+                fwhmArr[ind,:,0] = allfwhmX
+                fwhmArr[ind,:,1] = allfwhmY
+                
             head = self.save_centroids(cenArr)
             
         self.cenArr = cenArr
@@ -291,15 +296,20 @@ class phot:
     def get_allcen_img(self,img,showStamp=False):
         """ Gets the centroids for all sources in one image """
         allX, allY = [], []
+        allfwhmX, allfwhmY = []
+        
         for ind, onePos in enumerate(self.srcApertures.positions):
-            xcen, ycen = self.get_centroid(img,onePos[0],onePos[1])
+            xcen, ycen, fwhmX, fwhmY = self.get_centroid(img,onePos[0],onePos[1])
             allX.append(xcen)
             allY.append(ycen)
+            allfwhmX.append(fwhmX)
+            allfwhmY.append(fwhmY)
         
         if showStamp == True:
             posArr = np.vstack((allX,allY)).transpose()
+            #fwhmArr = np.vstack((allfwhmX,allfwhmY)).transpose()
             self.showStamps(img=img,custPos=posArr)
-        return allX, allY
+        return allX, allY, allfwhmX, allfwhmY
     
     def get_centroid(self,img,xGuess,yGuess):
         """ Get the centroid of a source given an x and y guess 
@@ -314,10 +324,22 @@ class phot:
         subimg = img[minY:maxY,minX:maxX]
         
         xcenSub,ycenSub = centroid_2dg(subimg)
+        
         xcen = xcenSub + minX
         ycen = ycenSub + minY
         
-        return xcen, ycen
+        fwhmX, fwhmY = self.get_fwhm(subimg,xcenSub,ycenSub)
+        
+        return xcen, ycen, fwhmX, fwhmY
+    
+    def get_fwhm(self,subimg,xCen,yCen):
+        """ Get the FWHM of the source in a subarray surrounding it 
+        """
+        GaussModel = photutils.fit_2dgaussian(subimg)
+        pdb.set_trace()
+        fwhmX = GaussModel.x_stddev.value * 2.35482005
+        fwhmY = GaussModel.y_stddev.value * 2.35482005
+        return fwhmX, fwhmY
     
     def add_filenames_to_header(self,hdu):
         """ Uses fits header cards to list the files"""
