@@ -255,13 +255,24 @@ class phot:
         hdu.header['AXIS2'] = ('src','source axis')
         hdu.header['AXIS3'] = ('image','image axis')
         hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
+        hdu.name = 'Centroids'
         
         self.add_filenames_to_header(hdu)
-        HDUList = fits.HDUList([hdu])
+        
+        hdu2 = fits.ImageHDU(fwhmArr)
+        hdu2.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
+        hdu2.header['NIMG'] = (self.nImg,'Number of images')
+        hdu2.header['AXIS1'] = ('dimension','dimension axis X=0,Y=1')
+        hdu2.header['AXIS2'] = ('src','source axis')
+        hdu2.header['AXIS3'] = ('image','image axis')
+        hdu2.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used to fit 2D gaussian')
+        hdu2.name = 'FWHM'
+        
+        HDUList = fits.HDUList([hdu,hdu2])
         HDUList.writeto(self.centroidFile,overwrite=True)
         
         head = hdu.header
-        return head
+        return head, hdu2.header
     
     def get_allimg_cen(self,recenter=False):
         """ Get all image centroids
@@ -274,6 +285,12 @@ class phot:
         if os.path.exists(self.centroidFile) and (recenter == False):
             HDUList = fits.open(self.centroidFile)
             cenArr, head = HDUList[0].data, HDUList[0].header
+            if len(HDUList) > 1:
+                fwhmArr, headFWHM = HDUList[1].data, HDUList[1].header
+                keepFWHM = True
+            else:
+                keepFWHM = False ## allow for legacy centroid files
+            
             HDUList.close()
         elif self.param['doCentering'] == False:
             img, head = self.get_default_im()
@@ -294,12 +311,15 @@ class phot:
                 cenArr[ind,:,1] = allY
                 fwhmArr[ind,:,0] = allfwhmX
                 fwhmArr[ind,:,1] = allfwhmY
-                pdb.set_trace()
+                keepFWHM = True
                 
-            head = self.save_centroids(cenArr)
+            head, headFWHM = self.save_centroids(cenArr,fwhmArr)
             
         self.cenArr = cenArr
         self.cenHead = head
+        if keepFWHM == True:
+            self.fwhmArr = fwhmArr
+            self.headFWHM = headFWHM
     
     def get_allcen_img(self,img,showStamp=False):
         """ Gets the centroids for all sources in one image """
