@@ -158,7 +158,7 @@ class phot:
         fig.savefig('plots/photometry/star_labels/st_labels.pdf',
                     bbox_inches='tight')
 
-    def showStamps(self,img=None,head=None,custPos=None):
+    def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
@@ -184,9 +184,16 @@ class phot:
             ax.set_title(self.srcNames[ind])
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
-            circ = plt.Circle((onePos[0] - xStamp[0],onePos[1] - yStamp[0]),
+            srcX, srcY = onePos[0] - xStamp[0],onePos[1] - yStamp[0]
+            circ = plt.Circle((srcX,srcY),
                               self.param['apRadius'],edgecolor='red',facecolor='none')
             ax.add_patch(circ)
+            
+            if custFWHM is not None:
+                circFWHM = plt.Circle((srcX,srcY),
+                                      custFWHM[ind],edgecolor='orange',facecolor='none')
+                ax.add_patch(circFWHM)
+            
         
         fig.colorbar(imData,label='Counts')
         
@@ -287,6 +294,7 @@ class phot:
                 cenArr[ind,:,1] = allY
                 fwhmArr[ind,:,0] = allfwhmX
                 fwhmArr[ind,:,1] = allfwhmY
+                pdb.set_trace()
                 
             head = self.save_centroids(cenArr)
             
@@ -296,7 +304,7 @@ class phot:
     def get_allcen_img(self,img,showStamp=False):
         """ Gets the centroids for all sources in one image """
         allX, allY = [], []
-        allfwhmX, allfwhmY = []
+        allfwhmX, allfwhmY = [], []
         
         for ind, onePos in enumerate(self.srcApertures.positions):
             xcen, ycen, fwhmX, fwhmY = self.get_centroid(img,onePos[0],onePos[1])
@@ -308,7 +316,8 @@ class phot:
         if showStamp == True:
             posArr = np.vstack((allX,allY)).transpose()
             #fwhmArr = np.vstack((allfwhmX,allfwhmY)).transpose()
-            self.showStamps(img=img,custPos=posArr)
+            quadFWHM = np.sqrt(np.array(allfwhmX)**2 + np.array(allfwhmY)**2)
+            self.showStamps(img=img,custPos=posArr,custFWHM=quadFWHM)
         return allX, allY, allfwhmX, allfwhmY
     
     def get_centroid(self,img,xGuess,yGuess):
@@ -336,7 +345,7 @@ class phot:
         """ Get the FWHM of the source in a subarray surrounding it 
         """
         GaussModel = photutils.fit_2dgaussian(subimg)
-        pdb.set_trace()
+        
         fwhmX = GaussModel.x_stddev.value * 2.35482005
         fwhmY = GaussModel.y_stddev.value * 2.35482005
         return fwhmX, fwhmY
