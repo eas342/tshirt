@@ -815,7 +815,26 @@ def allTser(refCorrect=False,showBestFit=False):
         fig.savefig('plots/photometry/tser_allstar/all_kic1255.pdf')
 
 
-
+def seeing_summary():
+    """ Makes a summary of the seeing for a given night """
+    cenList = glob.glob('centroids/*.fits')
+    
+    fileArr,medFWHMArr = [], []
+    
+    for oneFile in cenList:
+        HDUList = fits.open(oneFile)
+        if 'FWHM' in HDUList:
+            fwhmData = np.abs(HDUList['FWHM'].data)
+            low, med, high = np.nanpercentile(fwhmData,[0.32,0.5, 0.68])
+            baseName = os.path.basename(oneFile)
+            print("{}: {} {} {}".format(baseName,low,med,high))
+            fileArr.append(baseName)
+            medFWHMArr.append(med)
+        HDUList.close()
+    t = Table()
+    t['File'] = fileArr
+    t['FWHM'] = medFWHMArr
+    return t
 # # ## Compare to SLC curve
 #
 # # In[63]:
