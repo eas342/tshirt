@@ -450,7 +450,7 @@ class phot:
         hduTime.name = 'Time'
         hduCen.name = 'Centroids'
         
-        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen,hduFWHM])
+        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen])
         
         if self.doFWHM == True:
             hduFWHM = fits.ImageHDU(self.fwhmArr,header=self.headFWHM)
