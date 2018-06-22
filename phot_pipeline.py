@@ -287,9 +287,9 @@ class phot:
             cenArr, head = HDUList[0].data, HDUList[0].header
             if len(HDUList) > 1:
                 fwhmArr, headFWHM = HDUList[1].data, HDUList[1].header
-                keepFWHM = True
+                self.keepFWHM = True
             else:
-                keepFWHM = False ## allow for legacy centroid files
+                self.keepFWHM = False ## allow for legacy centroid files
             
             HDUList.close()
         elif self.param['doCentering'] == False:
@@ -300,6 +300,7 @@ class phot:
                 cenArr[ind,:,0] = pos[:,0]
                 cenArr[ind,:,1] = pos[:,1]
             head = self.save_centroids(cenArr)
+            self.keepFWHM = False
         else:
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
             fwhmArr = np.zeros((self.nImg,self.nsrc,ndim))
@@ -311,13 +312,13 @@ class phot:
                 cenArr[ind,:,1] = allY
                 fwhmArr[ind,:,0] = allfwhmX
                 fwhmArr[ind,:,1] = allfwhmY
-                keepFWHM = True
+            self.keepFWHM = True
                 
             head, headFWHM = self.save_centroids(cenArr,fwhmArr)
             
         self.cenArr = cenArr
         self.cenHead = head
-        if keepFWHM == True:
+        if self.keepFWHM == True:
             self.fwhmArr = fwhmArr
             self.headFWHM = headFWHM
     
@@ -448,7 +449,13 @@ class phot:
         hdu.name = 'Photometry'
         hduTime.name = 'Time'
         hduCen.name = 'Centroids'
-        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen])
+        
+        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen,hduFWHM])
+        
+        if self.doFWHM == True:
+            hduFWHM = fits.ImageHDU(self.fwhmArr,header=self.headFWHM)
+            HDUList.append(hduFWHM)
+        
         
         HDUList.writeto(self.photFile,overwrite=True)
     
