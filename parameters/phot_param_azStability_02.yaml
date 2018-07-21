@@ -1,0 +1,19 @@
+procFiles: /data1/Local/AZLabStability/red_03/NRCSTABTST_1_486*.slp.fits ## files on which to do Phot
+srcName: B1
+srcNameShort: B1
+nightName: AZLabStab01red02
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 968.0, 140.5]
+   - [1019.0, 140.5]
+srcGeometry: Square ## Source aperture geometry
+bkgSub: False ## Do background subtraction?
+bkgGeometry: None  ## Background geometry
+apRadius: 60. ## Source aperture radius
+backStart: None ## Background annulus start radius
+backEnd: None ## Background annulus end radius
+boxFindSize: None ## the half-width of the box used for source centroiding
+jdRef: 2457816.6 ## JD reference offset to subtract
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+description: The input files have been chosen to use only 5 groups of the ramp to stay more in the linear regime.
