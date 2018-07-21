@@ -20,3 +20,5 @@ boxFindSize: 18 ## the half-width of the box used for source centroiding
 jdRef: 2457551 ## JD reference offset to subtract
 apHeight: None ## Source aperture height for Rectangular srcGeometry
 apWidth: None ## Source aperture width for Rectangular srcGeometry
+scaleAperture: True ## Scale the aperture with the FWHM?
+apScale: 2.5 ## number of times the FWHM for aperture-scaling

@@ -53,7 +53,8 @@ class phot:
         self.nsrc = len(positions)
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
-                        'doCentering': True, 'bkgGeometry': 'CircularAnnulus'}
+                        'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
+                        'scaleAperture': False, 'apScale': 2.5}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -397,6 +398,11 @@ class phot:
             
             self.srcApertures.positions = self.cenArr[ind]
             
+            if 'scaleAperture' in self.param:
+                if self.param['scaleAperture'] == True:
+                    medianFWHM = np.median(self.fwhmArr[ind])
+                    self.srcApertures.r = medianFWHM * self.param['apScale']
+            
             if 'RDNOISE1' in head:
                 readNoise = float(head['RDNOISE1'])
             else:
@@ -452,7 +458,7 @@ class phot:
         
         HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen])
         
-        if self.doFWHM == True:
+        if self.keepFWHM == True:
             hduFWHM = fits.ImageHDU(self.fwhmArr,header=self.headFWHM)
             HDUList.append(hduFWHM)
         
