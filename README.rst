@@ -26,11 +26,36 @@ Execute ``nohup python prep_images.py &`` to run the reduction in the background
 
 Usage for Time Series Aperture Photometry
 ==========================================
+
+Photometry Parameters File
+---------------------------
 Create a photometry parameters file from the example in ``parameters/phot_parameters.yaml``.
 You will need to specify a list of files, source name and a list of source coordinates in pixels [x,y].
 The first source should be the target and the rest will be reference stars.
 Specify the aperture geometry, sizes as well as the box finding size for locating sources.
-The `jdRef` parameter specifies a reference epoch for time series plots.
+The ``jdRef`` parameter specifies a reference epoch for time series plots.
+The apertures can be fixed for all images or be scaled with the FWHM using either ``scaleAperture: True`` or ``scaleAperture: False``. If true, specify the scaling factor. The source aperture will be the FWHM multiplied by the scaling factor 
+
+.. math::
+
+   r_src = FWHM * apScale.
+
+The background start will be calculated as 
+
+.. math::
+
+   r_in = backStart - apRadius + r_src.
+   
+The background end will be calculated as
+
+.. math::
+
+   r_out = backEnd - backStart + r_in
+
+where the ``apScale``, ``backStart``, ``apRadius`` and ``backEnd`` keywords are specified in the parameter file.
+
+Running the Time Series Aperture Photometry
+--------------------------------------------
 Run the following commands in either an iPython session or in a python script:
 
 ::
