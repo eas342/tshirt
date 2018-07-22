@@ -22,3 +22,5 @@ tser_data/refcor_phot/*.fits
 tser_data/best_fit_models/kic1255/kic1255_best_fit*.csv
 mcmcRuns/k1255_mod/kuiper/old_mcmc/
 tser_data/phot/old/
+tser_data/phot/backups/
+tser_data/phot/phot_w_constant_aperture/
