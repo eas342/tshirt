@@ -54,7 +54,7 @@ class phot:
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
-                        'scaleAperture': False, 'apScale': 2.5}
+                        'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999]}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -401,7 +401,22 @@ class phot:
             if 'scaleAperture' in self.param:
                 if self.param['scaleAperture'] == True:
                     medianFWHM = np.median(self.fwhmArr[ind])
+                    
+                    minFWHMRallowed, maxFWHMallowed = self.param['apRange']
+                    bigRadius = 2. * self.param['backEnd']
+                    if medianFWHM < minFWHMallowed:
+                        warnings.warn("FWHM found was smaller than apRange ({}) px. Using {} for Image {}"format(minFWHMallowed,minFWHMallowed,self.fileL[ind]))
+                        medianFWHM = minFWHMallowed
+                    elif medianFWHM > maxFWHMallowed:
+                        warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}"format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
+                        medianFWHM = maxFWHMallowed
+                    
                     self.srcApertures.r = medianFWHM * self.param['apScale']
+                    self.bkgApertures.r_in = (self.srcApertures.r + 
+                                              self.param['backStart'] - self.param['apRadius'])
+                    self.bkgApertures.r_out = (self.bkgApertures.r_in +
+                                               self.param['backEnd'] - self.param['backStart'])
+                    
             
             if 'RDNOISE1' in head:
                 readNoise = float(head['RDNOISE1'])
@@ -464,6 +479,7 @@ class phot:
         
         
         HDUList.writeto(self.photFile,overwrite=True)
+        warnings.resetwarnings()
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
                   normReg=None,doBin=None):
