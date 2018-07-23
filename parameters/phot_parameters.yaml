@@ -22,3 +22,4 @@ apHeight: None ## Source aperture height for Rectangular srcGeometry
 apWidth: None ## Source aperture width for Rectangular srcGeometry
 scaleAperture: True ## Scale the aperture with the FWHM?
 apScale: 2.5 ## number of times the FWHM for aperture-scaling
+apRange: [2,17] ## min/max range of allowed FHWM, when scaling
