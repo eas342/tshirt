@@ -6,7 +6,10 @@ except ImportError:
     warnings.warn("Unable to import miescatter, so scattering models won't work")
 import pdb
 import matplotlib.pyplot as plt
-import es_gen
+try:
+    import es_gen
+except ImportError:
+    warnings.warn("Unable to import es_gen. Some of the Mie scattering models may not work")
 import yaml
 
 coeff = yaml.load(open('parameters/mie_params/simplePoly.yaml'))
