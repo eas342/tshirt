@@ -23,7 +23,6 @@ try:
     import spiderman
 except ImportError:
     warnings.warn('Could not load spiderman models.')
-import phot_pipeline
 import fit_models
 
 def sanitize_param(inputP):
