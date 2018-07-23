@@ -402,13 +402,13 @@ class phot:
                 if self.param['scaleAperture'] == True:
                     medianFWHM = np.median(self.fwhmArr[ind])
                     
-                    minFWHMRallowed, maxFWHMallowed = self.param['apRange']
+                    minFWHMallowed, maxFWHMallowed = self.param['apRange']
                     bigRadius = 2. * self.param['backEnd']
                     if medianFWHM < minFWHMallowed:
-                        warnings.warn("FWHM found was smaller than apRange ({}) px. Using {} for Image {}"format(minFWHMallowed,minFWHMallowed,self.fileL[ind]))
+                        warnings.warn("FWHM found was smaller than apRange ({}) px. Using {} for Image {}".format(minFWHMallowed,minFWHMallowed,self.fileL[ind]))
                         medianFWHM = minFWHMallowed
                     elif medianFWHM > maxFWHMallowed:
-                        warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}"format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
+                        warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}".format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
                         medianFWHM = maxFWHMallowed
                     
                     self.srcApertures.r = medianFWHM * self.param['apScale']
