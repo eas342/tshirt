@@ -53,6 +53,8 @@ The background end will be calculated as
    r_out = backEnd - backStart + r_in
 
 where the ``apScale``, ``backStart``, ``apRadius`` and ``backEnd`` keywords are specified in the parameter file.
+You can also specify an ``apRange`` parameter which sets the minimum and maximum allowed FWHM. This adds some robustness in the case the FWHM found is wacky - for example if clouds go over.
+
 
 Running the Time Series Aperture Photometry
 --------------------------------------------
