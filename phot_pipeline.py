@@ -535,21 +535,22 @@ class phot:
                 goodP = (yShow > minValue) & (yShow < maxValue)
                 nBin = int(np.round((np.max(x[goodP]) - np.min(x[goodP]))/doBin))
                 
-                yBins = Table()
-                for oneStatistic in ['mean','std','count']:
-                    if oneStatistic == 'std':
-                        statUse = np.std
-                    else: statUse = oneStatistic
-                    
-                    yBin, xEdges, binNum = binned_statistic(x[goodP],yShow[goodP],
-                                                            statistic=statUse,bins=nBin)
-                    yBins[oneStatistic] = yBin
+                if nBin > 1:
+                    yBins = Table()
+                    for oneStatistic in ['mean','std','count']:
+                        if oneStatistic == 'std':
+                            statUse = np.std
+                        else: statUse = oneStatistic
+                        
+                        yBin, xEdges, binNum = binned_statistic(x[goodP],yShow[goodP],
+                                                                statistic=statUse,bins=nBin)
+                        yBins[oneStatistic] = yBin
                 
-                ## Standard error in the mean
-                stdErrM = yBins['std'] / np.sqrt(yBins['count'])
+                    ## Standard error in the mean
+                    stdErrM = yBins['std'] / np.sqrt(yBins['count'])
                 
-                xbin = (xEdges[:-1] + xEdges[1:])/2.
-                ax.errorbar(xbin,yBins['mean'],yerr=stdErrM,marker='s',markersize=3.,
+                    xbin = (xEdges[:-1] + xEdges[1:])/2.
+                    ax.errorbar(xbin,yBins['mean'],yerr=stdErrM,marker='s',markersize=3.,
                             label='binned')
                 
         else:
