@@ -452,7 +452,15 @@ class phot:
         hdu.header['AXIS2'] = ('image','image axis')
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
-        hdu.header['APRADIUS'] = (self.param['apRadius'], 'Aperture radius (px)')
+        if 'apRadius' in self.param:
+            hdu.header['APRADIUS'] = (self.param['apRadius'], 'Aperture radius (px)')
+        elif 'apHeight' in self.param:
+            hdu.header['APRADIUS'] = (self.param['apHeight'], 'Aperture radius (px)')
+            hdu.header['APHEIGHT'] = (self.param['apHeight'], 'Aperture radius (px)')
+            hdu.header['APWIDTH'] = (self.param['apWidth'], 'Aperture radius (px)')
+        else:
+            print("No apHeight or apRadius found in parameters")
+        
         hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px)')
         hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px)')
         hdu.header['BOXSZ'] = (self.cenHead['BOXSZ'], 'half-width of the box used for source centroiding')
