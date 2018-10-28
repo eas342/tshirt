@@ -32,8 +32,16 @@ Photometry Parameters File
 Create a photometry parameters file from the example in ``parameters/phot_parameters.yaml``.
 You will need to specify a list of files, source name and a list of source coordinates in pixels [x,y].
 The first source should be the target and the rest will be reference stars.
-Specify the aperture geometry, sizes as well as the box finding size for locating sources.
 The ``jdRef`` parameter specifies a reference epoch for time series plots.
+
+Aperture Photometry Geometry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Specify the aperture geometry, sizes as well as the box finding size for locating sources.
+
+
+Scaled Aperture Sizes
+~~~~~~~~~~~~~~~~~~~~~~
 The apertures can be fixed for all images or be scaled with the FWHM using either ``scaleAperture: True`` or ``scaleAperture: False``. If true, specify the scaling factor. The source aperture will be the FWHM multiplied by the scaling factor 
 
 .. math::
@@ -54,6 +62,10 @@ The background end will be calculated as
 
 where the ``apScale``, ``backStart``, ``apRadius`` and ``backEnd`` keywords are specified in the parameter file.
 You can also specify an ``apRange`` parameter which sets the minimum and maximum allowed FWHM. This adds some robustness in the case the FWHM found is wacky - for example if clouds go over.
+
+
+
+=====================
 
 
 Running the Time Series Aperture Photometry
