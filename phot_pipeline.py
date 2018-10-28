@@ -300,7 +300,8 @@ class phot:
             for ind, oneFile in enumerate(self.fileL):
                 cenArr[ind,:,0] = pos[:,0]
                 cenArr[ind,:,1] = pos[:,1]
-            head = self.save_centroids(cenArr)
+            fwhm = np.zeros_like(cenArr)
+            head = self.save_centroids(cenArr,fwhm)
             self.keepFWHM = False
         else:
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))

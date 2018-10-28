@@ -1,4 +1,4 @@
-procFiles: /data1/tso_analysis/all_tso_otis/raw_separated_MMM/NRCN83-256-O9LW-7251174918_1_2819_JW1_JLAB40_20170908T131523.621_20170908T192559.261/*.fits ## files on which to do Phot
+procFiles: /data1/tso_analysis/all_tso_otis/raw_separated_MMM/NRCN83-256-O9LW-7251174918_1_2819_JW1_JLAB40_20170908T131523.621_20170908T192559.261/*I???.slp.fits ## files on which to do Phot
 srcName: LWgrism
 srcNameShort: LWgrism
 nightName: otisSWLWsimult
