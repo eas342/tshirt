@@ -156,7 +156,7 @@ class phot:
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
         fig.show()
-        fig.savefig('plots/photometry/star_labels/st_labels.pdf',
+        fig.savefig('plots/photometry/star_labels/st_labels_{}.pdf'.format(self.dataFileDescrip),
                     bbox_inches='tight')
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
