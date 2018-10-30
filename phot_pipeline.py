@@ -429,6 +429,7 @@ class phot:
             err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
             
             rawPhot = aperture_photometry(img,self.srcApertures,error=err)
+            
             if self.param['bkgSub'] == True:
                 self.bkgApertures.positions = self.cenArr[ind]  
                 bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
@@ -661,10 +662,10 @@ class phot:
         else:
             img = data
         
-        if self.param['nanTreatment'] = 'zero':
+        if self.param['nanTreatment'] == 'zero':
             nanPt = (np.isfinite(img) == False)
             img[nanPt] = 0.0
-        elif self.param['nanTreatment'] = '':
+        elif self.param['nanTreatment'] == '':
             raise NotImplementedError
         
         head = HDUList[ext].header
