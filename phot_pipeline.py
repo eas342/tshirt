@@ -137,20 +137,22 @@ class phot:
 
         if showAps == True:
             self.srcApertures.plot(ax=ax)
-        
+            outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
             ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
             
             showApPos = self.get_default_cen(custPos=custPos)
-            for ind, onePos in enumerate(showApPos):
-                
-                #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
-                #ax.add_patch(circ)
-                if ind == 0:
-                    name='src'
-                else:
-                    name=str(ind)
-                ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color='white')
+            outName = 'st_labels_{}.pdf'.format(self.dataFileDescrip)
+        
+        for ind, onePos in enumerate(showApPos):
+            
+            #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
+            #ax.add_patch(circ)
+            if ind == 0:
+                name='src'
+            else:
+                name=str(ind)
+            ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color='white')
         
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
@@ -158,7 +160,7 @@ class phot:
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
         fig.show()
-        fig.savefig('plots/photometry/star_labels/st_labels_{}.pdf'.format(self.dataFileDescrip),
+        fig.savefig('plots/photometry/star_labels/{}'.format(labelName),
                     bbox_inches='tight')
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
