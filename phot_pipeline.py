@@ -16,6 +16,7 @@ from photutils import centroid_2dg, aperture_photometry
 import photutils
 import numpy as np
 from astropy.time import Time
+import astropy.units as u
 import pdb
 import es_gen
 from copy import deepcopy
@@ -396,6 +397,10 @@ class phot:
             
             img, head = self.getImg(oneImg)
             t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
+            if 'timingMethod' in self.param:
+                if 'timingMethod' == 'JWSTint':
+                    t = t + (head['TFRAME'] + head['INTTIME']) * head['ON_NINT'] * u.sec
+                    pdb.set_trace()
             jdArr.append(t.jd)
             
             self.srcApertures.positions = self.cenArr[ind]

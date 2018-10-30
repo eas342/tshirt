@@ -16,6 +16,7 @@ backStart: None ## Background annulus start radius
 backEnd: None ## Background annulus end radius
 boxFindSize: None ## the half-width of the box used for source centroiding
 jdRef: 2458005.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
 isCube: True
 cubePlane: 0 ## The plane to choose if images are cubes
 doCentering: False ## Center the aperturess with Gaussian?
