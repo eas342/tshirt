@@ -11,6 +11,7 @@ bkgGeometry: None  ## Background geometry
 #apRadius: 60. ## Source aperture radius
 apHeight: 40 ## Source aperture height (only for rectangular aperture)
 apWidth: 1502 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
 backStart: None ## Background annulus start radius
 backEnd: None ## Background annulus end radius
 boxFindSize: None ## the half-width of the box used for source centroiding

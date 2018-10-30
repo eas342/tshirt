@@ -54,7 +54,8 @@ class phot:
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
-                        'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999]}
+                        'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
+                        'nanTreatment': None}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -659,6 +660,12 @@ class phot:
             img = data[0,:,:]
         else:
             img = data
+        
+        if self.param['nanTreatment'] = 'zero':
+            nanPt = (np.isfinite(img) == False)
+            img[nanPt] = 0.0
+        elif self.param['nanTreatment'] = '':
+            raise NotImplementedError
         
         head = HDUList[ext].header
         HDUList.close()
