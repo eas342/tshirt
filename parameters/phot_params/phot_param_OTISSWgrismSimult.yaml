@@ -4,8 +4,8 @@ srcNameShort: SWgrism
 nightName: otisSWLWsimult
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [ 1094, 225]
+   - [ 1192, 167]
    - [ 990.0,228]
-   - [ 1045, 225.0]
    - [ 914, 169.0]
 srcGeometry: Rectangular ## Source aperture geometry
 bkgSub: False ## Do background subtraction?
