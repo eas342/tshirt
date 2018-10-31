@@ -135,13 +135,13 @@ class phot:
         ax.invert_yaxis()
         rad, txtOffset = 50, 20
 
+        showApPos = self.get_default_cen(custPos=custPos)
         if showAps == True:
             self.srcApertures.plot(ax=ax)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
             ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
             
-            showApPos = self.get_default_cen(custPos=custPos)
             outName = 'st_labels_{}.pdf'.format(self.dataFileDescrip)
         
         for ind, onePos in enumerate(showApPos):
@@ -160,7 +160,7 @@ class phot:
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
         fig.show()
-        fig.savefig('plots/photometry/star_labels/{}'.format(labelName),
+        fig.savefig('plots/photometry/star_labels/{}'.format(outName),
                     bbox_inches='tight')
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
