@@ -7,7 +7,7 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
 srcGeometry: Circular ## Source aperture geometry
 bkgSub: False ## Do background subtraction?
 bkgGeometry: None  ## Background geometry
-apRadius: 60. ## Source aperture radius
+apRadius: 15. ## Source aperture radius
 #apHeight: 51 ## Source aperture height (only for rectangular aperture)
 #apWidth: 67 ## Source aperture width (only for rectangular aperture)
 nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
