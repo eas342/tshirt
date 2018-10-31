@@ -37,7 +37,12 @@ The ``jdRef`` parameter specifies a reference epoch for time series plots.
 Aperture Photometry Geometry
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Specify the aperture geometry, sizes as well as the box finding size for locating sources.
+Specify the aperture geometry, sizes as well as the box finding size for locating sources. The options for geometry `srcGeometry` are "Circular" and "Rectangular".
+
+
+Fixed Aperture Sizes
+~~~~~~~~~~~~~~~~~~~~~~~
+For the circular aperture ``apRadius``, ``apHeight`` and ``apWidth`` give the source radius, and the inner and outer radii of the background annulus. For a rectangular aperture, the ``apHeight`` and ``apWidth`` describe the height and width. These units are in pixels.
 
 
 Scaled Aperture Sizes
@@ -65,6 +70,7 @@ You can also specify an ``apRange`` parameter which sets the minimum and maximum
 
 
 
+
 =====================
 
 
@@ -75,10 +81,12 @@ Run the following commands in either an iPython session or in a python script:
 ::
 
    phot = phot_pipeline.phot(paramFile='parameters/aug2016_corot1_parameters.yaml')
+   phot.showStarChoices()
+   phot.showStarChoices(showAps=True)
    phot.do_phot()
    phot.showCustSet()
 
-where ``parameters/aug2016_corot1_parameters.yaml`` is the name of the ``yaml`` parameters file.
+where ``parameters/aug2016_corot1_parameters.yaml`` is the name of the ``yaml`` parameters file. `phot.showStarChoices`
 
 Usage for Time Series Model Fitting
 ====================================
