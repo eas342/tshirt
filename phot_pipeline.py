@@ -55,6 +55,7 @@ class phot:
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
+                        'boxFindSize': 18,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': None}
         
@@ -473,7 +474,7 @@ class phot:
         
         hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px)')
         hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px)')
-        hdu.header['BOXSZ'] = (self.cenHead['BOXSZ'], 'half-width of the box used for source centroiding')
+        hdu.header['BOXSZ'] = (self.param['boxFindSize'], 'half-width of the box used for source centroiding')
         hdu.header['JDREF'] = (self.param['jdRef'], ' JD reference offset to subtract for plots')
         
         self.add_filenames_to_header(hdu)
