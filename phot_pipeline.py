@@ -55,7 +55,7 @@ class phot:
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
-                        'boxFindSize': 18,,'backStart': 9, 'backEnd': 12,
+                        'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': None}
         
