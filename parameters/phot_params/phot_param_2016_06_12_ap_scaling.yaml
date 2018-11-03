@@ -1,0 +1,25 @@
+procFiles: /data1/tso_analysis/kic1255/UT2016_06_12/proc/k1255*.fits ## files on which to do Phot
+srcName: KIC 12557548
+srcNameShort: kic1255
+nightName: UT2016_06_12
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 750.2,  682.3]
+   - [ 842.3,  682.4]
+   - [1027.4,  856.9]
+   - [ 592.2,  746.8]
+   - [ 607.9,  656.2]
+   - [ 551.2,  422.9]
+   - [ 834.2,  338.4]
+   - [ 746.4,  154.1]
+   - [ 371.9,  165.0]
+   - [ 208.9,  279.1]
+   - [ 108.0,  362.7]
+   - [  31.8,  628.2]
+   - [ 137.6, 1108.5]
+apRadius: 9. ## Source aperture radius
+backStart: 9. ## Background annulus start radius
+backEnd: 12. ## Background annulus end radius
+boxFindSize: 18 ## the half-width of the box used for source centroiding
+jdRef: 2457551 ## JD reference offset to subtract
+scaleAperture: True ## Scale the aperture with the FWHM?
+apScale: 2.5 ## number of times the FWHM for aperture-scaling
