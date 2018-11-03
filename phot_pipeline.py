@@ -252,6 +252,17 @@ class phot:
             print('Unrecognized plot type')
             
     
+    def make_filename_hdu(self):
+        """
+        Makes a Header data unit (binary FITS table) for filenames
+        """
+        fileLTable = Table()
+        fileLTable['File Path'] = self.fileL
+        hduFileNames = fits.BinTableHDU(fileLTable)
+        hduFileNames.name = "FILENAMES"
+        
+        return hduFileNames
+    
     def save_centroids(self,cenArr,fwhmArr):
         """ Saves the image centroid data"""
         hdu = fits.PrimaryHDU(cenArr)
@@ -263,8 +274,6 @@ class phot:
         hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
         hdu.name = 'Centroids'
         
-        self.add_filenames_to_header(hdu)
-        
         hdu2 = fits.ImageHDU(fwhmArr)
         hdu2.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
         hdu2.header['NIMG'] = (self.nImg,'Number of images')
@@ -274,7 +283,9 @@ class phot:
         hdu2.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used to fit 2D gaussian')
         hdu2.name = 'FWHM'
         
-        HDUList = fits.HDUList([hdu,hdu2])
+        hduFileNames = self.make_filename_hdu()
+        
+        HDUList = fits.HDUList([hdu,hdu2,hduFileNames])
         HDUList.writeto(self.centroidFile,overwrite=True)
         
         head = hdu.header
@@ -290,9 +301,9 @@ class phot:
             
         if os.path.exists(self.centroidFile) and (recenter == False):
             HDUList = fits.open(self.centroidFile)
-            cenArr, head = HDUList[0].data, HDUList[0].header
-            if len(HDUList) > 1:
-                fwhmArr, headFWHM = HDUList[1].data, HDUList[1].header
+            cenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
+            if "FWHM" in HDUList:
+                fwhmArr, headFWHM = HDUList["FWHM"].data, HDUList["FWHM"].header
                 self.keepFWHM = True
             else:
                 self.keepFWHM = False ## allow for legacy centroid files
@@ -379,7 +390,10 @@ class phot:
         return fwhmX, fwhmY
     
     def add_filenames_to_header(self,hdu):
-        """ Uses fits header cards to list the files"""
+        """ Uses fits header cards to list the files
+        This clutters up the header, so I have now moved
+        the fileName list to a separate structure
+        """
         for ind, oneFile in enumerate(self.fileL):
             hdu.header['FIL'+str(ind)] = (os.path.basename(oneFile),'file name')
         
@@ -477,7 +491,7 @@ class phot:
         hdu.header['BOXSZ'] = (self.param['boxFindSize'], 'half-width of the box used for source centroiding')
         hdu.header['JDREF'] = (self.param['jdRef'], ' JD reference offset to subtract for plots')
         
-        self.add_filenames_to_header(hdu)
+        hduFileNames = self.make_filename_hdu()
         
         hduTime = fits.ImageHDU(jdArr)
         hduTime.header['UNITS'] = ('days','JD time, UT')
@@ -489,8 +503,9 @@ class phot:
         hdu.name = 'Photometry'
         hduTime.name = 'Time'
         hduCen.name = 'Centroids'
+        ## hduFileName.name = 'Filenames' # already named by make_filename_hdu
         
-        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen])
+        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen,hduFileNames])
         
         if self.keepFWHM == True:
             hduFWHM = fits.ImageHDU(self.fwhmArr,header=self.headFWHM)
