@@ -316,8 +316,8 @@ class phot:
             for ind, oneFile in enumerate(self.fileL):
                 cenArr[ind,:,0] = pos[:,0]
                 cenArr[ind,:,1] = pos[:,1]
-            fwhm = np.zeros_like(cenArr)
-            head = self.save_centroids(cenArr,fwhm)
+            fwhmArr = np.zeros_like(cenArr)
+            head, headFWHM = self.save_centroids(cenArr,fwhmArr)
             self.keepFWHM = False
         else:
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
