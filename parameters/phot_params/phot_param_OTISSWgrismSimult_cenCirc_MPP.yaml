@@ -1,0 +1,21 @@
+procFiles: /data1/tso_analysis/all_tso_otis/raw_separated_MPP/NRCN83-256-O9SW-7251174342_1_2820_JW1_JLAB40_20170908T131522.725_20170908T192558.685/*I???.slp.fits ## files on which to do Phot
+srcName: SWgrism_cen_cenCirc_MPP
+srcNameShort: SWgrism_cenCirc_MPP
+nightName: otisSWLWsimult
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 1094, 230]
+srcGeometry: Circular ## Source aperture geometry
+bkgSub: False ## Do background subtraction?
+bkgGeometry: None  ## Background geometry
+apRadius: 15. ## Source aperture radius
+#apHeight: 51 ## Source aperture height (only for rectangular aperture)
+#apWidth: 67 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backStart: None ## Background annulus start radius
+backEnd: None ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458005.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: True ## Center the aperturess with Gaussian?
