@@ -516,7 +516,7 @@ class phot:
         warnings.resetwarnings()
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
-                  normReg=None,doBin=None):
+                  normReg=None,doBin=None,doNorm=True):
         """ Plots previously calculated photometry 
         Parameters
         ---------------------
@@ -536,6 +536,8 @@ class phot:
         doBin: float or None
             The bin size if showing binned data
             This only works on reference-corrected photometry for now
+        doNorm: bool
+            Normalize the individual time series?
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
@@ -595,7 +597,11 @@ class phot:
                     pLabel = 'Src'
                 else:
                     pLabel = 'Ref '+str(oneSrc)
-                yplot = yNorm - offset * oneSrc
+                if doNorm == True:
+                    yplot = yNorm - offset * oneSrc
+                else:
+                    yplot = yFlux - offset * oneSrc
+                
                 ## To avoid repeat colors, switch to dashed lins
                 if oneSrc >= 10: linestyle='dashed'
                 else: linestyle= 'solid'
@@ -604,7 +610,10 @@ class phot:
             ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
                          str(head['BKGEND'])+']')
         ax.set_xlabel('JD - '+str(jdRef))
-        ax.set_ylabel('Normalized Flux + Offset')
+        if doNorm == True:
+            ax.set_ylabel('Normalized Flux + Offset')
+        else:
+            ax.set_ylabel('Flux + Offset')
         #ax.set_ylim(0.94,1.06)
         if showLegend == True:
             ax.legend(loc='best',fontsize=10)
