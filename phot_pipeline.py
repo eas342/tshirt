@@ -18,7 +18,7 @@ import numpy as np
 from astropy.time import Time
 import astropy.units as u
 import pdb
-import es_gen
+from general_python_mod import es_gen
 from copy import deepcopy
 import yaml
 import os

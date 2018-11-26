@@ -7,7 +7,7 @@ except ImportError:
 import pdb
 import matplotlib.pyplot as plt
 try:
-    import es_gen
+    from general_python_mod import es_gen
 except ImportError:
     warnings.warn("Unable to import es_gen. Some of the Mie scattering models may not work")
 import yaml
