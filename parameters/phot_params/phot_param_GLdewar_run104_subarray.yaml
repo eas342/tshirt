@@ -1,4 +1,4 @@
-procFiles: /data1/tso_analysis/gl_dewar/run_104/raw_separated_MMM/s02_array/*.slp.fits  ## files on which to do Phot
+procFiles: /surtdata1/tso_analysis/gl_dewar/run_104/raw_separated_MMM/s02_array/*.slp.fits  ## files on which to do Phot
 srcName: S02illum
 srcNameShort: S02illum
 nightName: GLrun104
