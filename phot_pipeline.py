@@ -99,7 +99,7 @@ class phot:
         """ Get the default image for postage stamps or star identification maps"""
         ## Get the data
         if img is None:
-            img, head = self.getImg(self.fileL[self.nImg/2])
+            img, head = self.getImg(self.fileL[self.nImg // 2])
         
         return img, head
     
@@ -235,7 +235,7 @@ class phot:
         """
         self.get_allimg_cen()
         if index == None:
-            index = self.nImg / 2
+            index = self.nImg // 2
         
         img, head = self.getImg(self.fileL[index])
         
