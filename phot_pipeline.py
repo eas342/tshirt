@@ -413,7 +413,13 @@ class phot:
                 print("On "+str(ind)+' of '+str(len(self.fileL)))
             
             img, head = self.getImg(oneImg)
-            t = Time(head['DATE-OBS']+'T'+head['TIME-OBS'])
+            if 'DATE-OBS' in head:
+                useDate = head['DATE-OBS']
+            elif 'DATE' in head:
+                warnings.warn('DATE-OBS not found in header. Using DATE instead')
+                month1, day1, year1 = head['DATE'].split("/")
+                useDate = "-".join([year1,month1,day1])                                                                              
+            t = Time(useDate+'T'+head['TIME-OBS'])
             if 'timingMethod' in self.param:
                 if self.param['timingMethod'] == 'JWSTint':
                     t = t + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT'] - 1.) * u.second
