@@ -623,9 +623,13 @@ class phot:
         #ax.set_ylim(0.94,1.06)
         if showLegend == True:
             ax.legend(loc='best',fontsize=10)
+        
         fig.show()
+        
         if refCorrect == True:
-            fig.savefig('plots/photometry/tser_refcor/refcor_01.pdf')
+            fig.savefig('plots/photometry/tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip))
+        else:
+            fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
     
     def refSeries(self,photArr,reNorm=False,custSrc=None,sigRej=5.):
         """ Average together the reference stars
