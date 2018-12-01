@@ -15,7 +15,7 @@ nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
 backStart: None ## Background annulus start radius
 backEnd: None ## Background annulus end radius
 boxFindSize: 15 ## the half-width of the box used for source centroiding
-jdRef: 2457320.0 ## JD reference offset to subtract
+jdRef: 2457320.5 ## JD reference offset to subtract
 timingMethod: None ## how to assign integration times? None, 'JWSTint' will calculate from ints
 isCube: True
 cubePlane: 0 ## The plane to choose if images are cubes
