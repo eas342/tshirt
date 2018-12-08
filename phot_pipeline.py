@@ -129,8 +129,8 @@ class phot:
         
         img, head = self.get_default_im(img=img,head=None)
         
-        lowVmin = np.percentile(img,1)
-        highVmin = np.percentile(img,99)
+        lowVmin = np.nanpercentile(img,1)
+        highVmin = np.nanpercentile(img,99)
 
         imData = ax.imshow(img,cmap='viridis',vmin=lowVmin,vmax=highVmin,interpolation='nearest')
         ax.invert_yaxis()
