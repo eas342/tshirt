@@ -57,7 +57,7 @@ class phot:
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
-                        'nanTreatment': None}
+                        'nanTreatment': None, 'backOffset': [0.0,0.0]}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -78,10 +78,14 @@ class phot:
         self.yCoors = self.srcApertures.positions[:,1]
         
         if self.param['bkgSub'] == True:
+            bkgPositions = np.array(deepcopy(positions))
+            bkgPositions[:,0] = bkgPositions[:,0] + self.param['backOffset'][0]
+            bkgPositions[:,1] = bkgPositions[:,0] + self.param['backOffset'][1]
+            
             if self.param['bkgGeometry'] == 'CircularAnnulus':
                 self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],
                                                     r_out=self.param['backEnd'])
-            elif self.param['bkgGeometry'] == 'Rectangle':
+            elif self.param['bkgGeometry'] == 'Rectangular':
                 self.bkgApertures = RectangularAperture(positions,w=self.param['backWidth'],
                                                     h=self.param['backHeight'],theta=0)
             else:
@@ -139,6 +143,8 @@ class phot:
         showApPos = self.get_default_cen(custPos=custPos)
         if showAps == True:
             self.srcApertures.plot(ax=ax)
+            if self.param['bkgSub'] == True:
+                self.bkgApertures.plot(ax=ax)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
             ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
@@ -336,6 +342,13 @@ class phot:
             
         self.cenArr = cenArr
         self.cenHead = head
+        
+        ## Make an array for the background offsets
+        backgOffsetArr = np.zeros((self.nImg,self.nsrc,ndim))
+        backgOffsetArr[:,:,0] = self.param['backOffset'][0]
+        backgOffsetArr[:,:,1] = self.param['backOffset'][0]
+        self.backgOffsetArr = backgOffsetArr
+        
         if self.keepFWHM == True:
             self.fwhmArr = fwhmArr
             self.headFWHM = headFWHM
@@ -441,12 +454,14 @@ class phot:
                         warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}".format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
                         medianFWHM = maxFWHMallowed
                     
-                    self.srcApertures.r = medianFWHM * self.param['apScale']
-                    self.bkgApertures.r_in = (self.srcApertures.r + 
-                                              self.param['backStart'] - self.param['apRadius'])
-                    self.bkgApertures.r_out = (self.bkgApertures.r_in +
-                                               self.param['backEnd'] - self.param['backStart'])
-                    
+                    if self.param['bkgGeometry'] == 'CircularAnnulus':
+                        self.srcApertures.r = medianFWHM * self.param['apScale']
+                        self.bkgApertures.r_in = (self.srcApertures.r + 
+                                                  self.param['backStart'] - self.param['apRadius'])
+                        self.bkgApertures.r_out = (self.bkgApertures.r_in +
+                                                   self.param['backEnd'] - self.param['backStart'])
+                    else:
+                        warnings.warn('Background Aperture scaling not set up for non-annular geometry')
             
             if 'RDNOISE1' in head:
                 readNoise = float(head['RDNOISE1'])
@@ -459,7 +474,7 @@ class phot:
             rawPhot = aperture_photometry(img,self.srcApertures,error=err)
             
             if self.param['bkgSub'] == True:
-                self.bkgApertures.positions = self.cenArr[ind]  
+                self.bkgApertures.positions = self.cenArr[ind] + self.backgOffsetArr[ind]
                 bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
                 bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
                 bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
@@ -492,8 +507,15 @@ class phot:
         else:
             print("No apHeight or apRadius found in parameters")
         
-        hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px)')
-        hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px)')
+        hdu.header['BKSUB'] = (self.param['bkgSub'], 'Do a background subtraction?')
+        hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px), if background used')
+        hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px), if background used')
+        if 'backHeight' in self.param:
+            hdu.header['BKHEIGHT'] = (self.param['backHeight'], 'Background Box Height (px)')
+            hdu.header['BKWIDTH'] = (self.param['backWdith'], 'Background Box Width (px)')
+        hdu.header['BKOFFSTX'] = (self.param['backOffset'][0], 'X Offset between background and source (px)')
+        hdu.header['BKOFFSTY'] = (self.param['backOffset'][1], 'Y Offset between background and source (px)')
+        
         hdu.header['BOXSZ'] = (self.param['boxFindSize'], 'half-width of the box used for source centroiding')
         hdu.header['JDREF'] = (self.param['jdRef'], ' JD reference offset to subtract for plots')
         
