@@ -80,13 +80,13 @@ class phot:
         if self.param['bkgSub'] == True:
             bkgPositions = np.array(deepcopy(positions))
             bkgPositions[:,0] = bkgPositions[:,0] + self.param['backOffset'][0]
-            bkgPositions[:,1] = bkgPositions[:,0] + self.param['backOffset'][1]
+            bkgPositions[:,1] = bkgPositions[:,1] + self.param['backOffset'][1]
             
             if self.param['bkgGeometry'] == 'CircularAnnulus':
-                self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],
+                self.bkgApertures = CircularAnnulus(bkgPositions,r_in=self.param['backStart'],
                                                     r_out=self.param['backEnd'])
             elif self.param['bkgGeometry'] == 'Rectangular':
-                self.bkgApertures = RectangularAperture(positions,w=self.param['backWidth'],
+                self.bkgApertures = RectangularAperture(bkgPositions,w=self.param['backWidth'],
                                                     h=self.param['backHeight'],theta=0)
             else:
                 raise ValueError('Unrecognized background geometry')
@@ -507,12 +507,12 @@ class phot:
         else:
             print("No apHeight or apRadius found in parameters")
         
-        hdu.header['BKSUB'] = (self.param['bkgSub'], 'Do a background subtraction?')
+        hdu.header['BKGSUB'] = (self.param['bkgSub'], 'Do a background subtraction?')
         hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px), if background used')
         hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px), if background used')
         if 'backHeight' in self.param:
             hdu.header['BKHEIGHT'] = (self.param['backHeight'], 'Background Box Height (px)')
-            hdu.header['BKWIDTH'] = (self.param['backWdith'], 'Background Box Width (px)')
+            hdu.header['BKWIDTH'] = (self.param['backWidth'], 'Background Box Width (px)')
         hdu.header['BKOFFSTX'] = (self.param['backOffset'][0], 'X Offset between background and source (px)')
         hdu.header['BKOFFSTY'] = (self.param['backOffset'][1], 'Y Offset between background and source (px)')
         
