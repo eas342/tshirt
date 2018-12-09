@@ -346,7 +346,7 @@ class phot:
         ## Make an array for the background offsets
         backgOffsetArr = np.zeros((self.nImg,self.nsrc,ndim))
         backgOffsetArr[:,:,0] = self.param['backOffset'][0]
-        backgOffsetArr[:,:,1] = self.param['backOffset'][0]
+        backgOffsetArr[:,:,1] = self.param['backOffset'][1]
         self.backgOffsetArr = backgOffsetArr
         
         if self.keepFWHM == True:
