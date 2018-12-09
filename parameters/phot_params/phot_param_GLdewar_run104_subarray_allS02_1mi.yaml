@@ -1,0 +1,22 @@
+procFiles: /surtrdata1/tso_analysis/gl_dewar/run_104/raw_separated_MMM/s02_all_1mi/*.slp.fits  ## files on which to do Phot
+srcName: S02illum All 1mi
+srcNameShort: S02illum1miAll
+nightName: GLrun104
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 40, 90]
+   - [ 120, 90]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: False ## Do background subtraction?
+bkgGeometry: None  ## Background geometry
+#apRadius: 15. ## Source aperture radius
+apHeight: 105 ## Source aperture height (only for rectangular aperture)
+apWidth: 70 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backStart: None ## Background annulus start radius
+backEnd: None ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2457320.5 ## JD reference offset to subtract
+timingMethod: None ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
