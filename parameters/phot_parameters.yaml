@@ -20,7 +20,7 @@ apRadius: 9. ## Source aperture radius
 backStart: 9. ## Background annulus start radius
 backEnd: 12. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
-#backWidth: 1502 ## Source aperture width (only for rectangular aperture)
+#backWidth: 1502 ## background aperture width (only for rectangular aperture)
 backOffset: [0.,0.] ## Background offset (from source centroid)
 boxFindSize: 18 ## the half-width of the box used for source centroiding
 jdRef: 2457551 ## JD reference offset to subtract
