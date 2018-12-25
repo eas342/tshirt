@@ -432,13 +432,13 @@ class phot:
                 warnings.warn('DATE-OBS not found in header. Using DATE instead')
                 month1, day1, year1 = head['DATE'].split("/")
                 useDate = "-".join([year1,month1,day1])                                                                              
-            t = Time(useDate+'T'+head['TIME-OBS'])
+            t0 = Time(useDate+'T'+head['TIME-OBS'])
             if 'timingMethod' in self.param:
                 if self.param['timingMethod'] == 'JWSTint':
-                    t = t + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT'] - 1.) * u.second
+                    t = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
             
             jdArr.append(t.jd)
-            
+
             self.srcApertures.positions = self.cenArr[ind]
             
             if 'scaleAperture' in self.param:
