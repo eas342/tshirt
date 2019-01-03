@@ -116,7 +116,8 @@ class phot:
         
         return showApPos
     
-    def showStarChoices(self,img=None,head=None,custPos=None,showAps=False):
+    def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
+                        srcLabel=None):
         """ Show the star choices for photometry
         Parameters
         ------------------
@@ -128,6 +129,9 @@ class phot:
             (optional) Custom positions
         showAps: bool
             (optional) Show apertures rather than circle stars
+        srcLabel: str or None
+            (optional) What should the source label be?
+                        The default is "src"
         """
         fig, ax = plt.subplots()
         
@@ -156,7 +160,10 @@ class phot:
             #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
             #ax.add_patch(circ)
             if ind == 0:
-                name='src'
+                if srcLabel is None:
+                    name='src'
+                else:
+                    name=srcLabel
             else:
                 name=str(ind)
             ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color='white')
