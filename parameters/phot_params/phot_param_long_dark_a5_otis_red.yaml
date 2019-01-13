@@ -3,8 +3,9 @@ srcName: darkRed
 srcNameShort: darkRed
 nightName: NRCALONG-DARK-7235074213_1
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
-   - [ 770, 540]
-   - [ 1370, 541]
+   - [  768, 540]
+   - [ 1280, 540]
+   - [  768, 1250]
 srcGeometry: Circular ## Source aperture geometry
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry

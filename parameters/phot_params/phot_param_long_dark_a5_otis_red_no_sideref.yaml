@@ -1,6 +1,6 @@
-procFiles: /data1/tso_analysis/otis_long_dark/pairwise_sub/*int_???_???.fits
-srcName: dark
-srcNameShort: dark
+procFiles: /data1/tso_analysis/otis_long_dark/pairwise_sub_red_no_side_refcor/*.fits
+srcName: darkRedNoSideRef ## Pairs of reads taken from an OTIS dark and reduced w/out side reference pix correction
+srcNameShort: darkRedNoSideRef
 nightName: NRCALONG-DARK-7235074213_1
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [  768, 540]
