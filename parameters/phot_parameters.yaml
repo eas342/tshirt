@@ -12,7 +12,7 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [193.87, 499.77]
 srcGeometry: Circular ## Source aperture geometry
 bkgSub: True ## Do background subtraction?
-bkgGeometry: CircularAnnulus ## Background geometry, Circula Annulus or Rectangle
+bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangle
 apRadius: 9. ## Source aperture radius
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
