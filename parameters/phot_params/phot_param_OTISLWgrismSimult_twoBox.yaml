@@ -1,6 +1,6 @@
 procFiles: /surtrdata1/tso_analysis/all_tso_otis/raw_separated_MPP/NRCN83-256-O9LW-7251174918_1_2819_JW1_JLAB40_20170908T131523.621_20170908T192559.261/*I???.slp.fits ## files on which to do Phot
-srcName: LWgrism MPP One Ap background sub test
-srcNameShort: LWgrisApBackTest
+srcName: LWgrism MPP Two Box Test
+srcNameShort: LWgrisTwoBoxTest
 nightName: otisSWLWsimult
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [ 620, 102.707]
