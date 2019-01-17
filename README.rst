@@ -34,11 +34,14 @@ You will need to specify a list of files, source name and a list of source coord
 The first source should be the target and the rest will be reference stars.
 The ``jdRef`` parameter specifies a reference epoch for time series plots.
 
-Aperture Photometry Geometry
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Source Aperture Photometry Geometry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Specify the aperture geometry, sizes as well as the box finding size for locating sources. The options for geometry `srcGeometry` are "Circular" and "Rectangular".
 
+Background Aperture Photometry Geometry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Specify the background aperture geometry. You can use either ``CircularAnnulus`` or ``Rectangle``. If using ``CircularAnnulus``, the inner and outer radii are set by the ``backStart`` and the ``backEnd`` keywords, while ignoring ``backHeight`` and ``backWidth``. If using ``Rectangular``, the ``backHeight`` and ``backWidth`` keywords are used to define the background aperture size. Regardless of the geometry, the background aperture is always centered relative to the source aperture. The offset between background aperture and the source aperture is set by ``backOffset``, which is a 2 element list in the form of [DX, DY], where DX and DY are the offset in number of pixels.
 
 Fixed Aperture Sizes
 ~~~~~~~~~~~~~~~~~~~~~~~
