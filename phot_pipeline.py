@@ -27,7 +27,7 @@ from scipy.stats import binned_statistic
 from astropy.table import Table
 
 class phot:
-    def __init__(self,paramFile='parameters/phot_parameters.yaml'):
+    def __init__(self,paramFile='parameters/phot_params/example_phot_parameters.yaml'):
         """ Photometry class
     
         Parameters

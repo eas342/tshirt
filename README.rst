@@ -29,7 +29,7 @@ Usage for Time Series Aperture Photometry
 
 Photometry Parameters File
 ---------------------------
-Create a photometry parameters file from the example in ``parameters/phot_parameters.yaml``.
+Create a photometry parameters file from the example in the `example_phot_parameters.yaml <parameters/phot_params/example_phot_parameters.yaml>`_.
 You will need to specify a list of files, source name and a list of source coordinates in pixels [x,y].
 The first source should be the target and the rest will be reference stars.
 The ``jdRef`` parameter specifies a reference epoch for time series plots.
@@ -82,13 +82,13 @@ Run the following commands in either an iPython session or in a python script:
 
 ::
 
-   phot = phot_pipeline.phot(paramFile='parameters/aug2016_corot1_parameters.yaml')
+   phot = phot_pipeline.phot(paramFile='parameters/phot_params/example_phot_parameters.yaml')
    phot.showStarChoices()
    phot.showStarChoices(showAps=True)
    phot.do_phot()
    phot.showCustSet()
 
-where ``parameters/aug2016_corot1_parameters.yaml`` is the name of the ``yaml`` parameters file. 
+where ``parameters/phot_params/example_phot_parameters.yaml`` is the name of the ``yaml`` parameters file. 
 ``phot.showStarChoices`` has a boolean parameter. If ``showAps`` is True, then it will draw the apertures. Sometimes these apertures are too small to be seen easily so ``showAps`` is False will draw circles around the sources.
 
 Re-centering Apertures
