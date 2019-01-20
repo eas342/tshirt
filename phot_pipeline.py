@@ -442,9 +442,9 @@ class phot:
             t0 = Time(useDate+'T'+head['TIME-OBS'])
             if 'timingMethod' in self.param:
                 if self.param['timingMethod'] == 'JWSTint':
-                    t = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
+                    t0 = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
             
-            jdArr.append(t.jd)
+            jdArr.append(t0.jd)
 
             self.srcApertures.positions = self.cenArr[ind]
             
