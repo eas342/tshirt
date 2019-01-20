@@ -1,0 +1,25 @@
+procFiles: /surtrdata1/tso_analysis/all_tso_otis/additional_proc_MPP/NRCN83-FULLFRAME-7251210755_1_2825_JW1_JLAB40_20170908T210928.164_20170908T213806.429/*I???.slp_rowSub.fits ## files on which to do Phot
+srcName: Subarray Config Full Frame Proc Slope with Median Row Sub
+srcNameShort: SubConfigFullRowSub
+nightName: SubarrayConfig
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 1612, 547]
+   - [ 1612, 1103]
+srcGeometry: Circular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: CircularAnnulus  ## Background geometry
+apRadius: 130. ## Source aperture radius
+#apHeight: 40 ## Source aperture height (only for rectangular aperture)
+#apWidth: 500 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backStart: 131 ## Background annulus start radius
+backEnd: 227 ## Background annulus end radius
+#backHeight: 40 ## background aperture height (for rectangular background)
+#backWidth: 500 ## Source aperture width (only for rectangular aperture)
+backOffset: [0.,0.] ## Background offset (from source centroid)
+boxFindSize: None ## the half-width of the box used for source centroiding
+jdRef: 2458005.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: False
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?

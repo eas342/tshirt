@@ -1,0 +1,24 @@
+procFiles: /surtrdata1/tso_analysis/all_tso_otis/raw_separated_MPP/NRCN83-64-STRIPE-*_2827_*/*I???.slp.fits ## files on which to do Phot
+srcName: Subarray Config STRIPE-64 Proc Slope
+srcNameShort: SubConfigStripe64
+nightName: SubarrayConfig
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 1611, 37]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular  ## Background geometry
+#apRadius: 130. ## Source aperture radius
+apHeight: 51 ## Source aperture height (only for rectangular aperture)
+apWidth: 192 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+#backStart: 131 ## Background annulus start radius
+#backEnd: 227 ## Background annulus end radius
+backHeight: 51 ## background aperture height (for rectangular background)
+backWidth: 192 ## Source aperture width (only for rectangular aperture)
+backOffset: [-210.,0.] ## Background offset (from source centroid)
+boxFindSize: None ## the half-width of the box used for source centroiding
+jdRef: 2458005.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
