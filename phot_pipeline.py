@@ -418,6 +418,15 @@ class phot:
             hdu.header['FIL'+str(ind)] = (os.path.basename(oneFile),'file name')
         
     
+    def reset_phot(self):
+        """ 
+        Reset the photometry
+        
+        A reminder to myself to write a script to clear the positions.
+        Sometimes, if you get bad positions from a previous file, they 
+        will wind up being used again. Need to reset the srcAperture.positions!
+        """
+    
     def do_phot(self):
         """ Does photometry using the centroids found in get_allimg_cen 
         """
@@ -496,7 +505,8 @@ class phot:
             srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
             photArr[ind,:] = srcPhot
             errArr[ind,:] = srcPhotErr
-        
+            
+            
         ## Save the photometry results
         hdu = fits.PrimaryHDU(photArr)
         hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with photometry')
