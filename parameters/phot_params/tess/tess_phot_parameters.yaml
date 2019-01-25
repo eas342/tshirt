@@ -1,0 +1,27 @@
+procFiles: /Users/everettschlawin/Documents/tess/wasp120example/separate_ints/tess*.fits ## files on which to do Phot
+srcName: WASP-120
+srcNameShort: wasp120
+nightName: Sector4
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [5.5,7.5]
+srcGeometry: Circular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry, Circular Annulus or Rectangle
+apRadius: 1.5 ## Source aperture radius
+#apHeight: 40 ## Source aperture height (only for rectangular aperture)
+#apWidth: 1502 ## Source aperture width (only for rectangular aperture)
+#nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+#backStart: 9. ## Background annulus start radius
+#backEnd: 12. ## Background annulus end radius
+backHeight: 3 ## background aperture height (for rectangular background)
+backWidth: 3 ## background aperture width (only for rectangular aperture)
+backOffset: [0.,4.] ## Background offset (from source centroid)
+boxFindSize: 2 ## the half-width of the box used for source centroiding
+jdRef: 2458400 ## JD reference offset to subtract
+#timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time
+#apHeight: None ## Source aperture height for Rectangular srcGeometry
+#apWidth: None ## Source aperture width for Rectangular srcGeometry
+scaleAperture: False ## Scale the aperture with the FWHM?
+apScale: None ## number of times the FWHM for aperture-scaling
+apRange: None ## min/max range of allowed FHWM, when scaling
+doCentering: False
