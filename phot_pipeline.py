@@ -747,7 +747,7 @@ class phot:
         HDUList = fits.open(path)
         data = HDUList[ext].data
         if self.param['isCube'] == True:
-            img = data[0,:,:]
+            img = data[self.param['cubePlane'],:,:]
         else:
             img = data
         
