@@ -515,6 +515,8 @@ class phot:
         hdu.header['AXIS2'] = ('image','image axis')
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
+        hdu.header['SRCGEOM'] = (self.param['srcGeometry'], 'Source Aperture Geometry')
+        hdu.header['BKGGEOM'] = (self.param['bkgGeometry'], 'Background Aperture Geometry')
         if 'apRadius' in self.param:
             hdu.header['APRADIUS'] = (self.param['apRadius'], 'Aperture radius (px)')
         elif 'apHeight' in self.param:
@@ -525,16 +527,22 @@ class phot:
             print("No apHeight or apRadius found in parameters")
         
         hdu.header['BKGSUB'] = (self.param['bkgSub'], 'Do a background subtraction?')
-        hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px), if background used')
-        hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px), if background used')
+        hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px), if used')
+        hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px), if used')
         if 'backHeight' in self.param:
             hdu.header['BKHEIGHT'] = (self.param['backHeight'], 'Background Box Height (px)')
             hdu.header['BKWIDTH'] = (self.param['backWidth'], 'Background Box Width (px)')
         hdu.header['BKOFFSTX'] = (self.param['backOffset'][0], 'X Offset between background and source (px)')
         hdu.header['BKOFFSTY'] = (self.param['backOffset'][1], 'Y Offset between background and source (px)')
         
-        hdu.header['BOXSZ'] = (self.param['boxFindSize'], 'half-width of the box used for source centroiding')
+        hdu.header['BOXSZ'] = (self.param['boxFindSize'], 'half-width of the box used for centroiding')
         hdu.header['JDREF'] = (self.param['jdRef'], ' JD reference offset to subtract for plots')
+        
+        hdu.header['SCALEDAP'] = (self.param['scaleAperture'], 'Is the aperture scaled by the FWHM?')
+        hdu.header['APSCALE'] = (self.param['apScale'], 'If scaling apertures, which scale factor?')
+        hdu.header['ISCUBE'] = (self.param['isCube'], 'Is the image data 3D?')
+        hdu.header['CUBPLANE'] = (self.param['cubePlane'], 'Which plane of the cube is used?')
+        hdu.header['DOCEN'] = (self.param['doCentering'], 'Is each aperture centered individually?')
         
         hduFileNames = self.make_filename_hdu()
         
