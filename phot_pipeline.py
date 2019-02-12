@@ -57,7 +57,8 @@ class phot:
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
-                        'nanTreatment': None, 'backOffset': [0.0,0.0]}
+                        'nanTreatment': None, 'backOffset': [0.0,0.0],
+                         'FITSextension': 0, 'HEADextension': 0}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -742,8 +743,10 @@ class phot:
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
         return yCorrNorm
 
-    def getImg(self,path,ext=0):
+    def getImg(self,path):
         """ Load an image from a given path and extensions"""
+        ext = self.param['FITSextension']
+        headExtension = self.param['HEADextension']
         HDUList = fits.open(path)
         data = HDUList[ext].data
         if self.param['isCube'] == True:
@@ -757,7 +760,7 @@ class phot:
         elif self.param['nanTreatment'] == '':
             raise NotImplementedError
         
-        head = HDUList[ext].header
+        head = HDUList[headExtension].header
         HDUList.close()
         return img, head
         

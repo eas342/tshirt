@@ -31,3 +31,5 @@ apRange: [2,17] ## min/max range of allowed FHWM, when scaling
 isCube: False ## Is the data a cube (3D)?
 cubePlane: 0 ## The plane to choose if data is in cubes
 doCentering: False ## Center the aperturess with Gaussian?
+FITSextension: 0 ## FITS extension of science frames
+HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
