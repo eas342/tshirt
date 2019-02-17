@@ -18,7 +18,7 @@ import numpy as np
 from astropy.time import Time
 import astropy.units as u
 import pdb
-from general_python_mod import es_gen
+#from general_python_mod import es_gen
 from copy import deepcopy
 import yaml
 import os
@@ -838,6 +838,47 @@ class prevPhot(phot):
         self.param['jdRef'] = photHead['JDREF']
         self.param['boxFindSize'] = photHead['BOXSZ']
         self.centroidFile = self.photFile
+        
+        self.photHead = photHead
+        
+        if 'SRCGEOM' in self.photHead:
+            if self.photHead['SRCGEOM'] == 'Rectangular':
+                self.param['srcGeometry'] = 'Rectangular'
+                self.param['apWidth'] = photHead['APWIDTH']
+                self.param['apHeight'] = photHead['APHEIGHT']
+            else:
+                self.param['srcGeometry'] = 'Circular'
+        else:
+            self.param['srcGeometry'] = 'Circular'
+        
+        positions = HDUList['CENTROIDS'].data[0]
+        
+        
+        if self.param['srcGeometry'] == 'Circular':
+            self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
+        elif self.param['srcGeometry'] == 'Rectangular':
+            self.srcApertures = RectangularAperture(positions,w=self.param['apWidth'],
+                                                    h=self.param['apHeight'],theta=0)
+        else:
+            print('Unrecognized aperture')
+        
+        self.xCoors = self.srcApertures.positions[:,0]
+        self.yCoors = self.srcApertures.positions[:,1]
+        
+        # if self.param['bkgSub'] == True:
+        #     bkgPositions = np.array(deepcopy(positions))
+        #     bkgPositions[:,0] = bkgPositions[:,0] + self.param['backOffset'][0]
+        #     bkgPositions[:,1] = bkgPositions[:,1] + self.param['backOffset'][1]
+        #
+        #     if self.param['bkgGeometry'] == 'CircularAnnulus':
+        #         self.bkgApertures = CircularAnnulus(bkgPositions,r_in=self.param['backStart'],
+        #                                             r_out=self.param['backEnd'])
+        #     elif self.param['bkgGeometry'] == 'Rectangular':
+        #         self.bkgApertures = RectangularAperture(bkgPositions,w=self.param['backWidth'],
+        #                                             h=self.param['backHeight'],theta=0)
+        #     else:
+        #         raise ValueError('Unrecognized background geometry')
+        
         
         HDUList.close()
         
