@@ -7,6 +7,6 @@ setup(
     packages=['tser_tools',],
     license='MIE',
 #    package_data={'': ['parameters/phot_params/keywords_for_phot_pipeline.csv']},
-#    include_package_data=True,
+    include_package_data=True,
     long_description=open('README.rst').read(),
 )
