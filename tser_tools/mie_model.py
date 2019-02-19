@@ -7,9 +7,9 @@ except ImportError:
 import pdb
 import matplotlib.pyplot as plt
 try:
-    from general_python_mod import es_gen
+    import phot_pipeline
 except ImportError:
-    warnings.warn("Unable to import es_gen. Some of the Mie scattering models may not work")
+    warnings.warn("Unable to import phot_pipeline. Some of the Mie scattering models may not work")
 import yaml
 
 coeff = yaml.load(open('parameters/mie_params/simplePoly.yaml'))
@@ -188,7 +188,7 @@ def getPoly(pord=15):
     rad = 1.0
     nInd = complex(1.67,-0.006)
     y = extinct(x,rad=rad,logNorm=True,npoint=1024,n=nInd)
-    polyFit = es_gen.robust_poly(x,y,pord,sigreject=100.)
+    polyFit = phot_pipeline.robust_poly(x,y,pord,sigreject=100.)
     plt.loglog(x,y,label='Log-Normal Q$_{ext}$')
     plt.plot(x,np.polyval(polyFit,x),label='Polynomial Fit')
     plt.legend(loc='best')

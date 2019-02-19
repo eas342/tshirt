@@ -18,7 +18,6 @@ import numpy as np
 from astropy.time import Time
 import astropy.units as u
 import pdb
-from general_python_mod import es_gen
 from copy import deepcopy
 import yaml
 import os
@@ -619,7 +618,7 @@ class phot:
                 yShow = yCorrected
             else:
                 fitp = (x < normReg[0]) | (x > normReg[1])
-                polyBase = es_gen.robust_poly(x[fitp],yCorrected[fitp],2,sigreject=2)
+                polyBase = robust_poly(x[fitp],yCorrected[fitp],2,sigreject=2)
                 yBase = np.polyval(polyBase,x)
                 
                 yShow = yCorrected / yBase
@@ -985,39 +984,35 @@ def seeing_summary():
     t['File'] = fileArr
     t['FWHM'] = medFWHMArr
     return t
-# # ## Compare to SLC curve
-#
-# # In[63]:
-#
-# lc = ascii.read('slc_curve/k1255.hjd',data_start=0,names=['HJD'])
-#
-# quickfl = ascii.read('slc_curve/k1255.dR7.r12345689101112',data_start=0,names=['Fl'])
-#
-# lc.add_column(quickfl['Fl'])
-#
-# x = lc['HJD'] - 1.
-# y = 10**(0.4 * lc['Fl'])
-#
-#
-# # In[ ]:
-#
-# yfit = es_gen.yCorrNorm3
-#
-#
-# # In[72]:
-#
-# fig, ax = plt.subplots(figsize=(12,12))
-# #ax.plot(jdArr - jdRef,yCorrNorm3,'o',label='Choice Ref Norm Sum')
-# ax.plot(jdArr - jdRef,yCorrNorm3,label='Choice Ref Norm Sum')
-# #ax.plot(x,y,'o',label='slc pipelin')
-# ax.plot(x,y,label='slc pipelin')
-# ax.legend(loc='lower right')
-# ax.set_xlabel('JD - '+str(jdRef))
-# ax.set_ylabel('Normalized Flux')
-# fig.savefig('reference_method.pdf')
 
-
-# In[ ]:
-
+def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None):
+    finitep = np.isfinite(y) & np.isfinite(x)
+    goodp = finitep ## Start with the finite points
+    for iter in range(iteration):
+        if np.sum(goodp) < polyord:
+            warntext = "Less than "+str(polyord)+"points accepted, returning flat line"
+            warnings.warn(warntext)
+            coeff = np.zeros(polyord)
+            coeff[0] = 1.0
+        else:
+            if useSpline == True:
+                if knots is None:
+                    spl = UnivariateSpline(x[goodp], y[goodp], k=polyord, s=sSpline)
+                else:
+                    spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
+                ymod = spl(x)
+            else:
+                coeff = np.polyfit(x[goodp],y[goodp],polyord)
+                yPoly = np.poly1d(coeff)
+                ymod = yPoly(x)
+            
+            resid = np.abs(ymod - y)
+            madev = np.nanmedian(np.abs(resid - np.nanmedian(resid)))
+            goodp = (np.abs(resid) < (sigreject * madev))
+    
+    if useSpline == True:
+        return spl
+    else:
+        return coeff
 
 
