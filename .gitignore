@@ -27,3 +27,5 @@ tser_tools/tser_data/phot/phot_w_constant_aperture/
 tser_tools/tser_data/phot/phot_w_variable_aperture/
 tser_tools/parameters/backup_param/
 build/
+dist/
+tser_tools.egg-info/
