@@ -18,7 +18,7 @@ import numpy as np
 from astropy.time import Time
 import astropy.units as u
 import pdb
-#from general_python_mod import es_gen
+from general_python_mod import es_gen
 from copy import deepcopy
 import yaml
 import os
@@ -64,6 +64,19 @@ class phot:
             if oneKey not in self.param:
                 self.param[oneKey] = defaultParams[oneKey]
         
+        
+        self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
+        self.srcNames[0] = 'src'
+        
+        self.set_up_apertures(positions)
+        
+        ## Set up file names for output
+        self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
+        self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
+        self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
+        self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
+    
+    def set_up_apertures(self,positions):
         if self.param['srcGeometry'] == 'Circular':
             self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
         elif self.param['srcGeometry'] == 'Square':
@@ -91,15 +104,7 @@ class phot:
                                                     h=self.param['backHeight'],theta=0)
             else:
                 raise ValueError('Unrecognized background geometry')
-        
-        self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
-        self.srcNames[0] = 'src'
-        self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
-        self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
-        self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
-        
-        self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
-        
+    
     def get_default_im(self,img=None,head=None):
         """ Get the default image for postage stamps or star identification maps"""
         ## Get the data
@@ -829,56 +834,28 @@ class prevPhot(phot):
         self.srcNames[0] = 'src'
         
         self.dataFileDescrip = os.path.splitext(os.path.basename(self.photFile))[0]
+                
+        self.photHead = photHead
         self.param = {}
-        self.param['srcName'] = photHead['SRCNAME']
-        self.param['nightName'] = photHead['NIGHT']
-        self.param['apRadius'] = photHead['APRADIUS']
-        self.param['backStart'] = photHead['BKGSTART']
-        self.param['backEnd'] = photHead['BKGEND']
-        self.param['jdRef'] = photHead['JDREF']
-        self.param['boxFindSize'] = photHead['BOXSZ']
+        
+        photKeywords = ascii.read('parameters/phot_params/keywords_for_phot_pipeline.csv')
+        for ind,oneKeyword in enumerate(photKeywords['FITS Keyword']):
+            if oneKeyword in self.photHead:
+                self.param[photKeywords[ind]['Parameter Name']] = self.photHead[oneKeyword]
+            else:
+                self.param[photKeywords[ind]['Parameter Name']] = photKeywords[ind]['Default Value']
+        
+        ## Some parameters are more complicated
+        if 'BKOFFSTX' in self.photHead and 'BKOFFSTY' in self.photHead:
+            self.param['backOffset'] = [self.photHead['BKOFFSTX'],self.photHead['BKOFFSTY']]
+        
         self.centroidFile = self.photFile
         
-        self.photHead = photHead
+        positions = HDUList['CENTROIDS'].data[self.nImg // 2]
         
-        if 'SRCGEOM' in self.photHead:
-            if self.photHead['SRCGEOM'] == 'Rectangular':
-                self.param['srcGeometry'] = 'Rectangular'
-                self.param['apWidth'] = photHead['APWIDTH']
-                self.param['apHeight'] = photHead['APHEIGHT']
-            else:
-                self.param['srcGeometry'] = 'Circular'
-        else:
-            self.param['srcGeometry'] = 'Circular'
+        self.set_up_apertures(positions)
         
-        positions = HDUList['CENTROIDS'].data[0]
-        
-        
-        if self.param['srcGeometry'] == 'Circular':
-            self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
-        elif self.param['srcGeometry'] == 'Rectangular':
-            self.srcApertures = RectangularAperture(positions,w=self.param['apWidth'],
-                                                    h=self.param['apHeight'],theta=0)
-        else:
-            print('Unrecognized aperture')
-        
-        self.xCoors = self.srcApertures.positions[:,0]
         self.yCoors = self.srcApertures.positions[:,1]
-        
-        # if self.param['bkgSub'] == True:
-        #     bkgPositions = np.array(deepcopy(positions))
-        #     bkgPositions[:,0] = bkgPositions[:,0] + self.param['backOffset'][0]
-        #     bkgPositions[:,1] = bkgPositions[:,1] + self.param['backOffset'][1]
-        #
-        #     if self.param['bkgGeometry'] == 'CircularAnnulus':
-        #         self.bkgApertures = CircularAnnulus(bkgPositions,r_in=self.param['backStart'],
-        #                                             r_out=self.param['backEnd'])
-        #     elif self.param['bkgGeometry'] == 'Rectangular':
-        #         self.bkgApertures = RectangularAperture(bkgPositions,w=self.param['backWidth'],
-        #                                             h=self.param['backHeight'],theta=0)
-        #     else:
-        #         raise ValueError('Unrecognized background geometry')
-        
         
         HDUList.close()
         

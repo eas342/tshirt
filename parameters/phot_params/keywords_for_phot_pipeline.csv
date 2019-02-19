@@ -1,0 +1,14 @@
+Parameter Name, FITS Keyword, Default Value,Description
+srcName,SRCNAME,None,Name of the source
+nightName,NIGHT,None,
+apRadius,APRADIUS,9,
+jdRef,JDREF,2457551,
+boxFindSize,BOXSZ,18,
+doCentering,DOCEN,FALSE,
+srcGeometry,SRCGEOM,Circular,
+bkgSub,BKGSUB,FALSE,
+bkgGeometry,BKGGEOM,CircularAnnulus,
+backStart,BKGSTART,9,
+backEnd,BKGEND,12,
+bkgHeight,BKHEIGHT,10,
+bkgWidth,BKWIDTH,10,
