@@ -26,13 +26,19 @@ from scipy.stats import binned_statistic
 from astropy.table import Table
 
 class phot:
-    def __init__(self,paramFile='parameters/phot_params/example_phot_parameters.yaml'):
+    def __init__(self,paramFile='parameters/phot_params/example_phot_parameters.yaml',
+                 directParam=None):
         """ Photometry class
     
         Parameters
         ------
         paramFile: str
-            Location of the YAML file that contains the photometry parameters
+            Location of the YAML file that contains the photometry parameters as long
+            as directParam is None. Otherwise, it uses directParam
+        directParam: dict
+            Rather than use the paramFile, you can put a dictionary here.
+            This can be useful for running a batch of photometric extractions.
+        
         Properties
         -------
         paramFile: str
@@ -44,8 +50,13 @@ class phot:
         nImg: int
             Number of images in the sequence
         """
-        self.paramFile = paramFile
-        self.param = yaml.load(open(paramFile))
+        if directParam is None:
+            self.paramFile = paramFile
+            self.param = yaml.load(open(paramFile))
+        else:
+            self.paramFile = 'direct dictionary'
+            self.param = directParam
+            
         self.fileL = np.sort(glob.glob(self.param['procFiles']))
         self.nImg = len(self.fileL)
         xCoors, yCoors = [], []
@@ -803,6 +814,63 @@ class phot:
         ## To Do: add in error from reference stars
         
         t.write(self.refCorPhotFile,overwrite=True)
+
+class batchPhot:
+    """ 
+    Create several photometry objects and run phot over all of them
+    """
+    def __init__(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
+        self.batchFile = batchFile
+        self.batchParam = yaml.load(open(batchFile))
+        
+        ## Find keys that are lists. These are ones that are being run in batches
+        ## However, a few keywords are already lists (like [x,y] coordinates))
+        # and we are looking to see if those are lists of lists
+        ## this dictionary specifies the depth of the list
+        ## it could be a list of a list of list
+        alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1}
+        self.paramLists = []
+        self.counts = []
+        for oneKey in self.batchParam.keys():
+            if oneKey in alreadyLists:
+                depth = alreadyLists[oneKey]
+                value = deepcopy(self.batchParam[oneKey])
+                ## dig as far as the depth number to check for a list
+                for oneDepth in np.arange(depth):
+                    value = value[0]
+                if type(value) == list:
+                    self.paramLists.append(oneKey)
+                    self.counts.append(len(self.batchParam[oneKey]))
+            else:
+                if type(self.batchParam[oneKey]) == list:
+                    self.paramLists.append(oneKey)
+                    self.counts.append(len(self.batchParam[oneKey]))
+        self.NDictionaries = self.counts[0]
+        ## Make sure there are a consistent number of parameters in each list
+        if np.all(np.array(self.counts) == self.NDictionaries) == False:
+            descrip1 = "Inconsistent parameter counts in {}.".format(self.batchFile)
+            descrip2 = "Parameters {} have counts {}".format(self.paramLists,self.counts)
+            raise Exception(descrip1+descrip2)
+        
+        self.paramDicts = []
+        for ind in np.arange(self.NDictionaries):
+            thisDict = {}
+            for oneKey in self.batchParam.keys():
+                if oneKey in self.paramLists:
+                    thisDict[oneKey] = self.batchParam[oneKey][ind]
+                else:
+                    thisDict[oneKey] = self.batchParam[oneKey]
+            self.paramDicts.append(thisDict)
+            
+    def print_all_dicts(self):
+        print(yaml.dump(self.paramDicts,default_flow_style=False))
+        
+    def run_all(self):
+        for oneDict in self.paramDicts:
+            thisPhot = phot(directParam=oneDict)
+            thisPhot.showStarChoices(showAps=True,srcLabel='0')
+            thisPhot.do_phot()
+    
 
 class prevPhot(phot):
     """ Loads in previous photometry from FITS data. Inherits functions from the phot class

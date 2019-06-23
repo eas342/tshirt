@@ -1,0 +1,47 @@
+procFiles:  ## files on which to do Phot
+   - /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg/proc/k1255.000?.fits
+   - /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg/proc/k1255.001?.fits
+   - /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg/proc/k1255.002?.fits
+   - /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg/proc/k1255.003?.fits
+srcName: 
+   - KIC 12557548 First 00
+   - KIC 12557548 First 10
+   - KIC 12557548 First 20
+   - KIC 12557548 First 30
+srcNameShort: 
+   - kic1255test00
+   - kic1255test10
+   - kic1255test20
+   - kic1255test30
+nightName: UT2016_06_12
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [750.7, 682.4]
+   - [843.3, 681.8]
+   - [918.5, 731.6]
+   - [877.4, 589.8]
+   - [483.3, 580.6]
+   - [552.8, 421.8]
+   - [193.87, 499.77]
+srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
+bkgSub: True ## Do background subtraction?
+bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
+apRadius: 9. ## Source aperture radius
+#apHeight: 40 ## Source aperture height (only for rectangular aperture)
+#apWidth: 1502 ## Source aperture width (only for rectangular aperture)
+#nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backStart: 9. ## Background annulus start radius
+backEnd: 12. ## Background annulus end radius
+#backHeight: 40 ## background aperture height (for rectangular background)
+#backWidth: 1502 ## background aperture width (only for rectangular aperture)
+backOffset: [0.,0.] ## Background offset (from source centroid)
+boxFindSize: 18 ## the half-width of the box used for source centroiding
+jdRef: 2457551 ## JD reference offset to subtract
+#timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time
+scaleAperture: False ## Scale the aperture with the FWHM?
+apScale: 2.5 ## number of times the FWHM for aperture-scaling
+apRange: [2,17] ## min/max range of allowed FHWM, when scaling
+isCube: False ## Is the data a cube (3D)?
+cubePlane: 0 ## The plane to choose if data is in cubes
+doCentering: False ## Center the aperturess with Gaussian?
+FITSextension: 0 ## FITS extension of science frames
+HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
