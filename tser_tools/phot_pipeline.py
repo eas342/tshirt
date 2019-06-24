@@ -52,7 +52,8 @@ class phot:
         """
         if directParam is None:
             self.paramFile = paramFile
-            self.param = yaml.load(open(paramFile))
+            with open(paramFile) as pFile:
+                self.param = yaml.load(pFile)
         else:
             self.paramFile = 'direct dictionary'
             self.param = directParam
@@ -821,7 +822,8 @@ class batchPhot:
     """
     def __init__(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
         self.batchFile = batchFile
-        self.batchParam = yaml.load(open(batchFile))
+        with open(batchFile) as bFile:
+            self.batchParam = yaml.load(bFile)
         
         ## Find keys that are lists. These are ones that are being run in batches
         ## However, a few keywords are already lists (like [x,y] coordinates))
