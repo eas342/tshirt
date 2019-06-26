@@ -874,6 +874,14 @@ class batchPhot:
                                                 thisPhot.dataFileDescrip))
             thisPhot.showStarChoices(showAps=True,srcLabel='0')
             thisPhot.do_phot()
+
+    def plot_all(self):
+        for oneDict in self.paramDicts:
+            thisPhot = phot(directParam=oneDict)
+            print("Working on batch {} ".format(thisPhot.param['srcName'],
+                                                thisPhot.dataFileDescrip))
+            thisPhot.plot_phot()
+        
     
 
 class prevPhot(phot):
