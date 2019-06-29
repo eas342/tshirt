@@ -321,6 +321,39 @@ class phot:
         head = hdu.header
         return head, hdu2.header
     
+    def shift_centroids_from_other_file(self,file,SWLW=True):
+        """
+        Creates a centroid array where shifts are applied from another 
+        file.
+        For example, Imaging data from another camera can be used
+        to provide shifts to the apertures for grism data
+        """
+        if SWLW == True:
+            rotAngle = 0; ## set to zero for now
+            scaling = 0.5
+        
+        HDUList = fits.open(file)
+        if "CENTROIDS" not in HDUList:
+            raise Exception("Could not find CENTROIDS extension in {}".format(file))
+        
+        refCenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
+        
+        xRefAbs, yRefAbs = refCenArr[:,0,0], reCenArr[:,0,1]
+        xRef, yRef = xRef - xRef[0], yRef - yRef[0]
+        
+        HDUList.close()
+        
+        cenArr = np.zeros((self.nImg,self.nsrc,ndim))
+        pos = self.get_default_cen()
+        for ind, oneFile in enumerate(self.fileL):
+            xVec = (xRef[ind] * np.cos(rotAngle) - yRef[ind] * np.sin(rotAngle)) * scaling
+            yVec = (xRef[ind] * np.sin(rotAngle) + yRef[ind] * np.cos(rotAngle)) * scaling
+            cenArr[ind,:,0] = pos[:,0] + xVec
+            cenArr[ind,:,1] = pos[:,1] + yVec
+        fwhmArr = np.zeros_like(cenArr)
+        head, headFWHM = self.save_centroids(cenArr,fwhmArr)
+        self.keepFWHM = False
+    
     def get_allimg_cen(self,recenter=False):
         """ Get all image centroids
         If self.param['doCentering'] is False, it will just use the input aperture positions 

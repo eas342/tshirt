@@ -29,3 +29,4 @@ tser_tools/parameters/backup_param/
 build/
 dist/
 tser_tools.egg-info/
+sync_plots_and_tser.sh
