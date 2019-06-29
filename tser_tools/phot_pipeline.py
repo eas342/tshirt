@@ -69,7 +69,8 @@ class phot:
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': None, 'backOffset': [0.0,0.0],
-                         'FITSextension': 0, 'HEADextension': 0}
+                         'FITSextension': 0, 'HEADextension': 0,
+                         'refPhotCentering': None}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -302,6 +303,7 @@ class phot:
         hdu.header['AXIS2'] = ('src','source axis')
         hdu.header['AXIS3'] = ('image','image axis')
         hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
+        hdu.header['REFCENS'] = (self.param['refPhotCentering'],'Reference Photometry file used to shift the centroids (or empty if none)')
         hdu.name = 'Centroids'
         
         hdu2 = fits.ImageHDU(fwhmArr)
@@ -321,7 +323,7 @@ class phot:
         head = hdu.header
         return head, hdu2.header
     
-    def shift_centroids_from_other_file(self,file,SWLW=True):
+    def shift_centroids_from_other_file(self,refPhotFile,SWLW=True):
         """
         Creates a centroid array where shifts are applied from another 
         file.
@@ -331,19 +333,23 @@ class phot:
         if SWLW == True:
             rotAngle = 0; ## set to zero for now
             scaling = 0.5
+        else:
+            raise Exception("Still working on scaling and rotation params")
         
-        HDUList = fits.open(file)
+        HDUList = fits.open(refPhotFile)
         if "CENTROIDS" not in HDUList:
-            raise Exception("Could not find CENTROIDS extension in {}".format(file))
+            raise Exception("Could not find CENTROIDS extension in {}".format(refPhotFile))
         
         refCenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
         
-        xRefAbs, yRefAbs = refCenArr[:,0,0], reCenArr[:,0,1]
-        xRef, yRef = xRef - xRef[0], yRef - yRef[0]
+        xRefAbs, yRefAbs = refCenArr[:,0,0], refCenArr[:,0,1]
+        xRef, yRef = xRefAbs - xRefAbs[0], yRefAbs - yRefAbs[0]
         
         HDUList.close()
         
+        ndim=2 ## Number of dimensions in image (assuming 2D)        
         cenArr = np.zeros((self.nImg,self.nsrc,ndim))
+        
         pos = self.get_default_cen()
         for ind, oneFile in enumerate(self.fileL):
             xVec = (xRef[ind] * np.cos(rotAngle) - yRef[ind] * np.sin(rotAngle)) * scaling
@@ -351,8 +357,7 @@ class phot:
             cenArr[ind,:,0] = pos[:,0] + xVec
             cenArr[ind,:,1] = pos[:,1] + yVec
         fwhmArr = np.zeros_like(cenArr)
-        head, headFWHM = self.save_centroids(cenArr,fwhmArr)
-        self.keepFWHM = False
+        return cenArr, fwhmArr
     
     def get_allimg_cen(self,recenter=False):
         """ Get all image centroids
@@ -372,6 +377,11 @@ class phot:
                 self.keepFWHM = False ## allow for legacy centroid files
             
             HDUList.close()
+        elif self.param['refPhotCentering'] is not None:
+            cenArr, fwhmArr = self.shift_centroids_from_other_file(self.param['refPhotCentering'])
+            head, headFWHM = self.save_centroids(cenArr,fwhmArr)
+            self.keepFWHM = False
+            
         elif self.param['doCentering'] == False:
             img, head = self.get_default_im()
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
