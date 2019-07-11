@@ -720,8 +720,9 @@ class phot:
                 else: linestyle= 'solid'
                 ax.plot(jdArr - jdRef,yplot,label=pLabel,linestyle=linestyle)
         
-            ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
-                         str(head['BKGEND'])+']')
+            if head['SRCGEOM'] == 'Circular':
+                ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
+                             str(head['BKGEND'])+']')
         ax.set_xlabel('JD - '+str(jdRef))
         if doNorm == True:
             ax.set_ylabel('Normalized Flux + Offset')
