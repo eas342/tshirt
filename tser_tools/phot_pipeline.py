@@ -26,7 +26,7 @@ from scipy.stats import binned_statistic
 from astropy.table import Table
 import multiprocessing
 from multiprocessing import Pool
-maxCPUs = multiprocessing.cpu_count() // 2
+maxCPUs = multiprocessing.cpu_count() // 3
 
 
 def run_one_phot(allInput):
@@ -580,7 +580,7 @@ class phot:
     def return_self(self):
         return self
     
-    def do_phot(self):
+    def do_phot(self,useMultiprocessing=False):
         """ Does photometry using the centroids found in get_allimg_cen 
         """
         self.get_allimg_cen()
@@ -591,10 +591,13 @@ class phot:
         jdArr = []
         
         fileCountArray = np.arange(len(self.fileL))
-        outputPhot = run_multiprocessing_phot(self,fileCountArray)
         
-        #for ind in fileCountArray:
-         #   outputPhot.append(self.phot_for_one_file(ind))
+        if useMultiprocessing == True:
+            outputPhot = run_multiprocessing_phot(self,fileCountArray)
+        else:
+            outputPhot = []
+            for ind in fileCountArray:
+                outputPhot.append(self.phot_for_one_file(ind))
         
         ## unpack the results
         for ind,val in enumerate(outputPhot):
@@ -946,13 +949,13 @@ class batchPhot:
     def print_all_dicts(self):
         print(yaml.dump(self.paramDicts,default_flow_style=False))
         
-    def run_all(self):
+    def run_all(self,useMultiprocessing=False):
         for oneDict in self.paramDicts:
             thisPhot = phot(directParam=oneDict)
             print("Working on batch {} ".format(thisPhot.param['srcName'],
                                                 thisPhot.dataFileDescrip))
             thisPhot.showStarChoices(showAps=True,srcLabel='0')
-            thisPhot.do_phot()
+            thisPhot.do_phot(useMultiprocessing=useMultiprocessing)
 
     def plot_all(self):
         for oneDict in self.paramDicts:
