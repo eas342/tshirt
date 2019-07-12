@@ -24,6 +24,28 @@ import os
 import warnings
 from scipy.stats import binned_statistic
 from astropy.table import Table
+import multiprocessing
+from multiprocessing import Pool
+maxCPUs = multiprocessing.cpu_count() // 2
+
+
+def run_one_phot(allInput):
+    """
+    Awkward workaround because multiprocessing doesn't work on object methods
+    """
+    photObj, ind = allInput
+    return photObj.phot_for_one_file(ind)
+
+def run_multiprocessing_phot(photObj,fileIndices):
+    """
+    Awkward workaround because multiprocessing doesn't work on object methods
+    """
+    allInput = []
+    for oneInd in fileIndices:
+        allInput.append([photObj,oneInd])
+    p = Pool(maxCPUs)
+    outputPhot = p.map(run_one_phot,allInput)
+    return outputPhot
 
 class phot:
     def __init__(self,paramFile='parameters/phot_params/example_phot_parameters.yaml',
@@ -487,6 +509,77 @@ class phot:
         will wind up being used again. Need to reset the srcAperture.positions!
         """
     
+    def phot_for_one_file(self,ind):
+        if np.mod(ind,15) == 0:
+            print("On "+str(ind)+' of '+str(len(self.fileL)))
+        oneImg = self.fileL[ind]
+        img, head = self.getImg(oneImg)
+        if 'DATE-OBS' in head:
+            useDate = head['DATE-OBS']
+        elif 'DATE' in head:
+            warnings.warn('DATE-OBS not found in header. Using DATE instead')
+            month1, day1, year1 = head['DATE'].split("/")
+            useDate = "-".join([year1,month1,day1])                                                                              
+        t0 = Time(useDate+'T'+head['TIME-OBS'])
+        if 'timingMethod' in self.param:
+            if self.param['timingMethod'] == 'JWSTint':
+                t0 = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
+        
+        self.srcApertures.positions = self.cenArr[ind]
+        
+        if 'scaleAperture' in self.param:
+            if self.param['scaleAperture'] == True:
+                medianFWHM = np.median(self.fwhmArr[ind])
+                
+                minFWHMallowed, maxFWHMallowed = self.param['apRange']
+                bigRadius = 2. * self.param['backEnd']
+                if medianFWHM < minFWHMallowed:
+                    warnings.warn("FWHM found was smaller than apRange ({}) px. Using {} for Image {}".format(minFWHMallowed,minFWHMallowed,self.fileL[ind]))
+                    medianFWHM = minFWHMallowed
+                elif medianFWHM > maxFWHMallowed:
+                    warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}".format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
+                    medianFWHM = maxFWHMallowed
+                
+                if self.param['bkgGeometry'] == 'CircularAnnulus':
+                    self.srcApertures.r = medianFWHM * self.param['apScale']
+                    self.bkgApertures.r_in = (self.srcApertures.r + 
+                                              self.param['backStart'] - self.param['apRadius'])
+                    self.bkgApertures.r_out = (self.bkgApertures.r_in +
+                                               self.param['backEnd'] - self.param['backStart'])
+                else:
+                    warnings.warn('Background Aperture scaling not set up for non-annular geometry')
+        
+        if 'RDNOISE1' in head:
+            readNoise = float(head['RDNOISE1'])
+        else:
+            readNoise = 1.0
+            warnings.warn('Warning, no read noise specified')
+        
+        err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
+        
+        rawPhot = aperture_photometry(img,self.srcApertures,error=err)
+        
+        if self.param['bkgSub'] == True:
+            self.bkgApertures.positions = self.cenArr[ind] + self.backgOffsetArr[ind]
+            bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
+            bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
+            bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+        
+            ## Background subtracted fluxes
+            srcPhot = rawPhot['aperture_sum'] - bkgVals
+        else:
+            ## No background subtraction
+            srcPhot = rawPhot['aperture_sum']
+            bkgValsErr = 0.
+            
+        srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
+        
+        
+        return [t0.jd,srcPhot,srcPhotErr]
+    
+    def return_self(self):
+        return self
+    
     def do_phot(self):
         """ Does photometry using the centroids found in get_allimg_cen 
         """
@@ -497,75 +590,17 @@ class phot:
         
         jdArr = []
         
-        for ind,oneImg in enumerate(self.fileL):
-            if np.mod(ind,15) == 0:
-                print("On "+str(ind)+' of '+str(len(self.fileL)))
-            
-            img, head = self.getImg(oneImg)
-            if 'DATE-OBS' in head:
-                useDate = head['DATE-OBS']
-            elif 'DATE' in head:
-                warnings.warn('DATE-OBS not found in header. Using DATE instead')
-                month1, day1, year1 = head['DATE'].split("/")
-                useDate = "-".join([year1,month1,day1])                                                                              
-            t0 = Time(useDate+'T'+head['TIME-OBS'])
-            if 'timingMethod' in self.param:
-                if self.param['timingMethod'] == 'JWSTint':
-                    t0 = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
-            
-            jdArr.append(t0.jd)
-
-            self.srcApertures.positions = self.cenArr[ind]
-            
-            if 'scaleAperture' in self.param:
-                if self.param['scaleAperture'] == True:
-                    medianFWHM = np.median(self.fwhmArr[ind])
-                    
-                    minFWHMallowed, maxFWHMallowed = self.param['apRange']
-                    bigRadius = 2. * self.param['backEnd']
-                    if medianFWHM < minFWHMallowed:
-                        warnings.warn("FWHM found was smaller than apRange ({}) px. Using {} for Image {}".format(minFWHMallowed,minFWHMallowed,self.fileL[ind]))
-                        medianFWHM = minFWHMallowed
-                    elif medianFWHM > maxFWHMallowed:
-                        warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}".format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
-                        medianFWHM = maxFWHMallowed
-                    
-                    if self.param['bkgGeometry'] == 'CircularAnnulus':
-                        self.srcApertures.r = medianFWHM * self.param['apScale']
-                        self.bkgApertures.r_in = (self.srcApertures.r + 
-                                                  self.param['backStart'] - self.param['apRadius'])
-                        self.bkgApertures.r_out = (self.bkgApertures.r_in +
-                                                   self.param['backEnd'] - self.param['backStart'])
-                    else:
-                        warnings.warn('Background Aperture scaling not set up for non-annular geometry')
-            
-            if 'RDNOISE1' in head:
-                readNoise = float(head['RDNOISE1'])
-            else:
-                readNoise = 1.0
-                warnings.warn('Warning, no read noise specified')
-            
-            err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
-            
-            rawPhot = aperture_photometry(img,self.srcApertures,error=err)
-            
-            if self.param['bkgSub'] == True:
-                self.bkgApertures.positions = self.cenArr[ind] + self.backgOffsetArr[ind]
-                bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
-                bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
-                bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
-            
-                ## Background subtracted fluxes
-                srcPhot = rawPhot['aperture_sum'] - bkgVals
-            else:
-                ## No background subtraction
-                srcPhot = rawPhot['aperture_sum']
-                bkgValsErr = 0.
-                
-            srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
-            photArr[ind,:] = srcPhot
-            errArr[ind,:] = srcPhotErr
-            
+        fileCountArray = np.arange(len(self.fileL))
+        outputPhot = run_multiprocessing_phot(self,fileCountArray)
+        
+        #for ind in fileCountArray:
+         #   outputPhot.append(self.phot_for_one_file(ind))
+        
+        ## unpack the results
+        for ind,val in enumerate(outputPhot):
+            jdArr.append(val[0])
+            photArr[ind,:] = val[1]
+            errArr[ind,:] = val[2]
             
         ## Save the photometry results
         hdu = fits.PrimaryHDU(photArr)
