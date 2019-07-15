@@ -92,7 +92,8 @@ class phot:
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': None, 'backOffset': [0.0,0.0],
                          'FITSextension': 0, 'HEADextension': 0,
-                         'refPhotCentering': None}
+                         'refPhotCentering': None,'isSlope': False,'readNoise': None,
+                         'detectorGain': None}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -549,7 +550,9 @@ class phot:
                 else:
                     warnings.warn('Background Aperture scaling not set up for non-annular geometry')
         
-        if 'RDNOISE1' in head:
+        if self.param['readNoise'] != None:
+            readNoise = float(self.param['readNoise'])
+        elif 'RDNOISE1' in head:
             readNoise = float(head['RDNOISE1'])
         else:
             readNoise = 1.0
@@ -859,6 +862,18 @@ class phot:
             raise NotImplementedError
         
         head = HDUList[headExtension].header
+        if self.param['isSlope'] == True:
+            if 'INTTIME' in head:
+                intTime = head['INTTIME']
+            else:
+                warnings.warn("Couldn't find INTTIME in header. Trying EXPTIME")
+                intTime = head['EXPTIME']
+            ## If it's a slope image, multiply rate time intTime to get counts
+            img = img * intTime
+        
+        if self.param['detectorGain'] != None:
+            img = img * self.param['detectorGain']
+        
         HDUList.close()
         return img, head
         

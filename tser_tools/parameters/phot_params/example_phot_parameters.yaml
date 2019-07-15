@@ -34,3 +34,6 @@ cubePlane: 0 ## The plane to choose if data is in cubes
 doCentering: False ## Center the aperturess with Gaussian?
 FITSextension: 0 ## FITS extension of science frames
 HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
+isSlope: False ## Is the FITS image a slope image that should be multiplied by the int time?
+readNoise: null ## Read noise in electrons
+detectorGain: null ## Optionally specify the detector gain
