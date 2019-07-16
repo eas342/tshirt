@@ -978,7 +978,12 @@ class batchPhot:
             print("Working on batch {} ".format(thisPhot.param['srcName'],
                                                 thisPhot.dataFileDescrip))
             thisPhot.plot_phot()
-        
+    
+    def return_phot_obj(self,ind=0):
+        """
+        Return a photometry object so other methods and attributes can be explored
+        """
+        return phot(directParam=self.paramDicts[ind])
     
 
 class prevPhot(phot):
