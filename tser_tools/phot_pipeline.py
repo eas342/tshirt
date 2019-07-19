@@ -440,7 +440,7 @@ class phot:
             backgOffsetArr[:,:,1] = self.param['backOffset'][1]
             self.backgOffsetArr = backgOffsetArr
         else:
-            self.backgOffsetArr = None
+            self.backgOffsetArr = np.zeros((self.nImg,self.nsrc,ndim))
         
         if self.keepFWHM == True:
             self.fwhmArr = fwhmArr
