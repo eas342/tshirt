@@ -433,11 +433,14 @@ class phot:
         self.cenArr = cenArr
         self.cenHead = head
         
-        ## Make an array for the background offsets
-        backgOffsetArr = np.zeros((self.nImg,self.nsrc,ndim))
-        backgOffsetArr[:,:,0] = self.param['backOffset'][0]
-        backgOffsetArr[:,:,1] = self.param['backOffset'][1]
-        self.backgOffsetArr = backgOffsetArr
+        if self.param['bkgSub'] == True:
+            ## Make an array for the background offsets
+            backgOffsetArr = np.zeros((self.nImg,self.nsrc,ndim))
+            backgOffsetArr[:,:,0] = self.param['backOffset'][0]
+            backgOffsetArr[:,:,1] = self.param['backOffset'][1]
+            self.backgOffsetArr = backgOffsetArr
+        else:
+            self.backgOffsetArr = None
         
         if self.keepFWHM == True:
             self.fwhmArr = fwhmArr
