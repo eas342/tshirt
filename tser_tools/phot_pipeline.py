@@ -937,9 +937,11 @@ class batchPhot:
             if oneKey in alreadyLists:
                 depth = alreadyLists[oneKey]
                 value = deepcopy(self.batchParam[oneKey])
-                ## dig as far as the depth number to check for a list
-                for oneDepth in np.arange(depth):
-                    value = value[0]
+                ## Make sure the parameter is not None, so we won't be digging
+                if value != None:
+                    ## dig as far as the depth number to check for a list
+                    for oneDepth in np.arange(depth):
+                        value = value[0]
                 if type(value) == list:
                     self.paramLists.append(oneKey)
                     self.counts.append(len(self.batchParam[oneKey]))
