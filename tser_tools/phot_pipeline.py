@@ -110,6 +110,12 @@ class phot:
         self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
         self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
+        self.check_parameters()
+        
+    
+    def check_parameters(self):
+        assert type(self.param['backOffset']) == list,"Background offset is not a list"
+        assert len(self.param['backOffset']) == 2,'Background offset must by a 2 element list'
     
     def set_up_apertures(self,positions):
         if self.param['srcGeometry'] == 'Circular':
