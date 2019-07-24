@@ -45,6 +45,7 @@ def run_multiprocessing_phot(photObj,fileIndices):
         allInput.append([photObj,oneInd])
     p = Pool(maxCPUs)
     outputPhot = p.map(run_one_phot,allInput)
+    p.close()
     return outputPhot
 
 class phot:
