@@ -990,27 +990,23 @@ class batchPhot:
         """
         for oneDict in self.paramDicts:
             thisPhot = phot(directParam=oneDict)
-            print("Working on batch {} ".format(thisPhot.param['srcName'],
-                                                thisPhot.dataFileDescrip))
+            print("Working on {} for batch {} {} ".format(method,
+                                                         thisPhot.param['srcName'],
+                                                         thisPhot.dataFileDescrip))
             photMethod = getattr(thisPhot,method)
             photMethod(**kwargs)
         
     
     def run_all(self,useMultiprocessing=False):
-        for oneDict in self.paramDicts:
-            thisPhot = phot(directParam=oneDict)
-            print("Working on batch {} ".format(thisPhot.param['srcName'],
-                                                thisPhot.dataFileDescrip))
-            thisPhot.showStarChoices(showAps=True,srcLabel='0')
-            thisPhot.do_phot(useMultiprocessing=useMultiprocessing)
+        self.batch_run('showStarChoices',showAps=True,srcLabel='0')
+        self.batch_run('do_phot',useMultiprocessing=useMultiprocessing)
 
     def plot_all(self):
-        for oneDict in self.paramDicts:
-            thisPhot = phot(directParam=oneDict)
-            print("Working on batch {} ".format(thisPhot.param['srcName'],
-                                                thisPhot.dataFileDescrip))
-            thisPhot.plot_phot()
+        self.batch_run('plot_phot')
     
+    def test_apertures(self):
+        self.batch_run('showStarChoices',showAps=True,srcLabel='0')
+
     def return_phot_obj(self,ind=0):
         """
         Return a photometry object so other methods and attributes can be explored
