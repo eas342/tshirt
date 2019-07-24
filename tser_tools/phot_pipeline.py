@@ -93,7 +93,7 @@ class phot:
                         'nanTreatment': None, 'backOffset': [0.0,0.0],
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
-                         'detectorGain': None}
+                         'detectorGain': None,'cornerSubarray': False}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -969,6 +969,27 @@ class batchPhot:
     def print_all_dicts(self):
         print(yaml.dump(self.paramDicts,default_flow_style=False))
         
+    def batch_run(self,method,**kwargs):
+        """
+        Run any method of the photometry class by name. This will 
+        cycle through all parameter lists and run the method
+        
+        Parameters
+        -----------
+        method: str
+           Photometry method to run in batch mode
+        
+        **kwargs: keywords or dict
+           Arguments to be passed to this method
+        """
+        for oneDict in self.paramDicts:
+            thisPhot = phot(directParam=oneDict)
+            print("Working on batch {} ".format(thisPhot.param['srcName'],
+                                                thisPhot.dataFileDescrip))
+            photMethod = getattr(thisPhot,method)
+            photMethod(**kwargs)
+        
+    
     def run_all(self,useMultiprocessing=False):
         for oneDict in self.paramDicts:
             thisPhot = phot(directParam=oneDict)
