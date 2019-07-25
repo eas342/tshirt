@@ -167,7 +167,7 @@ class phot:
         return showApPos
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
-                        srcLabel=None):
+                        srcLabel=None,figSize=None):
         """ Show the star choices for photometry
         Parameters
         ------------------
@@ -182,8 +182,11 @@ class phot:
         srcLabel: str or None
             (optional) What should the source label be?
                         The default is "src"
+        srcLabel: list or None
+            (optional) Specify the size of the plot
+            This is useful for looking at high/lower resolution
         """
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figSize)
         
         img, head = self.get_default_im(img=img,head=None)
         
