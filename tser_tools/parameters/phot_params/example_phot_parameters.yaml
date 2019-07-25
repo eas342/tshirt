@@ -35,5 +35,6 @@ doCentering: False ## Center the aperturess with Gaussian?
 FITSextension: 0 ## FITS extension of science frames
 HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
 isSlope: False ## Is the FITS image a slope image that should be multiplied by the int time?
+subpixelMethod: exact ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
 readNoise: null ## Read noise in electrons
-detectorGain: null ## Optionally specify the detector gain
+detectorGain: null ## Optionally specify the detector gain e-/DN

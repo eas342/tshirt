@@ -26,6 +26,7 @@ from scipy.stats import binned_statistic
 from astropy.table import Table
 import multiprocessing
 from multiprocessing import Pool
+import time
 maxCPUs = multiprocessing.cpu_count() // 3
 
 
@@ -94,7 +95,8 @@ class phot:
                         'nanTreatment': None, 'backOffset': [0.0,0.0],
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
-                         'detectorGain': None,'cornerSubarray': False}
+                         'detectorGain': None,'cornerSubarray': False,
+                         'subpixelMethod': 'exact'}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -569,12 +571,11 @@ class phot:
             warnings.warn('Warning, no read noise specified')
         
         err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
-        
-        rawPhot = aperture_photometry(img,self.srcApertures,error=err)
+        rawPhot = aperture_photometry(img,self.srcApertures,error=err,method=self.param['subpixelMethod'])
         
         if self.param['bkgSub'] == True:
             self.bkgApertures.positions = self.cenArr[ind] + self.backgOffsetArr[ind]
-            bkgPhot = aperture_photometry(img,self.bkgApertures,error=err)
+            bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
             bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
             bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
         
@@ -584,7 +585,7 @@ class phot:
             ## No background subtraction
             srcPhot = rawPhot['aperture_sum']
             bkgValsErr = 0.
-            
+        
         srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
         
         
