@@ -229,6 +229,7 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/star_labels/{}'.format(outName),
                     bbox_inches='tight')
+        plt.close(fig)
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
