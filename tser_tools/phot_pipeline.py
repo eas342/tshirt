@@ -793,6 +793,8 @@ class phot:
             fig.savefig('plots/photometry/tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip))
         else:
             fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
+        
+        HDUList.close()
     
     def refSeries(self,photArr,reNorm=False,custSrc=None,sigRej=5.):
         """ Average together the reference stars
