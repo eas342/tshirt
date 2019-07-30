@@ -7,12 +7,14 @@ import astropy.units as u
 import numpy as np
 import pdb
 
+defaultParamFile = 'parameters/reduction_parameters/example_reduction_parameters.yaml'
 class prep():
     """ Class for reducing images
     Parameters are located in parameters/reduction_parameters
      """
-    def __init__(self,testMode=False,rawIndex=0):
-        self.pipePrefs = yaml.load(open('parameters/reduction_parameters.yaml'))
+    def __init__(self,paramFile=defaultParamFile,testMode=False,rawIndex=0):
+        with open(paramFile) as paramFileIO:
+            self.pipePrefs = yaml.safe_load(paramFileIO)
         
         
         defaultParams = {'biasFiles': 'zero*.fits', ## Bias files
@@ -20,7 +22,9 @@ class prep():
                          'sciFiles': 'k1255*.fits', ## Science files
                          'nSkip': 2, ## number of files to skip at the beginning
                          'doBias': True, ## Calculate and apply a bias correction?
-                         'doFlat': True} ## Calculate and apply a flat correction?
+                         'doFlat': True,
+                         'gainKeyword': 'GAIN1', ## Calculate and apply a flat correction?
+                         'gainValue': None} ## manually specify the gain, if not in header
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.pipePrefs:
@@ -69,7 +73,7 @@ class prep():
             combiner.sigma_clipping(low_thresh=2, high_thresh=5, func=np.ma.median)
             combined_avg = combiner.average_combine()
             
-            comb_gained = gain_correct(combined_avg,float(head['GAIN1']) * u.electron/u.adu)
+            comb_gained = gain_correct(combined_avg,self.get_gain(head) * u.electron/u.adu)
             
             hdu = fits.PrimaryHDU(comb_gained)
             HDUList = fits.HDUList([hdu])
@@ -85,6 +89,15 @@ class prep():
             else:
                 outName = 'flat'
             HDUList.writeto(os.path.join(self.procDir,'master_'+outName+'.fits'),overwrite=True)
+    
+    def get_gain(self,head):
+        if self.pipePrefs['gainKeyword'] is not None:
+            gain = float(head[self.pipePrefs['gainKeyword']])
+        elif self.pipePrefs['gainValue'] is not None:
+            gain = float(self.pipePrefs['gainValue'])
+        else:
+            gain = 1.0
+        return gain
 
     def procSciFiles(self):
         """ Process the science images """
@@ -104,7 +117,7 @@ class prep():
         
         for oneFile in fileL:
             head, dataCCD = getData(oneFile)
-            nccd = ccd_process(dataCCD,gain=float(head['GAIN1']) * u.electron/u.adu,
+            nccd = ccd_process(dataCCD,gain=self.get_gain(head) * u.electron/u.adu,
                                master_flat=flat,
                                master_bias=bias)
             head['ZEROFILE'] = 'master_zero.fits'
