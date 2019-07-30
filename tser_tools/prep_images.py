@@ -54,7 +54,8 @@ class prep():
         allCals = []
         if self.pipePrefs['doBias'] == True:
             allCals.append('biasFiles')
-        elif self.pipePrefs['doFlat'] == True:
+        
+        if self.pipePrefs['doFlat'] == True:
             allCals.append('flatFiles')
         
         for oneCal in allCals:
