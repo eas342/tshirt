@@ -13,6 +13,19 @@ class prep():
      """
     def __init__(self,testMode=False,rawIndex=0):
         self.pipePrefs = yaml.load(open('parameters/reduction_parameters.yaml'))
+        
+        
+        defaultParams = {'biasFiles': 'zero*.fits', ## Bias files
+                         'flatFiles': 'flat*.fits', ## Flat field files
+                         'sciFiles': 'k1255*.fits', ## Science files
+                         'nSkip': 2, ## number of files to skip at the beginning
+                         'doBias': True, ## Calculate and apply a bias correction?
+                         'doFlat': True} ## Calculate and apply a flat correction?
+        
+        for oneKey in defaultParams.keys():
+            if oneKey not in self.pipePrefs:
+                self.pipePrefs[oneKey] = defaultParams[oneKey]
+        
         rawDirInput = self.pipePrefs['rawDir']
         if type(rawDirInput) == list:
             ## If the parameter file is list, choose one of those indices
@@ -33,8 +46,14 @@ class prep():
     
     def makeMasterCals(self):
         """ Makes the master calibration files """
-    
-        for oneCal in ['biasFiles','flatFiles']:
+        
+        allCals = []
+        if self.pipePrefs['doBias'] == True:
+            allCals.append('biasFiles')
+        elif self.pipePrefs['doFlat'] == True:
+            allCals.append('flatFiles')
+        
+        for oneCal in allCals:
         
             fileL = glob.glob(os.path.join(self.rawDir,self.pipePrefs[oneCal]))
             if self.testMode == True:
@@ -73,8 +92,15 @@ class prep():
         if self.testMode == True:
             fileL = fileL[0:4]
         
-        hbias, bias = getData(os.path.join(self.procDir,'master_zero.fits'))
-        hflat, flat = getData(os.path.join(self.procDir,'master_flat.fits'))
+        if self.pipePrefs['doBias'] == True:
+            hbias, bias = getData(os.path.join(self.procDir,'master_zero.fits'))
+        else:
+            hbias, bias = None, None
+        
+        if self.pipePrefs['doFlat'] == True:
+            hflat, flat = getData(os.path.join(self.procDir,'master_flat.fits'))
+        else:
+            hflat, flat = None, None
         
         for oneFile in fileL:
             head, dataCCD = getData(oneFile)
