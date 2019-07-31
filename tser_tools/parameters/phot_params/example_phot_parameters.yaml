@@ -38,3 +38,4 @@ isSlope: False ## Is the FITS image a slope image that should be multiplied by t
 subpixelMethod: exact ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
 readNoise: null ## Read noise in electrons
 detectorGain: null ## Optionally specify the detector gain e-/DN
+dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS

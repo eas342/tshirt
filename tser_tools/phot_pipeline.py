@@ -96,7 +96,8 @@ class phot:
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
-                         'subpixelMethod': 'exact'}
+                         'subpixelMethod': 'exact',
+                         'dateFormat': 'Two Part'}
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -229,7 +230,6 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/star_labels/{}'.format(outName),
                     bbox_inches='tight')
-        plt.close(fig)
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
@@ -536,8 +536,14 @@ class phot:
         elif 'DATE' in head:
             warnings.warn('DATE-OBS not found in header. Using DATE instead')
             month1, day1, year1 = head['DATE'].split("/")
-            useDate = "-".join([year1,month1,day1])                                                                              
-        t0 = Time(useDate+'T'+head['TIME-OBS'])
+            useDate = "-".join([year1,month1,day1])
+        if self.param['dateFormat'] == 'Two Part':
+            t0 = Time(useDate+'T'+head['TIME-OBS'])
+        elif self.param['dateFormat'] == 'One Part':
+            t0 = Time(useDate)
+        else:
+            raise Exception("Date format {} not understdood".format(self.param['dateFormat']))
+        
         if 'timingMethod' in self.param:
             if self.param['timingMethod'] == 'JWSTint':
                 t0 = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
