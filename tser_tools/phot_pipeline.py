@@ -433,6 +433,8 @@ class phot:
             fwhmArr = np.zeros((self.nImg,self.nsrc,ndim))
             #for ind, oneFile in enumerate(self.fileL):
             for ind, oneFile in enumerate(self.fileL):
+                if np.mod(ind,15) == 0:
+                    print("On {} of {}".format(ind,len(self.fileL)))
                 img, head = self.getImg(oneFile)
                 allX, allY, allfwhmX, allfwhmY = self.get_allcen_img(img)
                 cenArr[ind,:,0] = allX
