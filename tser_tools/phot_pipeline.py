@@ -29,25 +29,46 @@ from multiprocessing import Pool
 import time
 maxCPUs = multiprocessing.cpu_count() // 3
 
-
 def run_one_phot(allInput):
     """
+    Do aperture photometry on one file
     Awkward workaround because multiprocessing doesn't work on object methods
     """
     photObj, ind = allInput
     return photObj.phot_for_one_file(ind)
 
-def run_multiprocessing_phot(photObj,fileIndices):
+def run_centroid_finder_one_file(allInput):
     """
+    Find the centroids for one file
     Awkward workaround because multiprocessing doesn't work on object methods
+    """
+    photObj, ind = allInput
+    return photObj.get_allcen_img(ind)
+
+def run_multiprocessing_phot(photObj,fileIndices,method='apPhot'):
+    """
+    Run photometry methods on all files using multiprocessing
+    Awkward workaround because multiprocessing doesn't work on object methods
+    
+    Parameters
+    ----------
+    photObj: Photometry object
+        A photometry Object instance
+    fileIndices: list
+        List of file indices
+    method: str
+        Method on which to apply multiprocessing
     """
     allInput = []
     for oneInd in fileIndices:
         allInput.append([photObj,oneInd])
     p = Pool(maxCPUs)
-    outputPhot = p.map(run_one_phot,allInput)
+    if method == 'apPhot':
+        outputDat = p.map(run_one_phot,allInput)
+    else:
+        outputDat = p.map(run_centroid_finder_one_file,allInput)
     p.close()
-    return outputPhot
+    return outputDat
 
 class phot:
     def __init__(self,paramFile='parameters/phot_params/example_phot_parameters.yaml',
@@ -395,9 +416,15 @@ class phot:
         fwhmArr = np.zeros_like(cenArr)
         return cenArr, fwhmArr
     
-    def get_allimg_cen(self,recenter=False):
+    def get_allimg_cen(self,recenter=False,useMultiprocessing=False):
         """ Get all image centroids
         If self.param['doCentering'] is False, it will just use the input aperture positions 
+        Parameters
+        ----------
+        recenter: bool
+            Recenter the apertures again? Especially after changing the sources in photometry parameters
+        useMultiprocessing: bool
+            Use multiprocessing for faster computation?s
         """
         
         ndim=2 ## Number of dimensions in image (assuming 2D)
@@ -431,16 +458,22 @@ class phot:
         else:
             cenArr = np.zeros((self.nImg,self.nsrc,ndim))
             fwhmArr = np.zeros((self.nImg,self.nsrc,ndim))
-            #for ind, oneFile in enumerate(self.fileL):
+            
+            if useMultiprocessing == True:
+                fileCountArray = np.arange(len(self.fileL))
+                allOutput = run_multiprocessing_phot(self,fileCountArray,method='centroiding')
+            else:
+                allOutput = []
+                for ind, oneFile in enumerate(self.fileL):
+                    allOutput.append(self.get_allcen_img(ind))
+            
             for ind, oneFile in enumerate(self.fileL):
-                if np.mod(ind,15) == 0:
-                    print("On {} of {}".format(ind,len(self.fileL)))
-                img, head = self.getImg(oneFile)
-                allX, allY, allfwhmX, allfwhmY = self.get_allcen_img(img)
+                allX, allY, allfwhmX, allfwhmY = allOutput[ind]
                 cenArr[ind,:,0] = allX
                 cenArr[ind,:,1] = allY
                 fwhmArr[ind,:,0] = allfwhmX
                 fwhmArr[ind,:,1] = allfwhmY
+            
             self.keepFWHM = True
                 
             head, headFWHM = self.save_centroids(cenArr,fwhmArr)
@@ -461,8 +494,12 @@ class phot:
             self.fwhmArr = fwhmArr
             self.headFWHM = headFWHM
     
-    def get_allcen_img(self,img,showStamp=False):
+    def get_allcen_img(self,ind,showStamp=False):
         """ Gets the centroids for all sources in one image """
+        if np.mod(ind,15) == 0:
+            print("On {} of {}".format(ind,len(self.fileL)))
+        img, head = self.getImg(self.fileL[ind])
+        
         allX, allY = [], []
         allfwhmX, allfwhmY = [], []
         
@@ -1191,6 +1228,10 @@ def allTser(refCorrect=False,showBestFit=False):
     else:
         fig.savefig('plots/photometry/tser_allstar/all_kic1255.pdf')
 
+def test_centroiding(useMultiprocessing=True):
+    photObj = phot()
+    photObj.fileL = photObj.fileL[0:30]; photObj.nImg = 30; photObj.param['doCentering'] = True
+    photObj.get_allimg_cen(recenter=True,useMultiprocessing=useMultiprocessing)
 
 def seeing_summary():
     """ Makes a summary of the seeing for a given night """
