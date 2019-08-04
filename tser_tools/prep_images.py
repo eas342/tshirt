@@ -24,7 +24,9 @@ class prep():
                          'doBias': True, ## Calculate and apply a bias correction?
                          'doFlat': True,
                          'gainKeyword': 'GAIN1', ## Calculate and apply a flat correction?
-                         'gainValue': None} ## manually specify the gain, if not in header
+                         'gainValue': None,## manually specify the gain, if not in header
+                         'procName': 'proc' ## directory name for processed files
+                     } 
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.pipePrefs:
@@ -45,7 +47,7 @@ class prep():
         if testMode == True:
             self.procDir = os.path.join(self.rawDir,'test_proc')
         else:
-            self.procDir = os.path.join(self.rawDir,'proc')
+            self.procDir = os.path.join(self.rawDir,self.pipePrefs['procName'])
         
     
     def makeMasterCals(self):
