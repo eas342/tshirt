@@ -251,6 +251,7 @@ class phot:
         fig.show()
         fig.savefig('plots/photometry/star_labels/{}'.format(outName),
                     bbox_inches='tight')
+        plt.close(fig)
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
@@ -841,6 +842,7 @@ class phot:
             fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
         
         HDUList.close()
+        plt.close(fig)
     
     def refSeries(self,photArr,reNorm=False,custSrc=None,sigRej=5.):
         """ Average together the reference stars
