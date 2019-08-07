@@ -647,7 +647,7 @@ class phot:
     def do_phot(self,useMultiprocessing=False):
         """ Does photometry using the centroids found in get_allimg_cen 
         """
-        self.get_allimg_cen()
+        self.get_allimg_cen(useMultiprocessing=useMultiprocessing)
         
         photArr = np.zeros((self.nImg,self.nsrc))
         errArr = np.zeros_like(photArr)
