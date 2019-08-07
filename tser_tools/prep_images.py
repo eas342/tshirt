@@ -25,7 +25,9 @@ class prep():
                          'doFlat': True,
                          'gainKeyword': 'GAIN1', ## Calculate and apply a flat correction?
                          'gainValue': None,## manually specify the gain, if not in header
-                         'procName': 'proc' ## directory name for processed files
+                         'procName': 'proc', ## directory name for processed files
+                         'doNonLin': False, ## apply nonlinearity correction?
+                         'nonLinFunction': None ## non-linearity function
                      } 
         
         for oneKey in defaultParams.keys():
@@ -68,7 +70,7 @@ class prep():
             
             ccdList = []
             for oneFile in fileL:
-                head, dataCCD = getData(oneFile)
+                head, dataCCD = self.getData(oneFile)
                 ccdList.append(dataCCD)
             
             combiner = Combiner(ccdList)
@@ -109,17 +111,19 @@ class prep():
             fileL = fileL[0:4]
         
         if self.pipePrefs['doBias'] == True:
-            hbias, bias = getData(os.path.join(self.procDir,'master_zero.fits'))
+            hbias, bias = self.getData(os.path.join(self.procDir,'master_zero.fits'))
         else:
             hbias, bias = None, None
         
         if self.pipePrefs['doFlat'] == True:
-            hflat, flat = getData(os.path.join(self.procDir,'master_flat.fits'))
+            hflat, flat = self.getData(os.path.join(self.procDir,'master_flat.fits'))
         else:
             hflat, flat = None, None
         
+        
         for oneFile in fileL:
-            head, dataCCD = getData(oneFile)
+            head, dataCCD = self.getData(oneFile)
+            
             nccd = ccd_process(dataCCD,gain=self.get_gain(head) * u.electron/u.adu,
                                master_flat=flat,
                                master_bias=bias)
@@ -131,25 +135,62 @@ class prep():
             HDUList = fits.HDUList([hdu])
             newFile = os.path.basename(oneFile)
             HDUList.writeto(os.path.join(self.procDir,newFile),overwrite=True)
+        
+    def check_if_nonlin_needed(self,head):
+        """
+        Check if non-linearity correction should be applied
+        """
+        ## Is the nonlinearity correction specified?
+        
+        if self.pipePrefs['doNonLin'] == True:
+            if 'LINCOR' in head:
+                if head['LINCOR'] == True:
+                    return False
+                else:
+                    return True ## run if lincor hasn't been applied
+            else:
+                return True ## run if LINCOR not in header
+        else:
+            return False
     
-
-def getData(fileName):
-    """ Gets the data and converts to CCDData type"""
-    HDUList = fits.open(fileName)
-    data = HDUList[0].data
-    head = HDUList[0].header
-    HDUList.close()
     
-    if 'GAINCOR' in head:
-        if head['GAINCOR'] == 'T':
-            outUnit = u.electron
+    def getData(self,fileName):
+        """ Gets the data and converts to CCDData type"""
+        HDUList = fits.open(fileName)
+        data = HDUList[0].data
+        head = HDUList[0].header
+        HDUList.close()
+        
+        if 'GAINCOR' in head:
+            if head['GAINCOR'] == 'T':
+                outUnit = u.electron
+            else:
+                outUnit = u.adu
         else:
             outUnit = u.adu
+        
+        if self.check_if_nonlin_needed(head) == True:
+            if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
+                data = lbt_luci2_lincor(data,dataUnit=outUnit)
+            else:
+                raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
+            head['LINCOR'] = (True, "Is a non-linearity correction applied?")
+            head['LINCFUNC'] = (self.pipePrefs['nonLinFunction'], "Name of non-linearity function applied")
+        outData = CCDData(data,unit=outUnit)
+        return head, outData
+
+def lbt_luci2_lincor(img,dataUnit=u.adu):
+    """
+    LUCI2 linearity correction from 
+    https://sites.google.com/a/lbto.org/luci/observing/calibrations/calibration-details
+    Input image should be in ADU
+    """
+    if dataUnit == u.adu:
+        imgUse = img
     else:
-        outUnit = u.adu
-    
-    outData = CCDData(data,unit=outUnit)
-    return head, outData
+        raise Exception("Unit {} not the right unit for this nonlin correction".format(datUnit))
+    ADUlin=imgUse + 4.155e-6 * (imgUse)**2
+    return ADUlin
 
 def reduce_all(testMode=False):
     """ Reduce all files listed in reduction parameters """
