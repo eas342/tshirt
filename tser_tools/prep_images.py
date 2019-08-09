@@ -80,7 +80,7 @@ class prep():
             
             comb_gained = gain_correct(combined_avg,self.get_gain(head) * u.electron/u.adu)
             
-            hdu = fits.PrimaryHDU(comb_gained)
+            hdu = fits.PrimaryHDU(comb_gained,head)
             HDUList = fits.HDUList([hdu])
             HDUList[0].header['IMGAVG'] = ('T','Image is averaged')
             HDUList[0].header['GAINCOR'] = ('T','Gain correction applied (units are e)')
@@ -176,6 +176,9 @@ class prep():
                 raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
             head['LINCOR'] = (True, "Is a non-linearity correction applied?")
             head['LINCFUNC'] = (self.pipePrefs['nonLinFunction'], "Name of non-linearity function applied")
+        else:
+            head['LINCOR'] = (False, "Is a non-linearity correction applied?")
+        
         outData = CCDData(data,unit=outUnit)
         return head, outData
 
