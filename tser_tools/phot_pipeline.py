@@ -731,7 +731,7 @@ class phot:
         warnings.resetwarnings()
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
-                  normReg=None,doBin=None,doNorm=True):
+                  normReg=None,doBin=None,doNorm=True,yLim=[None,None]):
         """ Plots previously calculated photometry 
         Parameters
         ---------------------
@@ -753,6 +753,8 @@ class phot:
             This only works on reference-corrected photometry for now
         doNorm: bool
             Normalize the individual time series?
+        yLim: List
+            List of Y limit to show
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
@@ -826,6 +828,7 @@ class phot:
                 ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
                              str(head['BKGEND'])+']')
         ax.set_xlabel('JD - '+str(jdRef))
+        ax.set_ylim(yLim[0],yLim[1])
         if doNorm == True:
             ax.set_ylabel('Normalized Flux + Offset')
         else:
