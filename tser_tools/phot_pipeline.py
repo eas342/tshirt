@@ -103,8 +103,6 @@ class phot:
             self.paramFile = 'direct dictionary'
             self.param = directParam
             
-        self.fileL = np.sort(glob.glob(self.param['procFiles']))
-        self.nImg = len(self.fileL)
         xCoors, yCoors = [], []
         positions = self.param['refStarPos']
         self.nsrc = len(positions)
@@ -117,13 +115,17 @@ class phot:
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
-                         'subpixelMethod': 'exact',
+                         'subpixelMethod': 'exact','excludeList': None,
                          'dateFormat': 'Two Part'}
         
+
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
                 self.param[oneKey] = defaultParams[oneKey]
-        
+
+        # Get the file list
+        self.fileL = self.get_fileList()
+        self.nImg = len(self.fileL)
         
         self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
         self.srcNames[0] = 'src'
@@ -138,6 +140,19 @@ class phot:
         self.check_parameters()
         
     
+    def get_fileList(self):
+        origList = np.sort(glob.glob(self.param['procFiles']))
+        if self.param['excludeList'] is not None:
+            fileList = []
+            
+            for oneFile in origList:
+                if os.path.basename(oneFile) not in self.param['excludeList']:
+                    fileList.append(oneFile)
+        else:
+            fileList = origList
+        
+        return fileList
+
     def check_parameters(self):
         assert type(self.param['backOffset']) == list,"Background offset is not a list"
         assert len(self.param['backOffset']) == 2,'Background offset must by a 2 element list'
@@ -530,13 +545,22 @@ class phot:
         maxY = int(np.min([yGuess + boxSize,shape[1]-1]))
         subimg = img[minY:maxY,minX:maxX]
         
-        xcenSub,ycenSub = centroid_2dg(subimg)
+        try:
+            xcenSub,ycenSub = centroid_2dg(subimg)
+        except ValueError:
+            warnings.warn("Found value error for centroid. Putting in a Nan")
+            xcenSub,ycenSub = np.nan, np.nan
+        
         
         xcen = xcenSub + minX
         ycen = ycenSub + minY
         
-        fwhmX, fwhmY = self.get_fwhm(subimg,xcenSub,ycenSub)
-        
+        try:
+            fwhmX, fwhmY = self.get_fwhm(subimg,xcenSub,ycenSub)
+        except ValueError:
+            warnings.warn("Found value error for FWHM. Putting in a Nan")
+            fwhmX, fwhmY = np.nan, np.nan
+
         return xcen, ycen, fwhmX, fwhmY
     
     def get_fwhm(self,subimg,xCen,yCen):

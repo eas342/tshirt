@@ -1,4 +1,5 @@
 procFiles: /Users/everettschlawin/Documents/single_systems/kic1255/kuiperUT2016_06_12/allimg/proc/k1255*.fits ## files on which to do Phot
+excludeList: none
 srcName: KIC 12557548
 srcNameShort: kic1255test
 nightName: UT2016_06_12
