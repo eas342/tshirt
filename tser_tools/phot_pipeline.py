@@ -548,8 +548,8 @@ class phot:
         try:
             xcenSub,ycenSub = centroid_2dg(subimg)
         except ValueError:
-            warnings.warn("Found value error for centroid. Putting in a Nan")
-            xcenSub,ycenSub = np.nan, np.nan
+            warnings.warn("Found value error for centroid. Putting in Guess value")
+            xcenSub,ycenSub = xGuess, yGuess
         
         
         xcen = xcenSub + minX
@@ -593,14 +593,22 @@ class phot:
     def phot_for_one_file(self,ind):
         if np.mod(ind,15) == 0:
             print("On "+str(ind)+' of '+str(len(self.fileL)))
+        
         oneImg = self.fileL[ind]
         img, head = self.getImg(oneImg)
         if 'DATE-OBS' in head:
             useDate = head['DATE-OBS']
+        elif 'DATE_OBS' in head:
+            warnings.warn('DATE-OBS not found in header. Using DATE_OBS instead')
+            useDate = head['DATE_OBS']
         elif 'DATE' in head:
             warnings.warn('DATE-OBS not found in header. Using DATE instead')
             month1, day1, year1 = head['DATE'].split("/")
             useDate = "-".join([year1,month1,day1])
+        else:
+            warnings.warn('Date headers not found in header. Making it nan')
+            useDate = np.nan
+        
         if self.param['dateFormat'] == 'Two Part':
             t0 = Time(useDate+'T'+head['TIME-OBS'])
         elif self.param['dateFormat'] == 'One Part':
@@ -645,6 +653,7 @@ class phot:
             warnings.warn('Warning, no read noise specified')
         
         err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
+        
         rawPhot = aperture_photometry(img,self.srcApertures,error=err,method=self.param['subpixelMethod'])
         
         if self.param['bkgSub'] == True:
