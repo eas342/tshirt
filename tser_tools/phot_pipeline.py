@@ -599,7 +599,6 @@ class phot:
         if 'DATE-OBS' in head:
             useDate = head['DATE-OBS']
         elif 'DATE_OBS' in head:
-            warnings.warn('DATE-OBS not found in header. Using DATE_OBS instead')
             useDate = head['DATE_OBS']
         elif 'DATE' in head:
             warnings.warn('DATE-OBS not found in header. Using DATE instead')
