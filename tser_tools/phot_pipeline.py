@@ -1292,6 +1292,41 @@ def seeing_summary():
     return t
 
 def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None):
+    """
+    Fit a function (with sigma rejection) to a curve
+    
+    Parameters
+    -----------
+    x: numpy array
+        Independent variable
+    y: numpy array
+        Dependent variable
+    polyord: int
+        order of the fit (number of terms). polyord=1 is a linear fit,
+        2 is a quadratic, etc.
+    sigreject: float
+        The 'sigma' rejection level in terms of median absolute deviations
+    useSpline: bool
+        Do a spline fit?
+    knots: int or None
+        How many knots to use if doing a spline fit
+    
+    Example Usage:
+    ----------
+        import numpy as np
+        from tser_tools import phot_pipeline
+        import matplotlib.pyplot as plt
+        
+        x = np.arange(30)
+        y = np.random.randn(30) + x
+        y[2] = 80 ## an outlier
+        polyfit = phot_pipeline.robust_poly(x,y,1)
+        ymodel = np.polyval(polyfit,x)
+        plt.plot(x,y,'o',label='input')
+        plt.plot(x,ymodel,label='fit')
+        plt.show()
+        
+    """
     finitep = np.isfinite(y) & np.isfinite(x)
     goodp = finitep ## Start with the finite points
     for iter in range(iteration):
