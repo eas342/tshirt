@@ -10,17 +10,19 @@ refPhotCentering: null ## photometry fits file where to obtain centroid shifts t
 bkgSubX: True ## Do background subtraction along the X direction?
 bkgRegionsX: ## a list of background regions in the X direction
    - [0, 258]
+bkgOrderX: 0 ## order of polynomial subtraction in the X direction
 bkgSubY: True ## Do background subtraction along the Y direction?
 bkgRegionsY: ## a list of background regions in the Y direction
    - [0, 60]
    - [158, 255]
-apWidth: 70. ## Source aperture width
+bkgOrderY: 2 ## order of polynomial subtraction in the Y direction
+apWidth: 30. ## Source aperture width
 dispPixels: [320, 2020] ## pixels to use in the dispersion direction
 nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
 jdRef: 2457551 ## JD reference offset to subtract for plotting
 timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
 apMethod: optimal ## how to do the extraction 'optimal' will do a weighted, 'sum' will do a simple sum
-isCube: False ## Is the data a cube (3D)?
+isCube: True ## Is the data a cube (3D)?
 cubePlane: 0 ## The plane to choose if data is in cubes
 doCentering: False ## Center the aperturess with Gaussian?
 FITSextension: 0 ## FITS extension of science frames

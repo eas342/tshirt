@@ -590,12 +590,7 @@ class phot:
         will wind up being used again. Need to reset the srcAperture.positions!
         """
     
-    def phot_for_one_file(self,ind):
-        if np.mod(ind,15) == 0:
-            print("On "+str(ind)+' of '+str(len(self.fileL)))
-        
-        oneImg = self.fileL[ind]
-        img, head = self.getImg(oneImg)
+    def get_date(self,head):
         if 'DATE-OBS' in head:
             useDate = head['DATE-OBS']
         elif 'DATE_OBS' in head:
@@ -615,9 +610,32 @@ class phot:
         else:
             raise Exception("Date format {} not understdood".format(self.param['dateFormat']))
         
+        
         if 'timingMethod' in self.param:
             if self.param['timingMethod'] == 'JWSTint':
                 t0 = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
+        
+        return t0
+    
+    def get_read_noise(self,head):
+        if self.param['readNoise'] != None:
+            readNoise = float(self.param['readNoise'])
+        elif 'RDNOISE1' in head:
+            readNoise = float(head['RDNOISE1'])
+        else:
+            readNoise = 1.0
+            warnings.warn('Warning, no read noise specified')
+        
+        return readNoise
+    
+    def phot_for_one_file(self,ind):
+        if np.mod(ind,15) == 0:
+            print("On "+str(ind)+' of '+str(len(self.fileL)))
+        
+        oneImg = self.fileL[ind]
+        img, head = self.getImg(oneImg)
+        
+        t0 = get_date(head)
         
         self.srcApertures.positions = self.cenArr[ind]
         
@@ -643,13 +661,7 @@ class phot:
                 else:
                     warnings.warn('Background Aperture scaling not set up for non-annular geometry')
         
-        if self.param['readNoise'] != None:
-            readNoise = float(self.param['readNoise'])
-        elif 'RDNOISE1' in head:
-            readNoise = float(head['RDNOISE1'])
-        else:
-            readNoise = 1.0
-            warnings.warn('Warning, no read noise specified')
+        readNoise = get_read_noise(head)
         
         err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
         
@@ -1291,7 +1303,8 @@ def seeing_summary():
     t['FWHM'] = medFWHMArr
     return t
 
-def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None):
+def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None,
+                preScreen=False):
     """
     Fit a function (with sigma rejection) to a curve
     
@@ -1310,6 +1323,8 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
         Do a spline fit?
     knots: int or None
         How many knots to use if doing a spline fit
+    preScreen: bool
+        Pre-screen by removing outliers from the median (which might fail for large slopes)
     
     Example Usage:
     ----------
@@ -1329,6 +1344,11 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
     """
     finitep = np.isfinite(y) & np.isfinite(x)
     goodp = finitep ## Start with the finite points
+    if preScreen == True:
+        resid = np.abs(y - np.median(y))
+        madev = np.nanmedian(resid)
+        goodp = finitep & (np.abs(resid) < (sigreject * madev))
+        
     for iter in range(iteration):
         if np.sum(goodp) < polyord:
             warntext = "Less than "+str(polyord)+"points accepted, returning flat line"
@@ -1348,8 +1368,9 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
                 ymod = yPoly(x)
             
             resid = np.abs(ymod - y)
-            madev = np.nanmedian(np.abs(resid - np.nanmedian(resid)))
-            goodp = (np.abs(resid) < (sigreject * madev))
+            madev = np.nanmedian(resid)
+            if madev > 0:
+                goodp = (np.abs(resid) < (sigreject * madev))
     
     if useSpline == True:
         return spl
