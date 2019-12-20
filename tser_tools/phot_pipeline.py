@@ -635,7 +635,7 @@ class phot:
         oneImg = self.fileL[ind]
         img, head = self.getImg(oneImg)
         
-        t0 = get_date(head)
+        t0 = self.get_date(head)
         
         self.srcApertures.positions = self.cenArr[ind]
         
@@ -661,7 +661,7 @@ class phot:
                 else:
                     warnings.warn('Background Aperture scaling not set up for non-annular geometry')
         
-        readNoise = get_read_noise(head)
+        readNoise = self.get_read_noise(head)
         
         err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
         
