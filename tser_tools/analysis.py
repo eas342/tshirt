@@ -52,6 +52,18 @@ def flatten(x,y,flatteningMethod='filter',polyOrd=2,
     
     return yFlat
 
+def roll_pad(y,length,pad_value=np.nan):
+    """
+    Same as numpy roll (shifting) but make sure the wrap-arounds are NaN
+    Converts to floating point since the Nans are weird for integer arrays
+    """
+    rolled = np.array(np.roll(y,length),dtype=np.float)
+    if length > 0:
+        rolled[0:length] = pad_value
+    elif length < 0:
+        rolled[length:] = pad_value
+    return rolled
+
 def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
                     flatteningMethod='filter',
                     highPassFreq=0.01):
