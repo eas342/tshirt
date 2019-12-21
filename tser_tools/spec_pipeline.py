@@ -74,7 +74,9 @@ class spec(phot_pipeline.phot):
         self.check_parameters()
         
     def check_parameters(self):
-        pass
+        dispCheck = (self.param['dispDirection'] == 'x') | (self.param['dispDirection'] == 'y')
+        assert dispCheck, 'Dispersion direction parameter not valid'
+        
     
     def do_extraction(self):
         """
@@ -154,7 +156,7 @@ class spec(phot_pipeline.phot):
                 prefixName = 'unnamed'
             else:
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
-            origName = 'diagnostics//spec_backsub/{}_for_backsub_{}.fits'.format(prefixName,oneDirection)
+            origName = 'diagnostics/spec_backsub/{}_for_backsub_{}.fits'.format(prefixName,oneDirection)
             primHDU.writeto(origName,overwrite=True)
             primHDU_mod = fits.PrimaryHDU(bkgModel)
             subModelName = 'diagnostics/spec_backsub/{}_backsub_model_{}.fits'.format(prefixName,oneDirection)
@@ -171,7 +173,58 @@ class spec(phot_pipeline.phot):
         for oneDirection in ['Y','X']:
             if self.param['bkgSub{}'.format(oneDirection)] == True:
                 subImg, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,ind=ind,saveFits=saveFits)
-        return subImg
+        return subImg, subHead
+    
+    def find_profile(self,img,head,ind=None,saveFits=False,showEach=False):
+        """
+        Find the spectroscopic profile using splines along the spectrum
+        This assumes an inherently smooth continuum (like a stellar source)
+        """
+        profile_img = np.zeros_like(img)
+        dispStart = self.param['dispPixels'][0]
+        dispEnd = self.param['dispPixels'][1]
+        ind_var = np.arange(dispStart,dispEnd) ## independent variable
+        knots = np.linspace(dispStart,dispEnd,self.param['numSplineKnots'])[1:-1]
+        
+        for oneSourcePos in self.param['starPositions']:
+            startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
+            endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+            for oneSpatialInd in np.arange(startSpatial,endSpatial + 1):
+                if self.param['dispDirection'] == 'x':
+                    dep_var = img[oneSpatialInd,dispStart:dispEnd]
+                else:
+                    dep_var = img[dispStart:dispEnd,oneSpatialInd]
+                
+                spline1 = phot_pipeline.robust_poly(ind_var,np.log10(dep_var),self.param['splineSpecFitOrder'],
+                                                    knots=knots,useSpline=True)
+                modelF = 10**spline1(ind_var)
+                
+                if showEach == True:
+                    plt.plot(ind_var,dep_var,'o',label='data')
+                    plt.plot(ind_var,modelF,label='model')
+                    plt.show()
+                    pdb.set_trace()
+                
+                if self.param['dispDirection'] == 'x':
+                    profile_img[oneSpatialInd,dispStart:dispEnd] = modelF
+                else:
+                    profile_img[dispStart:dispEnd,oneSpatialInd] = modelF
+        
+        if saveFits == True:
+            primHDU = fits.PrimaryHDU(img,head)
+            if ind == None:
+                prefixName = 'unnamed'
+            else:
+                prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
+            origName = 'diagnostics/profile_fit/{}_for_profile_fit.fits'.format(prefixName)
+            primHDU.writeto(origName,overwrite=True)
+            primHDU_mod = fits.PrimaryHDU(profile_img)
+            profModelName = 'diagnostics/profile_fit/{}_profile_model.fits'.format(prefixName)
+            primHDU_mod.writeto(profModelName,overwrite=True)
+            # subName = 'diagnostics/spec_backsub/{}_subtracted_{}.fits'.format(prefixName,oneDirection)
+            # subHDU = fits.PrimaryHDU(img - bkgModel,outHead)
+            # subHDU.writeto(subName,overwrite=True)
+        
     
     def spec_for_one_file(ind):
         """ Get spectroscopy for one file """
@@ -182,5 +235,6 @@ class spec(phot_pipeline.phot):
         readNoise = get_read_noise(self,head)
         err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
         
-        imgSub = self.do_backsub(img,head,ind)
+        imgSub, subHead = self.do_backsub(img,head,ind)
+        profImg = self.find_profile_image(imgSub,subHead,ind)
         

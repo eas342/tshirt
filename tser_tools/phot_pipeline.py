@@ -23,6 +23,7 @@ import yaml
 import os
 import warnings
 from scipy.stats import binned_statistic
+from scipy.interpolate import UnivariateSpline, LSQUnivariateSpline
 from astropy.table import Table
 import multiprocessing
 from multiprocessing import Pool
