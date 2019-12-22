@@ -165,28 +165,34 @@ class spec(phot_pipeline.phot):
             subHDU = fits.PrimaryHDU(img - bkgModel,outHead)
             subHDU.writeto(subName,overwrite=True)
         
-        return img - bkgModel, outHead
+        return img - bkgModel, bkgModel, outHead
     
     def do_backsub(self,img,head,ind=None,saveFits=False):
         subImg = img
         subHead = head
+        bkgModelTotal = np.zeros_like(subImg)
         for oneDirection in ['Y','X']:
             if self.param['bkgSub{}'.format(oneDirection)] == True:
-                subImg, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,ind=ind,saveFits=saveFits)
-        return subImg, subHead
+                subImg, bkgModel, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,
+                                                                ind=ind,saveFits=saveFits)
+                bkgModelTotal = bkgModelTotal + bkgModel
+        return subImg, bkgModelTotal, subHead
     
     def find_profile(self,img,head,ind=None,saveFits=False,showEach=False):
         """
         Find the spectroscopic profile using splines along the spectrum
         This assumes an inherently smooth continuum (like a stellar source)
         """
-        profile_img = np.zeros_like(img)
+        
         dispStart = self.param['dispPixels'][0]
         dispEnd = self.param['dispPixels'][1]
         ind_var = np.arange(dispStart,dispEnd) ## independent variable
         knots = np.linspace(dispStart,dispEnd,self.param['numSplineKnots'])[1:-1]
         
+        profile_img_list = []
+        
         for oneSourcePos in self.param['starPositions']:
+            profile_img = np.zeros_like(img)
             startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
             endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
             for oneSpatialInd in np.arange(startSpatial,endSpatial + 1):
@@ -209,6 +215,8 @@ class spec(phot_pipeline.phot):
                     profile_img[oneSpatialInd,dispStart:dispEnd] = modelF
                 else:
                     profile_img[dispStart:dispEnd,oneSpatialInd] = modelF
+            
+            profile_img_list.append(profile_img)
         
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
@@ -218,23 +226,67 @@ class spec(phot_pipeline.phot):
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
             origName = 'diagnostics/profile_fit/{}_for_profile_fit.fits'.format(prefixName)
             primHDU.writeto(origName,overwrite=True)
-            primHDU_mod = fits.PrimaryHDU(profile_img)
-            profModelName = 'diagnostics/profile_fit/{}_profile_model.fits'.format(prefixName)
-            primHDU_mod.writeto(profModelName,overwrite=True)
-            # subName = 'diagnostics/spec_backsub/{}_subtracted_{}.fits'.format(prefixName,oneDirection)
-            # subHDU = fits.PrimaryHDU(img - bkgModel,outHead)
-            # subHDU.writeto(subName,overwrite=True)
+            for ind,profile_img in enumerate(profile_img_list):
+                primHDU_mod = fits.PrimaryHDU(profile_img)
+                profModelName = 'diagnostics/profile_fit/{}_profile_model_src_{}.fits'.format(prefixName,ind)
+                primHDU_mod.writeto(profModelName,overwrite=True)
         
+        
+        return profile_img_list
     
-    def spec_for_one_file(ind):
+    def spec_for_one_file(self,ind,saveFits=False):
         """ Get spectroscopy for one file """
         
-        oneImg = self.fileL[ind]
+        oneImgName = self.fileL[ind]
         img, head = self.getImg(oneImgName)
-        t0 = get_date(head)
-        readNoise = get_read_noise(self,head)
-        err = np.sqrt(np.abs(img) + readNoise**2) ## Should already be gain-corrected
+        t0 = self.get_date(head)
         
-        imgSub, subHead = self.do_backsub(img,head,ind)
-        profImg = self.find_profile_image(imgSub,subHead,ind)
+        imgSub, bkgModel, subHead = self.do_backsub(img,head,ind)
+        readNoise = self.get_read_noise(head)
+        ## Background and read noise only.
+        ## Smoothed source flux added below
+        varImg = readNoise**2 + bkgModel ## in electrons because it should be gain-corrected
+        
+        profile_img_list = self.find_profile(imgSub,subHead,ind)
+        for oneSrc in np.arange(self.nsrc): ## use the smoothed flux for the variance estimate
+            varImg = varImg + profile_img_list[oneSrc]
+        
+        if saveFits == True:
+            prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
+            varName = 'diagnostics/variance_img/{}_variance.fits'.format(prefixName)
+            primHDU = fits.PrimaryHDU(varImg)
+            primHDU.writeto(varName,overwrite=True)
+        
+        if self.param['dispDirection'] == 'x':
+            sumAx = 0 ## summation axis along Y
+            dispAx = 1 ## dispersion axis is X
+        else:
+            sumAx = 1 ## summation axis along X
+            dispAx = 0 ## dispersion axis is 0
+        
+        ## dispersion indices in pixels (before wavelength calibration)
+        nDisp = img.shape[dispAx]
+        dispIndices = np.arange(nDisp)
+        
+        optSpectra = np.zeros([nDisp,self.nsrc])
+        optSpectra_err = np.zeros_like(optSpectra)
+        sumSpectra = np.zeros_like(optSpectra)
+        sumSpectra_err = np.zeros_like(optSpectra)
+        
+        for oneSrc in np.arange(self.nsrc):
+            profile_img = profile_img_list[oneSrc]
+            srcMask = profile_img > 0.
+            
+            optflux = (np.sum(imgSub * profile_img / varImg,sumAx) / 
+                       np.sum(profile_img**2/varImg,sumAx))
+            varFlux = (np.sum(profile_img,sumAx) / 
+                       np.sum(profile_img**2 * varImg,sumAx))
+            sumFlux = np.sum(imgSub * srcMask,sumAx)
+            
+            optSpectra[:,oneSrc] = optflux
+            optSpectra_err[:,oneSrc] = np.sqrt(varFlux)
+            sumSpectra[:,oneSrc] = sumFlux
+        
+        return optSpectra, optSpectra_err, sumSpectra, t0, dispIndices
+        
         
