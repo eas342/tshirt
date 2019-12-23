@@ -188,6 +188,28 @@ class spec(phot_pipeline.phot):
                 bkgModelTotal = bkgModelTotal + bkgModel
         return subImg, bkgModelTotal, subHead
     
+    def profile_normalize(self,img):
+        """
+        Renormalize a profile along the spatial direction
+        
+        Parameters
+        -----------
+        img: numpy array
+            The input profile image to be normalized
+        
+        """
+        normArr = np.sum(img,self.spatialAx)
+        
+        if self.param['dispDirection'] == 'x':
+            norm2D = np.tile(normArr,[img.shape[0],1])
+        else:
+            norm2D = np.tile(normArr,[img.shape[1],1]).transpose()
+        
+        norm_profile = np.zeros_like(img)
+        nonZero = img != 0
+        norm_profile[nonZero] = img[nonZero]/norm2D[nonZero]
+        return norm_profile
+    
     def find_profile(self,img,head,ind=None,saveFits=False,showEach=False):
         """
         Find the spectroscopic profile using splines along the spectrum
@@ -230,23 +252,10 @@ class spec(phot_pipeline.phot):
             ## Find obviously bad pixels
             smooth_img = deepcopy(profile_img)
             
-            ## Experimenting with weight bad px as 0
-            # badPx = np.abs(profile_img - img) > 100. * np.sqrt(profile_img)
-            # profile_img[badPx] = 0.
-            
-            ## Renormalize
-            normArr = np.sum(profile_img,self.spatialAx)
-            
-            if self.param['dispDirection'] == 'x':
-                norm2D = np.tile(normArr,[img.shape[0],1])
-            else:
-                norm2D = np.tile(normArr,[img.shape[1],1]).transpose()
-            
-            norm_profile = np.zeros_like(profile_img)
-            nonZero = profile_img != 0
-            norm_profile[nonZero] = profile_img[nonZero]/norm2D[nonZero]
-            
+            ## Renormalize            
+            norm_profile = self.profile_normalize(profile_img)
             profile_img_list.append(norm_profile)
+            
             ## save the smoothed image
             smooth_img_list.append(smooth_img)
                 
@@ -308,16 +317,24 @@ class spec(phot_pipeline.phot):
         sumSpectra_err = np.zeros_like(optSpectra)
         
         for oneSrc in np.arange(self.nsrc):
-            ## Insert an interpolation method here
-            # badPx = np.abs(profile_img - img) > 100. * np.sqrt(profile_img)
-            # profile_img[badPx] = 0.
-            
             profile_img = profile_img_list[oneSrc]
+            smooth_img = smooth_img_list[oneSrc]
+            
+            ## Find the bad pixels and their missing weights
+            badPx = np.abs(smooth_img - img) > 100. * np.sqrt(varImg)
+            badPx = badPx | (np.isfinite(img) == False)
+            holey_profile = deepcopy(profile_img)
+            holey_profile[badPx] = 0.
+            holey_weights = np.sum(holey_profile,self.spatialAx)
+            correctionFactor = np.ones_like(holey_weights)
+            goodPts = holey_weights > 0.
+            correctionFactor[goodPts] = 1./holey_weights[goodPts]
+            
             srcMask = profile_img > 0.
             
-            optflux = (np.sum(imgSub * profile_img / varImg,spatialAx) / 
+            optflux = (np.sum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) / 
                        np.sum(profile_img**2/varImg,spatialAx))
-            varFlux = (np.sum(profile_img,spatialAx) / 
+            varFlux = (np.sum(profile_img * correctionFactor,spatialAx) / 
                        np.sum(profile_img**2 * varImg,spatialAx))
             sumFlux = np.sum(imgSub * srcMask,spatialAx)
             sumErr = np.sqrt(np.sum(varImg * srcMask,spatialAx))
