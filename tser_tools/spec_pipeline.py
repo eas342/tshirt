@@ -71,12 +71,22 @@ class spec(phot_pipeline.phot):
         self.specFile = 'tser_data/spec/spec_'+self.dataFileDescrip+'.fits'
         #self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         #self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
+        self.get_summation_direction()
+        
         self.check_parameters()
         
     def check_parameters(self):
         dispCheck = (self.param['dispDirection'] == 'x') | (self.param['dispDirection'] == 'y')
         assert dispCheck, 'Dispersion direction parameter not valid'
         
+    
+    def get_summation_direction(self):
+        if self.param['dispDirection'] == 'x':
+            self.spatialAx = 0 ## summation axis along Y (spatial axis)
+            self.dispAx = 1 ## dispersion axis is X
+        else:
+            self.spatialAx = 1 ## summation axis along X (spatial axis)
+            self.dispAx = 0 ## dispersion axis is 0
     
     def do_extraction(self):
         """
@@ -190,6 +200,7 @@ class spec(phot_pipeline.phot):
         knots = np.linspace(dispStart,dispEnd,self.param['numSplineKnots'])[1:-1]
         
         profile_img_list = []
+        smooth_img_list = [] ## save the smooth version if running diagnostics
         
         for oneSourcePos in self.param['starPositions']:
             profile_img = np.zeros_like(img)
@@ -216,8 +227,29 @@ class spec(phot_pipeline.phot):
                 else:
                     profile_img[dispStart:dispEnd,oneSpatialInd] = modelF
             
-            profile_img_list.append(profile_img)
-        
+            ## Find obviously bad pixels
+            smooth_img = deepcopy(profile_img)
+            
+            ## Experimenting with weight bad px as 0
+            # badPx = np.abs(profile_img - img) > 100. * np.sqrt(profile_img)
+            # profile_img[badPx] = 0.
+            
+            ## Renormalize
+            normArr = np.sum(profile_img,self.spatialAx)
+            
+            if self.param['dispDirection'] == 'x':
+                norm2D = np.tile(normArr,[img.shape[0],1])
+            else:
+                norm2D = np.tile(normArr,[img.shape[1],1]).transpose()
+            
+            norm_profile = np.zeros_like(profile_img)
+            nonZero = profile_img != 0
+            norm_profile[nonZero] = profile_img[nonZero]/norm2D[nonZero]
+            
+            profile_img_list.append(norm_profile)
+            ## save the smoothed image
+            smooth_img_list.append(smooth_img)
+                
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
             if ind == None:
@@ -227,12 +259,18 @@ class spec(phot_pipeline.phot):
             origName = 'diagnostics/profile_fit/{}_for_profile_fit.fits'.format(prefixName)
             primHDU.writeto(origName,overwrite=True)
             for ind,profile_img in enumerate(profile_img_list):
+                ## Saved the smoothed model
+                primHDU_smooth = fits.PrimaryHDU(smooth_img_list[ind])
+                smoothModelName = 'diagnostics/profile_fit/{}_smoothed_src_{}.fits'.format(prefixName,ind)
+                primHDU_smooth.writeto(smoothModelName,overwrite=True)
+                
+                ## Save the profile
                 primHDU_mod = fits.PrimaryHDU(profile_img)
                 profModelName = 'diagnostics/profile_fit/{}_profile_model_src_{}.fits'.format(prefixName,ind)
                 primHDU_mod.writeto(profModelName,overwrite=True)
         
         
-        return profile_img_list
+        return profile_img_list, smooth_img_list
     
     def spec_for_one_file(self,ind,saveFits=False):
         """ Get spectroscopy for one file """
@@ -247,9 +285,9 @@ class spec(phot_pipeline.phot):
         ## Smoothed source flux added below
         varImg = readNoise**2 + bkgModel ## in electrons because it should be gain-corrected
         
-        profile_img_list = self.find_profile(imgSub,subHead,ind)
+        profile_img_list, smooth_img_list = self.find_profile(imgSub,subHead,ind)
         for oneSrc in np.arange(self.nsrc): ## use the smoothed flux for the variance estimate
-            varImg = varImg + profile_img_list[oneSrc]
+            varImg = varImg + smooth_img_list[oneSrc]
         
         if saveFits == True:
             prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
@@ -257,13 +295,9 @@ class spec(phot_pipeline.phot):
             primHDU = fits.PrimaryHDU(varImg)
             primHDU.writeto(varName,overwrite=True)
         
-        if self.param['dispDirection'] == 'x':
-            sumAx = 0 ## summation axis along Y
-            dispAx = 1 ## dispersion axis is X
-        else:
-            sumAx = 1 ## summation axis along X
-            dispAx = 0 ## dispersion axis is 0
-        
+        spatialAx = self.spatialAx
+        dispAx = self.dispAx
+                
         ## dispersion indices in pixels (before wavelength calibration)
         nDisp = img.shape[dispAx]
         dispIndices = np.arange(nDisp)
@@ -274,19 +308,34 @@ class spec(phot_pipeline.phot):
         sumSpectra_err = np.zeros_like(optSpectra)
         
         for oneSrc in np.arange(self.nsrc):
+            ## Insert an interpolation method here
+            # badPx = np.abs(profile_img - img) > 100. * np.sqrt(profile_img)
+            # profile_img[badPx] = 0.
+            
             profile_img = profile_img_list[oneSrc]
             srcMask = profile_img > 0.
             
-            optflux = (np.sum(imgSub * profile_img / varImg,sumAx) / 
-                       np.sum(profile_img**2/varImg,sumAx))
-            varFlux = (np.sum(profile_img,sumAx) / 
-                       np.sum(profile_img**2 * varImg,sumAx))
-            sumFlux = np.sum(imgSub * srcMask,sumAx)
+            optflux = (np.sum(imgSub * profile_img / varImg,spatialAx) / 
+                       np.sum(profile_img**2/varImg,spatialAx))
+            varFlux = (np.sum(profile_img,spatialAx) / 
+                       np.sum(profile_img**2 * varImg,spatialAx))
+            sumFlux = np.sum(imgSub * srcMask,spatialAx)
+            sumErr = np.sqrt(np.sum(varImg * srcMask,spatialAx))
             
             optSpectra[:,oneSrc] = optflux
             optSpectra_err[:,oneSrc] = np.sqrt(varFlux)
+            
             sumSpectra[:,oneSrc] = sumFlux
+            sumSpectra_err[:,oneSrc] = sumErr
         
-        return optSpectra, optSpectra_err, sumSpectra, t0, dispIndices
+        extractDict = {} ## spectral extraction dictionary
+        extractDict['t0'] = t0
+        extractDict['disp indices'] = dispIndices
+        extractDict['opt spec'] = optSpectra
+        extractDict['opt spec err'] = optSpectra_err
+        extractDict['sum spec'] = sumSpectra
+        extractDict['sum spec err'] = sumSpectra_err
+        
+        return extractDict
         
         
