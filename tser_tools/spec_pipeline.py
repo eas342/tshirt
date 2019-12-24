@@ -138,8 +138,13 @@ class spec(phot_pipeline.phot):
         
         hduFileNames = self.make_filename_hdu()
         
+        ## Get an example original header
+        exImg, exHeader = self.get_default_im()
+        hduOrigHeader = fits.ImageHDU(None,exHeader)
+        hduOrigHeader.name = 'Orig Header'
+        
         HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,hduDispIndices,
-                                hduFileNames])
+                                hduFileNames,hduOrigHeader])
         HDUList.writeto(self.specFile,overwrite=True)
         
     
@@ -402,4 +407,19 @@ class spec(phot_pipeline.phot):
         
         return extractDict
         
+    def plot_one_spec(self,src=0,ind=None):
+        if os.path.exists(self.specFile) == False:
+            spec.do_extraction()
+        
+        HDUList = fits.open(self.specFile)
+        if ind == None:
+            ind = self.nImg // 2
+        
+        x = HDUList['DISP INDICES'].data
+        y = HDUList['OPTIMAL SPEC'].data[ind,:,src]
+        
+        fig, ax = plt.subplots()
+        ax.plot(x,y)
+        plt.show()
+        plt.close(fig)
         
