@@ -21,7 +21,6 @@ dispPixels: [320, 2020] ## pixels to use in the dispersion direction
 nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
 jdRef: 2457551 ## JD reference offset to subtract for plotting
 timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
-apMethod: optimal ## how to do the extraction 'optimal' will do a weighted, 'sum' will do a simple sum
 isCube: True ## Is the data a cube (3D)?
 cubePlane: 0 ## The plane to choose if data is in cubes
 doCentering: False ## Center the aperturess with Gaussian?
