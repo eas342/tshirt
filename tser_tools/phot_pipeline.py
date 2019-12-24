@@ -765,12 +765,16 @@ class phot:
         hduCen.name = 'Centroids'
         ## hduFileName.name = 'Filenames' # already named by make_filename_hdu
         
-        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen,hduFileNames])
+        ## Get an example original header
+        exImg, exHeader = self.get_default_im()
+        hduOrigHeader = fits.ImageHDU(None,exHeader)
+        hduOrigHeader.name = 'Orig Header'
+        
+        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen,hduFileNames,hduOrigHeader])
         
         if self.keepFWHM == True:
             hduFWHM = fits.ImageHDU(self.fwhmArr,header=self.headFWHM)
             HDUList.append(hduFWHM)
-        
         
         HDUList.writeto(self.photFile,overwrite=True)
         warnings.resetwarnings()
