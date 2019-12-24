@@ -78,7 +78,7 @@ class spec(phot_pipeline.phot):
     def check_parameters(self):
         dispCheck = (self.param['dispDirection'] == 'x') | (self.param['dispDirection'] == 'y')
         assert dispCheck, 'Dispersion direction parameter not valid'
-        
+    
     
     def get_summation_direction(self):
         if self.param['dispDirection'] == 'x':
@@ -87,6 +87,51 @@ class spec(phot_pipeline.phot):
         else:
             self.spatialAx = 1 ## summation axis along X (spatial axis)
             self.dispAx = 0 ## dispersion axis is 0
+    
+    def add_parameters_to_header(self,header=None):
+        if header is None:
+            header = fits.Header()
+        
+        defaultParams = read_yaml('parameters/spec_params/default_params.yaml')
+        
+        ## max depth to dig in lists of lists of lists...
+        maxDepth = 3
+        for oneKey in np.sort(defaultParams.keys()):
+            if len(oneKey) > 8:
+                keyName = oneKey[0:8]
+            else:
+                keyName = oneKey
+            
+            metaDatum = defaultParams[oneKey]
+            if type(metaDatum) == list:
+                for ind1, item1 in enumerate(metaDatum):
+                    if type(item1) == list:
+                        for ind2,item2 in enumerate(item1):
+                            if type(item2) == list:
+                                warnings.warn("3-Deep lists not saved to output FITS header")
+                            else:
+                                if len(keyName) > 6:
+                                    keyName = keyName[0:6]
+                                useKey = "{}{}{}".format(keyName,ind1,ind2)
+                                header[useKey] = (item2, "{}: item: {} sub-item {}".format(oneKey,ind1,ind2))
+                            
+                    else:
+                        if len(keyName) > 7:
+                            keyName = keyName[0:7]
+                        
+                        useKey = "{}{}".format(keyName,ind1)
+                        header[useKey] = (item1, "{}: item {}".format(oneKey,ind1))
+            else:
+                header[keyName] = (metaDatum, oneKey)
+                
+                # if value != None:
+                #     ## dig as far as the depth number to check for a list
+                #     for oneDepth in np.arange(depth):
+                #         value = value[0]
+                # if type(value) == list:
+                #     self.paramLists.append(oneKey)
+                #     self.counts.append(len(self.batchParam[oneKey]))
+        return header
     
     def do_extraction(self):
         """
@@ -122,6 +167,8 @@ class spec(phot_pipeline.phot):
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
         hdu.name = 'Optimal Spec'
+        
+        hdu.header = self.add_parameters_to_header(hdu.header)
         
         hduOptErr = fits.ImageHDU(optSpec_err,hdu.header)
         hduOptErr.name = 'Opt Spec Err'
