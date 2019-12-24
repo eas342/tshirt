@@ -92,9 +92,56 @@ class spec(phot_pipeline.phot):
         """
         Extract all spectroscopy
         """
-        fileCountArray = np.arange(len(self.fileL))
+        fileCountArray = np.arange(self.nImg)
+        outputSpec = []
         for ind in fileCountArray:
             outputSpec.append(self.spec_for_one_file(ind))
+        
+        timeArr = []
+        dispPixelArr = outputSpec[0]['disp indices']
+        nDisp = len(dispPixelArr)
+        optSpec = np.zeros([self.nImg,nDisp,self.nsrc])
+        optSpec_err = np.zeros_like(optSpec)
+        sumSpec = np.zeros_like(optSpec)
+        sumSpec_err = np.zeros_like(optSpec)
+        
+        for ind in fileCountArray:
+            specDict = outputSpec[ind]
+            timeArr.append(specDict['t0'])
+            optSpec[ind,:,:] = specDict['opt spec']
+            optSpec_err[ind,:,:] = specDict['opt spec err']
+            sumSpec[ind,:,:] = specDict['sum spec']
+            sumSpec_err[ind,:,:] = specDict['sum spec err']
+        
+        hdu = fits.PrimaryHDU(optSpec)
+        hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with spectroscopy')
+        hdu.header['NIMG'] = (self.nImg,'Number of images')
+        hdu.header['AXIS1'] = ('src','source axis')
+        hdu.header['AXIS2'] = ('disp','dispersion axis')
+        hdu.header['AXIS3'] = ('image','image axis')
+        hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
+        hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
+        hdu.name = 'Optimal Spec'
+        
+        hduOptErr = fits.ImageHDU(optSpec_err,hdu.header)
+        hduOptErr.name = 'Opt Spec Err'
+        
+        hduSum = fits.ImageHDU(sumSpec,hdu.header)
+        hduSum.name = 'Sum Spec'
+        
+        hduSumErr = fits.ImageHDU(sumSpec_err,hdu.header)
+        hduSum.name = 'Sum Spec Err'
+        
+        hduDispIndices = fits.ImageHDU(dispPixelArr)
+        hduDispIndices.header['AXIS1'] = ('disp index', 'dispersion index (pixels)')
+        hduDispIndices.name = 'Disp Indices'
+        
+        hduFileNames = self.make_filename_hdu()
+        
+        HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,hduDispIndices,
+                                hduFileNames])
+        HDUList.writeto(self.specFile,overwrite=True)
+        
     
     def backsub_oneDir(self,img,head,oneDirection,saveFits=False,
                        showEach=False,ind=None):

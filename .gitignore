@@ -25,6 +25,7 @@ tser_tools/tser_data/phot/old/
 tser_tools/tser_data/phot/backups/
 tser_tools/tser_data/phot/phot_w_constant_aperture/
 tser_tools/tser_data/phot/phot_w_variable_aperture/
+tser_tools/tser_data/spec/*.fits
 tser_tools/diagnostics/spec_backsub/*.fits
 tser_tools/diagnostics/profile_fit/*.fits
 tser_tools/diagnostics/variance_img/*.fits
