@@ -18,7 +18,6 @@ bkgRegionsY: ## a list of background regions in the Y direction
 bkgOrderY: 2 ## order of polynomial subtraction in the Y direction
 apWidth: 30. ## Source aperture width
 dispPixels: [320, 2020] ## pixels to use in the dispersion direction
-nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
 jdRef: 2457551 ## JD reference offset to subtract for plotting
 timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
 isCube: True ## Is the data a cube (3D)?

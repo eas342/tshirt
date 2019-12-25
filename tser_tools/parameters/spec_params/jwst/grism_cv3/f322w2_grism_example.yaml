@@ -1,23 +1,24 @@
-procFiles: ../example_data/spec_time_series/*.fits ## files on which to do spec extraction
+procFiles: /Users/everettschlawin/Documents/jwst/test_data/grism_examples/NRCN036810-AS322S-6025033814_1_485_SE_2016-01-25T03h52m48_I0000_PPP.slp.fits ## files on which to do spec extraction
 excludeList: null
 srcName: Lab LED
 srcNameShort: labLED
-nightName: UT2017_09_08
+nightName: CV3NRCN036810
 dispDirection: x ## dispersion direction 'x' or 'y'
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
-   - 104
+   - 1102
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 bkgSubX: True ## Do background subtraction along the X direction?
 bkgRegionsX: ## a list of background regions in the X direction
-   - [0, 258]
+   - [0, 111]
+   - [2013, 2047]
 bkgOrderX: 0 ## order of polynomial subtraction in the X direction
 bkgSubY: True ## Do background subtraction along the Y direction?
 bkgRegionsY: ## a list of background regions in the Y direction
-   - [0, 60]
-   - [158, 255]
+   - [460, 1057]
+   - [1170, 1705]
 bkgOrderY: 2 ## order of polynomial subtraction in the Y direction
-apWidth: 30. ## Source aperture width
-dispPixels: [320, 2020] ## pixels to use in the dispersion direction
+apWidth: 50. ## Source aperture width
+dispPixels: [240, 1984] ## pixels to use in the dispersion direction
 jdRef: 2457551 ## JD reference offset to subtract for plotting
 timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
 isCube: True ## Is the data a cube (3D)?
@@ -29,7 +30,3 @@ isSlope: True ## Is the FITS image a slope image that should be multiplied by th
 readNoise: 14 ## Read noise in electrons
 detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
-splineSpecFitOrder: 3 ## order of the Spline to fit along the dispersion direction (for profile & badpix)
-splineSigRej: 2 ## number of sigma to reject when fitting the Splines along dispersion direction
-numSplineKnots: 8 ## number of spline Knots when fitting the Splines along the dispersion direction
-nanTreatment: 'leave' ## How to treat NaNs in image? 'zero' will set to 0, 'leave' will leave at NaN

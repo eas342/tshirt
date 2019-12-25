@@ -177,7 +177,7 @@ class spec(phot_pipeline.phot):
         hduSum.name = 'Sum Spec'
         
         hduSumErr = fits.ImageHDU(sumSpec_err,hdu.header)
-        hduSum.name = 'Sum Spec Err'
+        hduSumErr.name = 'Sum Spec Err'
         
         hduDispIndices = fits.ImageHDU(dispPixelArr)
         hduDispIndices.header['AXIS1'] = ('disp index', 'dispersion index (pixels)')
@@ -429,14 +429,29 @@ class spec(phot_pipeline.phot):
             goodPts = holey_weights > 0.
             correctionFactor[goodPts] = 1./holey_weights[goodPts]
             
+            if saveFits == True:
+                if self.param['dispDirection'] == 'x':
+                    correct2D = np.tile(correctionFactor,[img.shape[0],1])
+                else:
+                    correct2D = np.tile(correctionFactor,[img.shape[1],1]).transpose()
+                correct2D[badPx] = 0.
+                
+                primHDU_prof2Dh = fits.PrimaryHDU(holey_profile)
+                holey_profile_name = 'diagnostics/profile_fit/{}_holey_profile_{}.fits'.format(prefixName,oneSrc)
+                primHDU_prof2Dh.writeto(holey_profile_name,overwrite=True)
+                
+                corrHDU = fits.PrimaryHDU(correct2D)
+                correction2DName = 'diagnostics/profile_fit/{}_correct_2D_{}.fits'.format(prefixName,oneSrc)
+                corrHDU.writeto(correction2DName,overwrite=True)
+            
             srcMask = profile_img > 0.
             
-            optflux = (np.sum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) / 
-                       np.sum(profile_img**2/varImg,spatialAx))
-            varFlux = (np.sum(profile_img * correctionFactor,spatialAx) / 
-                       np.sum(profile_img**2 * varImg,spatialAx))
-            sumFlux = np.sum(imgSub * srcMask,spatialAx)
-            sumErr = np.sqrt(np.sum(varImg * srcMask,spatialAx))
+            optflux = (np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) / 
+                       np.nansum(profile_img**2/varImg,spatialAx))
+            varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) / 
+                       np.nansum(profile_img**2 * varImg,spatialAx))
+            sumFlux = np.nansum(imgSub * srcMask,spatialAx)
+            sumErr = np.sqrt(np.nansum(varImg * srcMask,spatialAx))
             
             optSpectra[:,oneSrc] = optflux
             optSpectra_err[:,oneSrc] = np.sqrt(varFlux)
@@ -454,19 +469,21 @@ class spec(phot_pipeline.phot):
         
         return extractDict
         
-    def plot_one_spec(self,src=0,ind=None):
+    def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal']):
         if os.path.exists(self.specFile) == False:
-            spec.do_extraction()
+            self.do_extraction()
         
         HDUList = fits.open(self.specFile)
         if ind == None:
             ind = self.nImg // 2
         
-        x = HDUList['DISP INDICES'].data
-        y = HDUList['OPTIMAL SPEC'].data[ind,:,src]
-        
         fig, ax = plt.subplots()
-        ax.plot(x,y)
+        
+        x = HDUList['DISP INDICES'].data
+        for oneSpecType in specTypes:
+            y = HDUList['{} SPEC'.format(oneSpecType).upper()].data[ind,:,src]
+            ax.plot(x,y,label=oneSpecType)
+        ax.legend()
         plt.show()
         plt.close(fig)
         

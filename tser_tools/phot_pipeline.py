@@ -112,7 +112,7 @@ class phot:
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
-                        'nanTreatment': None, 'backOffset': [0.0,0.0],
+                        'nanTreatment': 'zero', 'backOffset': [0.0,0.0],
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
@@ -974,7 +974,9 @@ class phot:
         if self.param['nanTreatment'] == 'zero':
             nanPt = (np.isfinite(img) == False)
             img[nanPt] = 0.0
-        elif self.param['nanTreatment'] == '':
+        elif self.param['nanTreatment'] == 'leave':
+            pass
+        else:
             raise NotImplementedError
         
         head = HDUList[headExtension].header
