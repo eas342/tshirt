@@ -19,6 +19,7 @@ from astropy.table import Table
 import multiprocessing
 from multiprocessing import Pool
 import phot_pipeline
+from astropy.stats import LombScargle
 
 
 maxCPUs = multiprocessing.cpu_count() // 3
@@ -468,22 +469,73 @@ class spec(phot_pipeline.phot):
         extractDict['sum spec err'] = sumSpectra_err
         
         return extractDict
+    
+    def norm_spec(self,x,y,numSplineKnots=None):
+        """ Normalize spec """
+        dispStart = self.param['dispPixels'][0]
+        dispEnd = self.param['dispPixels'][1]
+        if numSplineKnots is None:
+            numSplineKnots = self.param['numSplineKnots']
         
-    def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal']):
-        if os.path.exists(self.specFile) == False:
-            self.do_extraction()
-        
-        HDUList = fits.open(self.specFile)
-        if ind == None:
-            ind = self.nImg // 2
+        knots = np.linspace(dispStart,dispEnd,numSplineKnots)[1:-1]
+        spline1 = phot_pipeline.robust_poly(x,np.log10(y),self.param['splineSpecFitOrder'],
+                                            knots=knots,useSpline=True)
+        modelF = 10**spline1(x)
+        return y / modelF
+    
+    def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal'],
+                      normalize=False,numSplineKnots=None):
         
         fig, ax = plt.subplots()
         
-        x = HDUList['DISP INDICES'].data
         for oneSpecType in specTypes:
-            y = HDUList['{} SPEC'.format(oneSpecType).upper()].data[ind,:,src]
+            x, y, yerr = self.get_spec(specType=oneSpecType,ind=ind,src=src)
+            if normalize==True:
+                y = self.norm_spec(x,y,numSplineKnots=numSplineKnots)
             ax.plot(x,y,label=oneSpecType)
         ax.legend()
         plt.show()
         plt.close(fig)
         
+    def periodogram(self,src=0,ind=None,specType='Optimal'):
+        x, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
+        
+        normY = self.norm_spec(x,y,numSplineKnots=40)
+        #x1, x2 = 
+        pts = np.isfinite(normY)
+        frequency, power = LombScargle(x[pts],normY[pts],yerr[pts]).autopower()
+        period = 1./frequency
+        
+        fig, ax = plt.subplots()
+        
+        ax.loglog(frequency,power)
+        plt.show()
+    
+    def get_spec(self,specType='Optimal',ind=None,src=0):
+        if os.path.exists(self.specFile) == False:
+            self.do_extraction()
+        
+        x, y, yerr = get_spectrum(self.specFile,specType=specType,ind=ind,src=src)
+        return x, y, yerr
+    
+def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
+    
+    HDUList = fits.open(specFile)
+    head = HDUList['OPTIMAL Spec'].header
+    nImg = head['NIMG']
+    
+    if ind == None:
+        ind = nImg // 2
+        
+    x = HDUList['DISP INDICES'].data
+    y = HDUList['{} SPEC'.format(specType).upper()].data[ind,:,src]
+    if specType == 'Optimal':
+        fitsExtensionErr = 'OPT SPEC ERR'
+    else:
+        fitsExtensionErr = 'SUM SPEC ERR'
+    
+    yerr = HDUList[fitsExtensionErr].data[ind,:,src]
+    
+    HDUList.close()
+    
+    return x, y, yerr
