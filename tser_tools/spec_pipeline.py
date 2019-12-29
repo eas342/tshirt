@@ -484,7 +484,7 @@ class spec(phot_pipeline.phot):
         return y / modelF
     
     def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal'],
-                      normalize=False,numSplineKnots=None):
+                      normalize=False,numSplineKnots=None,savePlot=False):
         
         fig, ax = plt.subplots()
         
@@ -494,10 +494,16 @@ class spec(phot_pipeline.phot):
                 y = self.norm_spec(x,y,numSplineKnots=numSplineKnots)
             ax.plot(x,y,label=oneSpecType)
         ax.legend()
-        plt.show()
+        ax.set_xlabel("{} pixel".format(self.param['dispDirection'].upper()))
+        ax.set_ylabel("Counts (e$^-$)")
+        if savePlot == True:
+            fig.savefig('plots/spectra/individual_spec/{}_ind_spec_{}.pdf'.format(self.param['srcNameShort'],
+                                                                                  self.param['nightName']))
+        else:
+            plt.show()
         plt.close(fig)
         
-    def periodogram(self,src=0,ind=None,specType='Optimal'):
+    def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False):
         x, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
         
         normY = self.norm_spec(x,y,numSplineKnots=40)
@@ -509,7 +515,14 @@ class spec(phot_pipeline.phot):
         fig, ax = plt.subplots()
         
         ax.loglog(frequency,power)
-        plt.show()
+        ax.set_xlabel('Frequency (1/px)')
+        ax.set_ylabel('Power')
+        
+        if savePlot == True:
+            periodoName = '{}_spec_periodo_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
+            fig.savefig('plots/periodograms/{}'.format(periodoName))
+        else:
+            plt.show()
     
     def get_spec(self,specType='Optimal',ind=None,src=0):
         if os.path.exists(self.specFile) == False:
