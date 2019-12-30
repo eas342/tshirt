@@ -15,11 +15,12 @@ from copy import deepcopy
 import yaml
 import warnings
 from scipy.stats import binned_statistic
+import astropy
 from astropy.table import Table
+from astropy.stats import LombScargle
 import multiprocessing
 from multiprocessing import Pool
 import phot_pipeline
-from astropy.stats import LombScargle
 
 
 maxCPUs = multiprocessing.cpu_count() // 3
@@ -509,7 +510,8 @@ class spec(phot_pipeline.phot):
         normY = self.norm_spec(x,y,numSplineKnots=40)
         #x1, x2 = 
         pts = np.isfinite(normY)
-        frequency, power = LombScargle(x[pts],normY[pts],yerr[pts]).autopower()
+        ls = LombScargle(x[pts],normY[pts],yerr[pts])
+        frequency, power = ls.autopower()
         period = 1./frequency
         
         fig, ax = plt.subplots()
@@ -518,9 +520,26 @@ class spec(phot_pipeline.phot):
         ax.set_xlabel('Frequency (1/px)')
         ax.set_ylabel('Power')
         
+        if astropy.__version__ > "3.0":
+            maxPower = power.max()
+            
+            fap = ls.false_alarm_probability(power.max())
+            print("False alarm probability at {} is {}".format(maxPower,fap))
+            for onePower in [1e-3,1e-2,2e-2,2.5e-2]:
+                fap = ls.false_alarm_probability(onePower)
+                print("False alarm probability at {} is {}".format(onePower,fap))
+        else:
+            warnings.warn('Not calculating FAP for older version of astropy')
+        
+        localPts = frequency < 0.05
+        argmax = np.argmax(power[localPts])
+        freqAtMax = frequency[localPts][argmax]
+        print('Freq at local max power = {}'.format(freqAtMax))
+        print('Corresponding period = {}'.format(1./freqAtMax))
+        
         if savePlot == True:
             periodoName = '{}_spec_periodo_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
-            fig.savefig('plots/periodograms/{}'.format(periodoName))
+            fig.savefig('plots/spectra/periodograms/{}'.format(periodoName))
         else:
             plt.show()
     
