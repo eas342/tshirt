@@ -1,5 +1,9 @@
 import photutils
-from ccdproc import CCDData, Combiner
+try:
+    from ccdproc import CCDData, Combiner
+except ImportError as err1:
+    print("Could not import ccdproc, so image processing may not work")
+
 from astropy.io import fits, ascii
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
