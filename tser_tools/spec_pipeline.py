@@ -451,7 +451,7 @@ class spec(phot_pipeline.phot):
             optflux = (np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) / 
                        np.nansum(profile_img**2/varImg,spatialAx))
             varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) / 
-                       np.nansum(profile_img**2 * varImg,spatialAx))
+                       np.nansum(profile_img**2/varImg,spatialAx))
             sumFlux = np.nansum(imgSub * srcMask,spatialAx)
             sumErr = np.sqrt(np.nansum(varImg * srcMask,spatialAx))
             
@@ -536,6 +536,7 @@ class spec(phot_pipeline.phot):
         freqAtMax = frequency[localPts][argmax]
         print('Freq at local max power = {}'.format(freqAtMax))
         print('Corresponding period = {}'.format(1./freqAtMax))
+        print("FAP at local max = {}".format(ls.false_alarm_probability(power[localPts][argmax])))
         
         if savePlot == True:
             periodoName = '{}_spec_periodo_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
