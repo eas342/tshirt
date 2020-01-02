@@ -23,8 +23,6 @@ from multiprocessing import Pool
 import phot_pipeline
 
 
-maxCPUs = multiprocessing.cpu_count() // 3
-
 def read_yaml(filePath):
     with open(filePath) as yamlFile:
         yamlStructure = yaml.safe_load(yamlFile)
@@ -135,16 +133,20 @@ class spec(phot_pipeline.phot):
                 #     self.counts.append(len(self.batchParam[oneKey]))
         return header
     
-    def do_extraction(self):
+    def do_extraction(self,useMultiprocessing=False):
         """
         Extract all spectroscopy
         """
         fileCountArray = np.arange(self.nImg)
-        outputSpec = []
-        for ind in fileCountArray:
-            if np.mod(ind,15) == 0:
-                print("Working on {} of {}".format(ind,self.nImg))
-            outputSpec.append(self.spec_for_one_file(ind))
+        
+        if useMultiprocessing == True:
+            outputSpec = phot_pipeline.run_multiprocessing_phot(self,fileCountArray,method='spec_for_one_file')
+        else:
+            outputSpec = []
+            for ind in fileCountArray:
+                if np.mod(ind,15) == 0:
+                    print("Working on {} of {}".format(ind,self.nImg))
+                outputSpec.append(self.spec_for_one_file(ind))
         
         timeArr = []
         dispPixelArr = outputSpec[0]['disp indices']
