@@ -92,17 +92,16 @@ class spec(phot_pipeline.phot):
         if header is None:
             header = fits.Header()
         
-        defaultParams = read_yaml('parameters/spec_params/default_params.yaml')
-        
         ## max depth to dig in lists of lists of lists...
         maxDepth = 3
-        for oneKey in np.sort(defaultParams.keys()):
+        keyList = np.sort(list(self.param.keys()))
+        for oneKey in keyList:
             if len(oneKey) > 8:
                 keyName = oneKey[0:8]
             else:
                 keyName = oneKey
             
-            metaDatum = defaultParams[oneKey]
+            metaDatum = self.param[oneKey]
             if type(metaDatum) == list:
                 for ind1, item1 in enumerate(metaDatum):
                     if type(item1) == list:
