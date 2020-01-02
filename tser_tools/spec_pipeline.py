@@ -142,6 +142,8 @@ class spec(phot_pipeline.phot):
         fileCountArray = np.arange(self.nImg)
         outputSpec = []
         for ind in fileCountArray:
+            if np.mod(ind,15) == 0:
+                print("Working on {} of {}".format(ind,self.nImg))
             outputSpec.append(self.spec_for_one_file(ind))
         
         timeArr = []
