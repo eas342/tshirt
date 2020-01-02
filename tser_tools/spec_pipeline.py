@@ -536,7 +536,10 @@ class spec(phot_pipeline.phot):
         freqAtMax = frequency[localPts][argmax]
         print('Freq at local max power = {}'.format(freqAtMax))
         print('Corresponding period = {}'.format(1./freqAtMax))
-        print("FAP at local max = {}".format(ls.false_alarm_probability(power[localPts][argmax])))
+        if astropy.__version__ > "3.0":
+            print("FAP at local max = {}".format(ls.false_alarm_probability(power[localPts][argmax])))
+        else:
+            warnings.warn('Not calculating FAP for older versions of astropy')
         
         if savePlot == True:
             periodoName = '{}_spec_periodo_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
