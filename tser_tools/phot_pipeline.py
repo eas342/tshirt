@@ -34,25 +34,21 @@ from multiprocessing import Pool
 import time
 maxCPUs = multiprocessing.cpu_count() // 3
 
-def run_one_phot(allInput):
+def run_one_phot_method(allInput):
     """
-    Do aperture photometry on one file
-    Awkward workaround because multiprocessing doesn't work on object methods
+    Do a photometry/spectroscopy method on one file
+    For example, do aperture photometry on one file
+    This is a slightly awkward workaround because multiprocessing doesn't work on object methods
+        So it's a separate function that takes an object and runs the method
     """
-    photObj, ind = allInput
-    return photObj.phot_for_one_file(ind)
+    photObj, ind, method = allInput
+    photMethod = getattr(photObj,method)
+    return photMethod(ind)
 
-def run_centroid_finder_one_file(allInput):
-    """
-    Find the centroids for one file
-    Awkward workaround because multiprocessing doesn't work on object methods
-    """
-    photObj, ind = allInput
-    return photObj.get_allcen_img(ind)
 
-def run_multiprocessing_phot(photObj,fileIndices,method='apPhot'):
+def run_multiprocessing_phot(photObj,fileIndices,method='phot_for_one_file'):
     """
-    Run photometry methods on all files using multiprocessing
+    Run photometry/spectroscopy methods on all files using multiprocessing
     Awkward workaround because multiprocessing doesn't work on object methods
     
     Parameters
@@ -66,12 +62,10 @@ def run_multiprocessing_phot(photObj,fileIndices,method='apPhot'):
     """
     allInput = []
     for oneInd in fileIndices:
-        allInput.append([photObj,oneInd])
+        allInput.append([photObj,oneInd,method])
     p = Pool(maxCPUs)
-    if method == 'apPhot':
-        outputDat = p.map(run_one_phot,allInput)
-    else:
-        outputDat = p.map(run_centroid_finder_one_file,allInput)
+    
+    outputDat = p.map(run_one_phot_method,allInput)
     p.close()
     return outputDat
 
@@ -482,7 +476,7 @@ class phot:
             
             if useMultiprocessing == True:
                 fileCountArray = np.arange(len(self.fileL))
-                allOutput = run_multiprocessing_phot(self,fileCountArray,method='centroiding')
+                allOutput = run_multiprocessing_phot(self,fileCountArray,method='get_allcen_img')
             else:
                 allOutput = []
                 for ind, oneFile in enumerate(self.fileL):
