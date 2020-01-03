@@ -425,8 +425,9 @@ class spec(phot_pipeline.phot):
             smooth_img = smooth_img_list[oneSrc]
             
             ## Find the bad pixels and their missing weights
-            badPx = np.abs(smooth_img - img) > 100. * np.sqrt(varImg)
-            badPx = badPx | (np.isfinite(img) == False)
+            badPx = np.zeros_like(img,dtype=np.bool)
+            finitep = np.isfinite(img)
+            badPx[finitep] = np.abs(smooth_img[finitep] - img[finitep]) > 100. * np.sqrt(varImg[finitep])
             holey_profile = deepcopy(profile_img)
             holey_profile[badPx] = 0.
             holey_weights = np.sum(holey_profile,self.spatialAx)
@@ -451,10 +452,21 @@ class spec(phot_pipeline.phot):
             
             srcMask = profile_img > 0.
             
-            optflux = (np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) / 
-                       np.nansum(profile_img**2/varImg,spatialAx))
-            varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) / 
-                       np.nansum(profile_img**2/varImg,spatialAx))
+            ## Replaced the old lines to avoid runtime warnings
+            # optflux = (np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) /
+            #            np.nansum(profile_img**2/varImg,spatialAx))
+            # varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) /
+            #            np.nansum(profile_img**2/varImg,spatialAx))
+            optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
+            denom =  np.nansum(profile_img**2/varImg,spatialAx)
+            nonz = (denom != 0.) & np.isfinite(denom)
+            optflux = np.zeros_like(optNumerator) * np.nan
+            optflux[nonz] = optNumerator[nonz] / denom[nonz]
+            
+            varNumerator = np.nansum(profile_img * correctionFactor,spatialAx)
+            varFlux = np.zeros_like(varNumerator) * np.nan
+            varFlux[nonz] = varNumerator[nonz] / denom[nonz]
+            
             sumFlux = np.nansum(imgSub * srcMask,spatialAx)
             sumErr = np.sqrt(np.nansum(varImg * srcMask,spatialAx))
             
