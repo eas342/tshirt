@@ -143,8 +143,6 @@ class spec(phot_pipeline.phot):
         else:
             outputSpec = []
             for ind in fileCountArray:
-                if np.mod(ind,15) == 0:
-                    print("Working on {} of {}".format(ind,self.nImg))
                 outputSpec.append(self.spec_for_one_file(ind))
         
         timeArr = []
@@ -387,6 +385,8 @@ class spec(phot_pipeline.phot):
     
     def spec_for_one_file(self,ind,saveFits=False):
         """ Get spectroscopy for one file """
+        if np.mod(ind,15) == 0:
+            print("On {} of {}".format(ind,len(self.fileL)))
         
         oneImgName = self.fileL[ind]
         img, head = self.getImg(oneImgName)
