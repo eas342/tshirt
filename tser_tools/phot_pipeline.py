@@ -63,6 +63,9 @@ def run_multiprocessing_phot(photObj,fileIndices,method='phot_for_one_file'):
     allInput = []
     for oneInd in fileIndices:
         allInput.append([photObj,oneInd,method])
+    if len(fileIndices) < maxCPUs:
+        raise Exception("Fewer files to process than CPUs, this can confuse multiprocessing")
+    
     p = Pool(maxCPUs)
     
     outputDat = p.map(run_one_phot_method,allInput)
