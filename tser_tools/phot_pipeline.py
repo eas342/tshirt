@@ -1351,11 +1351,14 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
         
     """
     finitep = np.isfinite(y) & np.isfinite(x)
-    goodp = finitep ## Start with the finite points
+    
     if preScreen == True:
-        resid = np.abs(y - np.median(y))
+        resid = np.abs(y - np.nanmedian(y))
         madev = np.nanmedian(resid)
-        goodp = finitep & (np.abs(resid) < (sigreject * madev))
+        goodp = np.zeros_like(resid,dtype=np.bool)
+        goodp[finitep] = (np.abs(resid[finitep]) < (sigreject * madev))
+    else:
+        goodp = finitep ## Start with the finite points
         
     for iter in range(iteration):
         if np.sum(goodp) < polyord:
@@ -1378,7 +1381,11 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
             resid = np.abs(ymod - y)
             madev = np.nanmedian(resid)
             if madev > 0:
-                goodp = (np.abs(resid) < (sigreject * madev))
+                ## replacing the old line to avoid runtime errors
+                ## goodp = (np.abs(resid) < (sigreject * madev))
+                goodp = np.zeros_like(resid,dtype=np.bool)
+                goodp[finitep] = (np.abs(resid[finitep]) < (sigreject * madev))
+                
     
     if useSpline == True:
         return spl
