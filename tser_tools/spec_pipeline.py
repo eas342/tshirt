@@ -148,7 +148,7 @@ class spec(phot_pipeline.phot):
         timeArr = []
         dispPixelArr = outputSpec[0]['disp indices']
         nDisp = len(dispPixelArr)
-        optSpec = np.zeros([self.nImg,nDisp,self.nsrc])
+        optSpec = np.zeros([self.nsrc,self.nImg,nDisp])
         optSpec_err = np.zeros_like(optSpec)
         sumSpec = np.zeros_like(optSpec)
         sumSpec_err = np.zeros_like(optSpec)
@@ -156,17 +156,17 @@ class spec(phot_pipeline.phot):
         for ind in fileCountArray:
             specDict = outputSpec[ind]
             timeArr.append(specDict['t0'])
-            optSpec[ind,:,:] = specDict['opt spec']
-            optSpec_err[ind,:,:] = specDict['opt spec err']
-            sumSpec[ind,:,:] = specDict['sum spec']
-            sumSpec_err[ind,:,:] = specDict['sum spec err']
+            optSpec[:,ind,:] = specDict['opt spec']
+            optSpec_err[:,ind,:] = specDict['opt spec err']
+            sumSpec[:,ind,:] = specDict['sum spec']
+            sumSpec_err[:,ind,:] = specDict['sum spec err']
         
         hdu = fits.PrimaryHDU(optSpec)
         hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with spectroscopy')
         hdu.header['NIMG'] = (self.nImg,'Number of images')
-        hdu.header['AXIS1'] = ('src','source axis')
-        hdu.header['AXIS2'] = ('disp','dispersion axis')
-        hdu.header['AXIS3'] = ('image','image axis')
+        hdu.header['AXIS1'] = ('disp','dispersion axis')
+        hdu.header['AXIS2'] = ('image','image axis')
+        hdu.header['AXIS3'] = ('src','source axis')
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
         hdu.name = 'Optimal Spec'
@@ -415,7 +415,7 @@ class spec(phot_pipeline.phot):
         nDisp = img.shape[dispAx]
         dispIndices = np.arange(nDisp)
         
-        optSpectra = np.zeros([nDisp,self.nsrc])
+        optSpectra = np.zeros([self.nsrc,nDisp])
         optSpectra_err = np.zeros_like(optSpectra)
         sumSpectra = np.zeros_like(optSpectra)
         sumSpectra_err = np.zeros_like(optSpectra)
@@ -458,11 +458,11 @@ class spec(phot_pipeline.phot):
             sumFlux = np.nansum(imgSub * srcMask,spatialAx)
             sumErr = np.sqrt(np.nansum(varImg * srcMask,spatialAx))
             
-            optSpectra[:,oneSrc] = optflux
-            optSpectra_err[:,oneSrc] = np.sqrt(varFlux)
+            optSpectra[oneSrc,:] = optflux
+            optSpectra_err[oneSrc,:] = np.sqrt(varFlux)
             
-            sumSpectra[:,oneSrc] = sumFlux
-            sumSpectra_err[:,oneSrc] = sumErr
+            sumSpectra[oneSrc,:] = sumFlux
+            sumSpectra_err[oneSrc,:] = sumErr
         
         extractDict = {} ## spectral extraction dictionary
         extractDict['t0'] = t0
@@ -567,13 +567,13 @@ def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
         ind = nImg // 2
         
     x = HDUList['DISP INDICES'].data
-    y = HDUList['{} SPEC'.format(specType).upper()].data[ind,:,src]
+    y = HDUList['{} SPEC'.format(specType).upper()].data[src,ind,:]
     if specType == 'Optimal':
         fitsExtensionErr = 'OPT SPEC ERR'
     else:
         fitsExtensionErr = 'SUM SPEC ERR'
     
-    yerr = HDUList[fitsExtensionErr].data[ind,:,src]
+    yerr = HDUList[fitsExtensionErr].data[src,ind,:]
     
     HDUList.close()
     
