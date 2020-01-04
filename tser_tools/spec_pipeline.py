@@ -326,6 +326,8 @@ class spec(phot_pipeline.phot):
         profile_img_list = []
         smooth_img_list = [] ## save the smooth version if running diagnostics
         
+        delta = self.param['readNoise'] * 2. ## a little delta to add to add to profile so that you don't get log(negative)
+        
         for oneSourcePos in self.param['starPositions']:
             profile_img = np.zeros_like(img)
             startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
@@ -336,13 +338,24 @@ class spec(phot_pipeline.phot):
                 else:
                     dep_var = img[dispStart:dispEnd,oneSpatialInd]
                 
-                spline1 = phot_pipeline.robust_poly(ind_var,np.log10(dep_var),self.param['splineSpecFitOrder'],
-                                                    knots=knots,useSpline=True)
-                modelF = 10**spline1(ind_var)
+                ## this is a very long way to calculate a log that avoids runtime warnings
+                fitY = np.zeros_like(dep_var) * np.nan
+                positivep = np.zeros_like(dep_var,dtype=np.bool)
+                finitep = np.isfinite(dep_var)
+                positivep[finitep] = (dep_var[finitep] > 0. - delta)
+                fitY[positivep] = np.log10(dep_var[positivep] + delta)
+                
+                spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
+                                                    knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
+                                                    plotEachStep=False)
+                modelF = 10**spline1(ind_var) - delta
                 
                 if showEach == True:
                     plt.plot(ind_var,dep_var,'o',label='data')
                     plt.plot(ind_var,modelF,label='model')
+                    yKnots = np.nanmedian(dep_var) * np.ones_like(knots)
+                    plt.plot(knots,yKnots,'o',label='knots')
+                    plt.legend()
                     plt.show()
                     pdb.set_trace()
                 

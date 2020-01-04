@@ -1312,7 +1312,7 @@ def seeing_summary():
     return t
 
 def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None,
-                preScreen=False):
+                preScreen=False,plotEachStep=False):
     """
     Fit a function (with sigma rejection) to a curve
     
@@ -1333,6 +1333,8 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
         How many knots to use if doing a spline fit
     preScreen: bool
         Pre-screen by removing outliers from the median (which might fail for large slopes)
+    plotEachStep: bool
+        Plot each step of the fitting?
     
     Example Usage:
     ----------
@@ -1385,7 +1387,12 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
                 ## goodp = (np.abs(resid) < (sigreject * madev))
                 goodp = np.zeros_like(resid,dtype=np.bool)
                 goodp[finitep] = (np.abs(resid[finitep]) < (sigreject * madev))
-                
+        
+        if plotEachStep == True:
+            plt.plot(x,y,'o')
+            plt.plot(x[goodp],y[goodp],'o')
+            plt.plot(x,ymod)
+            plt.show()
     
     if useSpline == True:
         return spl
