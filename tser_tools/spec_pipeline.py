@@ -73,6 +73,9 @@ class spec(phot_pipeline.phot):
         #self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
         self.get_summation_direction()
         
+        ## a little delta to add to add to profile so that you don't get log(negative)
+        self.floor_delta = self.param['readNoise'] * 2. 
+        
         self.check_parameters()
         
     def check_parameters(self):
@@ -326,7 +329,7 @@ class spec(phot_pipeline.phot):
         profile_img_list = []
         smooth_img_list = [] ## save the smooth version if running diagnostics
         
-        delta = self.param['readNoise'] * 2. ## a little delta to add to add to profile so that you don't get log(negative)
+        
         
         for oneSourcePos in self.param['starPositions']:
             profile_img = np.zeros_like(img)
@@ -342,13 +345,14 @@ class spec(phot_pipeline.phot):
                 fitY = np.zeros_like(dep_var) * np.nan
                 positivep = np.zeros_like(dep_var,dtype=np.bool)
                 finitep = np.isfinite(dep_var)
-                positivep[finitep] = (dep_var[finitep] > 0. - delta)
-                fitY[positivep] = np.log10(dep_var[positivep] + delta)
+                positivep[finitep] = (dep_var[finitep] > 0. - self.floor_delta)
+                fitY[positivep] = np.log10(dep_var[positivep] + self.floor_delta)
                 
                 spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
                                                     knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
                                                     plotEachStep=False)
-                modelF = 10**spline1(ind_var) - delta
+                
+                modelF = 10**spline1(ind_var) - self.floor_delta
                 
                 if showEach == True:
                     plt.plot(ind_var,dep_var,'o',label='data')
@@ -364,11 +368,11 @@ class spec(phot_pipeline.phot):
                 else:
                     profile_img[dispStart:dispEnd,oneSpatialInd] = modelF
             
-            ## Find obviously bad pixels
+            
             smooth_img = deepcopy(profile_img)
             
             ## Renormalize            
-            norm_profile = self.profile_normalize(profile_img)
+            norm_profile = self.profile_normalize(profile_img + self.floor_delta)
             profile_img_list.append(norm_profile)
             
             ## save the smoothed image
@@ -411,9 +415,9 @@ class spec(phot_pipeline.phot):
         ## Smoothed source flux added below
         varImg = readNoise**2 + bkgModel ## in electrons because it should be gain-corrected
         
-        profile_img_list, smooth_img_list = self.find_profile(imgSub,subHead,ind)
+        profile_img_list, smooth_img_list = self.find_profile(imgSub,subHead,ind,saveFits=saveFits)
         for oneSrc in np.arange(self.nsrc): ## use the smoothed flux for the variance estimate
-            varImg = varImg + smooth_img_list[oneSrc]
+            varImg = varImg + np.abs(smooth_img_list[oneSrc]) ## negative flux should be approximated as photon noise
         
         if saveFits == True:
             prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
