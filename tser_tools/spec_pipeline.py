@@ -586,6 +586,34 @@ class spec(phot_pipeline.phot):
         x, y, yerr = get_spectrum(self.specFile,specType=specType,ind=ind,src=src)
         return x, y, yerr
     
+    def plot_dynamic_spec(self,src=0,saveFits=False):
+        HDUList = fits.open(self.specFile)
+        optSpec = HDUList['OPTIMAL SPEC'].data[src]
+        avgSpec = np.nanmean(optSpec,0)
+        nImg = optSpec.shape[0]
+        normImg = np.tile(avgSpec,[nImg,1])
+        dynamicSpec = optSpec / normImg
+        
+        if saveFits == True:
+            outHDU = fits.PrimaryHDU(dynamicSpec,HDUList['OPTIMAL SPEC'].header)
+            dyn_spec_name = '{}_dyn_spec_{}.fits'.format(self.param['srcNameShort'],self.param['nightName'])
+            outHDU.writeto('tser_data/dynamic_spec/{}'.format(dyn_spec_name),overwrite=True)
+        else:
+            plt.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
+            dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
+            plt.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name))
+        # holey_weights = np.sum(holey_profile,self.spatialAx)
+        # correctionFactor = np.ones_like(holey_weights)
+        # goodPts = holey_weights > 0.
+        # correctionFactor[goodPts] = 1./holey_weights[goodPts]
+        #
+        # if saveFits == True:
+        #     if self.param['dispDirection'] == 'x':
+        #         correct2D = np.tile(correctionFactor,[img.shape[0],1])
+        #
+        HDUList.close()
+        
+    
 def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
     
     HDUList = fits.open(specFile)
