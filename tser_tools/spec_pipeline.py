@@ -599,9 +599,16 @@ class spec(phot_pipeline.phot):
             dyn_spec_name = '{}_dyn_spec_{}.fits'.format(self.param['srcNameShort'],self.param['nightName'])
             outHDU.writeto('tser_data/dynamic_spec/{}'.format(dyn_spec_name),overwrite=True)
         else:
-            plt.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
+            fig, ax = plt.subplots()
+            ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
+            ax.invert_yaxis()
+            ax.set_xlabel('Disp (pixels)')
+            ax.set_ylabel('Time (Image #)')
+            dispPix = self.param['dispPixels']
+            ax.set_xlim(dispPix[0],dispPix[1])
             dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
-            plt.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name))
+            fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
+            plt.close(fig)
         # holey_weights = np.sum(holey_profile,self.spatialAx)
         # correctionFactor = np.ones_like(holey_weights)
         # goodPts = holey_weights > 0.
