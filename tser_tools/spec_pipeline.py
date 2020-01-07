@@ -371,8 +371,14 @@ class spec(phot_pipeline.phot):
             
             smooth_img = deepcopy(profile_img)
             
+            ## add the delta in again for profile normalization > 0
+            if self.param['dispDirection'] == 'x':
+                profile_img[oneSpatialInd,dispStart:dispEnd] += self.floor_delta
+            else:
+                profile_img[dispStart:dispEnd,oneSpatialInd] += self.floor_delta
+            
             ## Renormalize            
-            norm_profile = self.profile_normalize(profile_img + self.floor_delta)
+            norm_profile = self.profile_normalize(profile_img)
             profile_img_list.append(norm_profile)
             
             ## save the smoothed image
