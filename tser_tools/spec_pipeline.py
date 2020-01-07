@@ -448,8 +448,9 @@ class spec(phot_pipeline.phot):
             smooth_img = smooth_img_list[oneSrc]
             
             ## Find the bad pixels and their missing weights
-            badPx = np.zeros_like(img,dtype=np.bool)
             finitep = np.isfinite(img)
+            badPx = finitep == False ## start by marking NaNs as bad pixels
+            ## also mark large deviations from profile fit
             badPx[finitep] = np.abs(smooth_img[finitep] - img[finitep]) > 100. * np.sqrt(varImg[finitep])
             holey_profile = deepcopy(profile_img)
             holey_profile[badPx] = 0.
@@ -463,7 +464,8 @@ class spec(phot_pipeline.phot):
                     correct2D = np.tile(correctionFactor,[img.shape[0],1])
                 else:
                     correct2D = np.tile(correctionFactor,[img.shape[1],1]).transpose()
-                correct2D[badPx] = 0.
+                markBad = badPx & (profile_img > 0.)
+                correct2D[markBad] = 0.
                 
                 primHDU_prof2Dh = fits.PrimaryHDU(holey_profile)
                 holey_profile_name = 'diagnostics/profile_fit/{}_holey_profile_{}.fits'.format(prefixName,oneSrc)
