@@ -543,8 +543,9 @@ class spec(phot_pipeline.phot):
         ax.set_xlabel("{} pixel".format(self.param['dispDirection'].upper()))
         ax.set_ylabel("Counts (e$^-$)")
         if savePlot == True:
-            fig.savefig('plots/spectra/individual_spec/{}_ind_spec_{}.pdf'.format(self.param['srcNameShort'],
-                                                                                  self.param['nightName']))
+            outName = 'plots/spectra/individual_spec/{}_ind_spec_{}.pdf'.format(self.param['srcNameShort'],
+                                                                                self.param['nightName'])
+            fig.savefig(outName,bbox_inches='tight')
         else:
             plt.show()
         plt.close(fig)
@@ -632,27 +633,43 @@ class spec(phot_pipeline.phot):
         #         correct2D = np.tile(correctionFactor,[img.shape[0],1])
         #
         HDUList.close()
-        
-    def plot_broadband_series(self,src=0):
+    
+    def get_broadband_series(self,src=0):
         HDUList = fits.open(self.specFile)
+        t = Table()
+        t['time'] = HDUList['TIME'].data
+        
         spec2D = HDUList['OPTIMAL SPEC'].data[src]
         spec2D_err = HDUList['OPT SPEC ERR'].data[src]
-        broadBand = np.nansum(spec2D,1)
-        broadBand_err = np.sqrt(np.nansum(spec2D_err**2,1))
+        t['Flux'] = np.nansum(spec2D,1)
+        t['Flux Err'] = np.sqrt(np.nansum(spec2D_err**2,1))
         
-        norm_value = np.nanmedian(broadBand)
-        norm_broadBand = broadBand / norm_value
-        norm_broadBand_err = broadBand_err / norm_value
-        
-        err_ppm = np.nanmedian(norm_broadBand_err) * 1e6
-        print('Formal Err = {} ppm '.format(err_ppm))
-        fig, ax = plt.subplots()
-        ax.plot(norm_broadBand)
-        ax.set_xlabel("Image #")
-        ax.set_ylabel("Normalized Flux")
-        fig.show()
+        norm_value = np.nanmedian(t['Flux'])
+        t['Norm Flux'] = t['Flux']  / norm_value
+        t['Norm Flux Err'] = t['Flux Err'] / norm_value
         
         HDUList.close()
+        
+        return t
+    
+    def plot_broadband_series(self,src=0,savePlot=False):
+        t = self.get_broadband_series(src=src)
+        offset_time = np.floor(np.min(t['time']))
+        
+        err_ppm = np.nanmedian(t['Norm Flux Err']) * 1e6
+        print('Formal Err = {} ppm '.format(err_ppm))
+        fig, ax = plt.subplots()
+        
+        ax.plot(t['time'] - offset_time,t['Norm Flux'])
+        ax.set_xlabel("Time - {} (days)".format(offset_time))
+        ax.set_ylabel("Normalized Flux")
+        if savePlot == True:
+            bb_series_name = '{}_bb_series_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
+            outName = 'plots/spectra/broadband_series/{}'.format(bb_series_name)
+            fig.savefig(outName)
+        else:
+            fig.show()
+        
     
 def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
     
