@@ -199,6 +199,7 @@ class spec(phot_pipeline.phot):
         ## Save the times
         hduTime = fits.ImageHDU(np.array(timeArr))
         hduTime.header['AXIS1'] = ('time', 'time in Julian Day (JD)')
+        hduTime.name = 'TIME'
         
         HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,hduDispIndices,
                                 hduTime,hduFileNames,hduOrigHeader])
