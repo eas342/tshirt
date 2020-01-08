@@ -31,5 +31,6 @@ detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 splineSpecFitOrder: 3 ## order of the Spline to fit along the dispersion direction (for profile & badpix)
 splineSigRej: 2 ## number of sigma to reject when fitting the Splines along dispersion direction
+sigForBadPx: 100 ## number of sigma difference from smoothed profile where to mark bad pixels
 numSplineKnots: 20 ## number of spline Knots when fitting the Splines along the dispersion direction
 nanTreatment: 'leave' ## How to treat NaNs in image? 'zero' will set to 0, 'leave' will leave at NaN

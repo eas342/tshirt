@@ -456,7 +456,7 @@ class spec(phot_pipeline.phot):
             finitep = np.isfinite(img)
             badPx = finitep == False ## start by marking NaNs as bad pixels
             ## also mark large deviations from profile fit
-            badPx[finitep] = np.abs(smooth_img[finitep] - img[finitep]) > 100. * np.sqrt(varImg[finitep])
+            badPx[finitep] = np.abs(smooth_img[finitep] - img[finitep]) > self.param['sigForBadPx'] * np.sqrt(varImg[finitep])
             holey_profile = deepcopy(profile_img)
             holey_profile[badPx] = 0.
             holey_weights = np.sum(holey_profile,self.spatialAx)
