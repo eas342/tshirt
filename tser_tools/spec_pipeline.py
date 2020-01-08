@@ -628,6 +628,26 @@ class spec(phot_pipeline.phot):
         #
         HDUList.close()
         
+    def plot_broadband_series(self,src=0):
+        HDUList = fits.open(self.specFile)
+        spec2D = HDUList['OPTIMAL SPEC'].data[src]
+        spec2D_err = HDUList['OPT SPEC ERR'].data[src]
+        broadBand = np.nansum(spec2D,1)
+        broadBand_err = np.sqrt(np.nansum(spec2D_err**2,1))
+        
+        norm_value = np.nanmedian(broadBand)
+        norm_broadBand = broadBand / norm_value
+        norm_broadBand_err = broadBand_err / norm_value
+        
+        err_ppm = np.nanmedian(norm_broadBand_err) * 1e6
+        print('Formal Err = {} ppm '.format(err_ppm))
+        fig, ax = plt.subplots()
+        ax.plot(norm_broadBand)
+        ax.set_xlabel("Image #")
+        ax.set_ylabel("Normalized Flux")
+        fig.show()
+        
+        HDUList.close()
     
 def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
     
