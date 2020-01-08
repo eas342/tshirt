@@ -158,7 +158,7 @@ class spec(phot_pipeline.phot):
         
         for ind in fileCountArray:
             specDict = outputSpec[ind]
-            timeArr.append(specDict['t0'])
+            timeArr.append(specDict['t0'].jd)
             optSpec[:,ind,:] = specDict['opt spec']
             optSpec_err[:,ind,:] = specDict['opt spec err']
             sumSpec[:,ind,:] = specDict['sum spec']
@@ -196,8 +196,12 @@ class spec(phot_pipeline.phot):
         hduOrigHeader = fits.ImageHDU(None,exHeader)
         hduOrigHeader.name = 'Orig Header'
         
+        ## Save the times
+        hduTime = fits.ImageHDU(np.array(timeArr))
+        hduTime.header['AXIS1'] = ('time', 'time in Julian Day (JD)')
+        
         HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,hduDispIndices,
-                                hduFileNames,hduOrigHeader])
+                                hduTime,hduFileNames,hduOrigHeader])
         HDUList.writeto(self.specFile,overwrite=True)
         
     
