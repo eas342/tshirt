@@ -354,9 +354,20 @@ class spec(phot_pipeline.phot):
                 positivep[finitep] = (dep_var[finitep] > 0. - self.floor_delta)
                 fitY[positivep] = np.log10(dep_var[positivep] + self.floor_delta)
                 
-                spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
-                                                    knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
-                                                    plotEachStep=False)
+                try:
+                    spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
+                                                        knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
+                                                        plotEachStep=False,preScreen=self.param['splinePreScreen'])
+                except ValueError as inst:
+                    if str(inst) == 'Interior knots t must satisfy Schoenberg-Whitney conditions':
+                        print(inst)
+                        print("Trying my debugging mode")
+                        
+                        print("Value error")
+                        pdb.set_trace()
+                    else:
+                        raise inst
+                
                 
                 modelF = 10**spline1(ind_var) - self.floor_delta
                 
