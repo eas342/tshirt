@@ -156,6 +156,7 @@ class spec(phot_pipeline.phot):
         optSpec_err = np.zeros_like(optSpec)
         sumSpec = np.zeros_like(optSpec)
         sumSpec_err = np.zeros_like(optSpec)
+        backSpec = np.zeros_like(optSpec)
         
         for ind in fileCountArray:
             specDict = outputSpec[ind]
@@ -164,6 +165,7 @@ class spec(phot_pipeline.phot):
             optSpec_err[:,ind,:] = specDict['opt spec err']
             sumSpec[:,ind,:] = specDict['sum spec']
             sumSpec_err[:,ind,:] = specDict['sum spec err']
+            backSpec[:,ind,:] = specDict['back spec']
         
         hdu = fits.PrimaryHDU(optSpec)
         hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with spectroscopy')
@@ -186,6 +188,9 @@ class spec(phot_pipeline.phot):
         hduSumErr = fits.ImageHDU(sumSpec_err,hdu.header)
         hduSumErr.name = 'Sum Spec Err'
         
+        hduBack = fits.ImageHDU(backSpec,hdu.header)
+        hduBack.name = 'Background Spec'
+        
         hduDispIndices = fits.ImageHDU(dispPixelArr)
         hduDispIndices.header['AXIS1'] = ('disp index', 'dispersion index (pixels)')
         hduDispIndices.name = 'Disp Indices'
@@ -202,7 +207,8 @@ class spec(phot_pipeline.phot):
         hduTime.header['AXIS1'] = ('time', 'time in Julian Day (JD)')
         hduTime.name = 'TIME'
         
-        HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,hduDispIndices,
+        HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,
+                                hduBack,hduDispIndices,
                                 hduTime,hduFileNames,hduOrigHeader])
         HDUList.writeto(self.specFile,overwrite=True)
         
@@ -459,6 +465,7 @@ class spec(phot_pipeline.phot):
         optSpectra_err = np.zeros_like(optSpectra)
         sumSpectra = np.zeros_like(optSpectra)
         sumSpectra_err = np.zeros_like(optSpectra)
+        backSpectra = np.zeros_like(optSpectra)
         
         for oneSrc in np.arange(self.nsrc):
             profile_img = profile_img_list[oneSrc]
@@ -517,6 +524,9 @@ class spec(phot_pipeline.phot):
             
             sumSpectra[oneSrc,:] = sumFlux
             sumSpectra_err[oneSrc,:] = sumErr
+            
+            backSpectra[oneSrc,:] = np.nanmean(bkgModel * srcMask,spatialAx)
+            
         
         extractDict = {} ## spectral extraction dictionary
         extractDict['t0'] = t0
@@ -525,6 +535,7 @@ class spec(phot_pipeline.phot):
         extractDict['opt spec err'] = optSpectra_err
         extractDict['sum spec'] = sumSpectra
         extractDict['sum spec err'] = sumSpectra_err
+        extractDict['back spec'] = backSpectra
         
         return extractDict
     
@@ -612,10 +623,11 @@ class spec(phot_pipeline.phot):
         x, y, yerr = get_spectrum(self.specFile,specType=specType,ind=ind,src=src)
         return x, y, yerr
     
-    def plot_dynamic_spec(self,src=0,saveFits=False):
+    def plot_dynamic_spec(self,src=0,saveFits=False,specAtTop=True):
         HDUList = fits.open(self.specFile)
         optSpec = HDUList['OPTIMAL SPEC'].data[src]
         avgSpec = np.nanmean(optSpec,0)
+        waveIndices = HDUList['DISP INDICES'].data
         nImg = optSpec.shape[0]
         normImg = np.tile(avgSpec,[nImg,1])
         dynamicSpec = optSpec / normImg
@@ -625,25 +637,26 @@ class spec(phot_pipeline.phot):
             dyn_spec_name = '{}_dyn_spec_{}.fits'.format(self.param['srcNameShort'],self.param['nightName'])
             outHDU.writeto('tser_data/dynamic_spec/{}'.format(dyn_spec_name),overwrite=True)
         else:
-            fig, ax = plt.subplots()
+            if specAtTop == True:
+                fig, axArr = plt.subplots(2,sharex=True)
+                axTop = axArr[0]
+                axTop.plot(waveIndices,avgSpec)
+                ax = axArr[1]
+            else:
+                fig, ax = plt.subplots()
+            
             ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
             ax.invert_yaxis()
+            ax.set_aspect('auto')
             ax.set_xlabel('Disp (pixels)')
             ax.set_ylabel('Time (Image #)')
             dispPix = self.param['dispPixels']
             ax.set_xlim(dispPix[0],dispPix[1])
+            
             dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
             fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
             plt.close(fig)
-        # holey_weights = np.sum(holey_profile,self.spatialAx)
-        # correctionFactor = np.ones_like(holey_weights)
-        # goodPts = holey_weights > 0.
-        # correctionFactor[goodPts] = 1./holey_weights[goodPts]
-        #
-        # if saveFits == True:
-        #     if self.param['dispDirection'] == 'x':
-        #         correct2D = np.tile(correctionFactor,[img.shape[0],1])
-        #
+        
         HDUList.close()
     
     def get_broadband_series(self,src=0):
