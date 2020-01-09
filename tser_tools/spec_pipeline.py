@@ -638,7 +638,7 @@ class spec(phot_pipeline.phot):
             outHDU.writeto('tser_data/dynamic_spec/{}'.format(dyn_spec_name),overwrite=True)
         else:
             if specAtTop == True:
-                fig, axArr = plt.subplots(2,sharex=True)
+                fig, axArr = plt.subplots(2, sharex=True,gridspec_kw={'height_ratios': [1, 3]})
                 axTop = axArr[0]
                 axTop.plot(waveIndices,avgSpec)
                 ax = axArr[1]
