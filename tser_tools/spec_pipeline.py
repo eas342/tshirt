@@ -23,13 +23,11 @@ from multiprocessing import Pool
 import phot_pipeline
 
 
-def read_yaml(filePath):
-    with open(filePath) as yamlFile:
-        yamlStructure = yaml.safe_load(yamlFile)
-    return yamlStructure
+
 
 class spec(phot_pipeline.phot):
-    def __init__(self,paramFile='parameters/spec_params/example_spec_parameters.yaml'):
+    def __init__(self,paramFile='parameters/spec_params/example_spec_parameters.yaml',
+                 directParam=None):
         """ Spectroscopy class
     
         Parameters
@@ -48,10 +46,13 @@ class spec(phot_pipeline.phot):
             The files on which photometry will be performed
         nImg: int
             Number of images in the sequence
+        directParam: dict
+            Parameter dictionary rather than YAML file (useful for batch processing)
         """
+        self.pipeType = 'spectroscopy'
+        self.get_parameters(paramFile=paramFile,directParam=directParam)
         
-        self.param = read_yaml(paramFile)
-        defaultParams = read_yaml('parameters/spec_params/default_params.yaml')
+        defaultParams = phot_pipeline.read_yaml('parameters/spec_params/default_params.yaml')
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -670,7 +671,39 @@ class spec(phot_pipeline.phot):
         else:
             fig.show()
         
+
+class batch_spec(phot_pipeline.batchPhot):
+    def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):
+        self.alreadyLists = {'starPositions': 1,'bkgRegionsX': 2, 'bkgRegionsY': 2,
+                             'dispPixels': 1, 'excludeList': 1}
+        self.general_init(batchFile=batchFile)
     
+    def make_pipe_obj(self,directParam):
+        """
+        Make a spectroscopy pipeline object that will be executed in batch
+        """
+        return spec(directParam=directParam)
+    
+    def run_all(self,useMultiprocessing=False):
+        self.batch_run('do_extraction')
+        self.batch_run('plot_dynamic_spec',saveFits=True)
+    
+    def plot_all(self):
+        self.batch_run('plot_one_spec',savePlot=True)
+    
+    def test_apertures(self):
+        raise NotImplementedError('still working on apertures')
+    
+    def return_phot_obj(self,ind=0):
+        print("try return spec obj")
+        
+    def return_spec_obj(self,ind=0):
+        """
+        Return a photometry object so other methods and attributes can be explored
+        """
+        return spec(directParam=self.paramDicts[ind])
+    
+
 def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
     
     HDUList = fits.open(specFile)

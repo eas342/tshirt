@@ -72,6 +72,11 @@ def run_multiprocessing_phot(photObj,fileIndices,method='phot_for_one_file'):
     p.close()
     return outputDat
 
+def read_yaml(filePath):
+    with open(filePath) as yamlFile:
+        yamlStructure = yaml.safe_load(yamlFile)
+    return yamlStructure
+
 class phot:
     def __init__(self,paramFile='parameters/phot_params/example_phot_parameters.yaml',
                  directParam=None):
@@ -96,14 +101,11 @@ class phot:
             The files on which photometry will be performed
         nImg: int
             Number of images in the sequence
+        directParam: dict
+            Parameter dictionary rather than YAML file (useful for batch processing)
         """
-        if directParam is None:
-            self.paramFile = paramFile
-            with open(paramFile) as pFile:
-                self.param = yaml.load(pFile)
-        else:
-            self.paramFile = 'direct dictionary'
-            self.param = directParam
+        self.pipeType = 'photometry'
+        self.get_parameters(paramFile=paramFile,directParam=directParam)
             
         xCoors, yCoors = [], []
         positions = self.param['refStarPos']
@@ -141,6 +143,14 @@ class phot:
         self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
         self.check_parameters()
         
+    
+    def get_parameters(self,paramFile,directParam=None):
+        if directParam is None:
+            self.paramFile = paramFile
+            self.param = read_yaml(paramFile)
+        else:
+            self.paramFile = 'direct dictionary'
+            self.param = directParam
     
     def get_fileList(self):
         origList = np.sort(glob.glob(self.param['procFiles']))
@@ -1037,6 +1047,10 @@ class batchPhot:
     Create several photometry objects and run phot over all of them
     """
     def __init__(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
+        self.alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1}
+        self.general_init(batchFile=batchFile)
+    
+    def general_init(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
         self.batchFile = batchFile
         with open(batchFile) as bFile:
             self.batchParam = yaml.load(bFile)
@@ -1044,14 +1058,13 @@ class batchPhot:
         ## Find keys that are lists. These are ones that are being run in batches
         ## However, a few keywords are already lists (like [x,y] coordinates))
         # and we are looking to see if those are lists of lists
-        ## this dictionary specifies the depth of the list
+        ## the self.alreadyLists dictionary specifies the depth of the list
         ## it could be a list of a list of list
-        alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1}
         self.paramLists = []
         self.counts = []
         for oneKey in self.batchParam.keys():
-            if oneKey in alreadyLists:
-                depth = alreadyLists[oneKey]
+            if oneKey in self.alreadyLists:
+                depth = self.alreadyLists[oneKey]
                 value = deepcopy(self.batchParam[oneKey])
                 ## Make sure the parameter is not None, so we won't be digging
                 if value != None:
@@ -1084,7 +1097,13 @@ class batchPhot:
             
     def print_all_dicts(self):
         print(yaml.dump(self.paramDicts,default_flow_style=False))
-        
+    
+    def make_pipe_obj(self,directParam):
+        """
+        Make a photometry pipeline object that will be executed in batch
+        """
+        return phot(directParam=directParam)
+    
     def batch_run(self,method,**kwargs):
         """
         Run any method of the photometry class by name. This will 
@@ -1099,7 +1118,7 @@ class batchPhot:
            Arguments to be passed to this method
         """
         for oneDict in self.paramDicts:
-            thisPhot = phot(directParam=oneDict)
+            thisPhot = self.make_pipe_obj(oneDict)
             print("Working on {} for batch {} {} ".format(method,
                                                          thisPhot.param['srcName'],
                                                          thisPhot.dataFileDescrip))
