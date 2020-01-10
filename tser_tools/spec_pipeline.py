@@ -70,6 +70,10 @@ class spec(phot_pipeline.phot):
         ## Set up file names for output
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
         self.specFile = 'tser_data/spec/spec_'+self.dataFileDescrip+'.fits'
+        
+        self.dyn_specFile_prefix = 'tser_data/dynamic_spec/dyn_spec_{}'.format(self.dataFileDescrip)
+        
+        self.wavebin_file_prefix = 'tser_data/wavebin_spec/wavebin_spec_{}'.format(self.dataFileDescrip)
         #self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         #self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
         self.get_summation_direction()
@@ -623,6 +627,9 @@ class spec(phot_pipeline.phot):
         x, y, yerr = get_spectrum(self.specFile,specType=specType,ind=ind,src=src)
         return x, y, yerr
     
+    def dyn_specFile(self,src=0):
+        return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
+    
     def plot_dynamic_spec(self,src=0,saveFits=False,specAtTop=True):
         HDUList = fits.open(self.specFile)
         optSpec = HDUList['OPTIMAL SPEC'].data[src]
@@ -631,11 +638,17 @@ class spec(phot_pipeline.phot):
         nImg = optSpec.shape[0]
         normImg = np.tile(avgSpec,[nImg,1])
         dynamicSpec = optSpec / normImg
+        dynamicSpec_err = HDUList['OPT SPEC ERR'].data[src] / normImg
         
         if saveFits == True:
-            outHDU = fits.PrimaryHDU(dynamicSpec,HDUList['OPTIMAL SPEC'].header)
-            dyn_spec_name = '{}_dyn_spec_{}.fits'.format(self.param['srcNameShort'],self.param['nightName'])
-            outHDU.writeto('tser_data/dynamic_spec/{}'.format(dyn_spec_name),overwrite=True)
+            dynHDU = fits.PrimaryHDU(dynamicSpec,HDUList['OPTIMAL SPEC'].header)
+            dynHDU.name = 'DYNAMIC SPEC'
+            dynHDUerr = fits.ImageHDU(dynamicSpec_err,dynHDU.header)
+            dynHDUerr.name = 'DYN SPEC ERR'
+            dispHDU = HDUList['DISP INDICES']
+            timeHDU = HDUList['TIME']
+            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU])
+            outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
         else:
             if specAtTop == True:
                 fig, axArr = plt.subplots(2, sharex=True,gridspec_kw={'height_ratios': [1, 3]})
@@ -658,6 +671,47 @@ class spec(phot_pipeline.phot):
             plt.close(fig)
         
         HDUList.close()
+    
+    def make_wavebin_series(self,specType='Optimal',src=0,nbins=10):
+        if os.path.exists(self.dyn_specFile(src)) == False:
+            self.plot_dynamic_spec(src=src,saveFits=True)
+        HDUList = fits.open(self.dyn_specFile(src))
+        dynSpec = HDUList['DYNAMIC SPEC'].data
+        dynSpec_err = HDUList['DYN SPEC ERR'].data
+        goodp = np.isfinite(dynSpec_err) & (dynSpec_err != 0)
+        
+        time = HDUList['TIME'].data
+        offset_time = np.floor(np.min(time))
+        nTime = len(time)
+        
+        ## Time variable weights
+        weights_tvar = np.zeros_like(dynSpec_err)
+        weights_tvar[goodp] = 1./dynSpec_err[goodp]**2
+        ## Weights that are time-constant
+        meanWeight = np.nanmean(weights_tvar,0)
+        weights = np.tile(meanWeight,[nTime,1])
+        
+        disp = HDUList['DISP INDICES'].data
+        
+        dispSt, dispEnd = self.param['dispPixels']
+        binEdges = np.array(np.linspace(dispSt,dispEnd,nbins+1),dtype=np.int)
+        binStarts = binEdges[0:-1]
+        binEnds = binEdges[1:]
+        binIndices = np.arange(len(binStarts))
+        
+        binGrid = np.zeros([nTime,nbins])
+        binGrid_err = np.zeros_like(binGrid)
+        for ind, binStart, binEnd in zip(binIndices,binStarts,binEnds):
+            binGrid[:,ind] = np.nansum(dynSpec[:,binStart:binEnd] * weights[:,binStart:binEnd] ,1)
+            #binGrid_err[:,ind] = np.sqrt(np.nansum(dynSpec_err[:,binStart:binEnd]**2,1))
+            binGrid[:,ind] = binGrid[:,ind] / np.nanmedian(binGrid[:,ind])
+            
+            plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind)
+            #plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind,
+            #             yerr=binGrid_err[:,ind])
+        plt.show()
+        HDUList.close()
+        return binGrid
     
     def get_broadband_series(self,src=0):
         HDUList = fits.open(self.specFile)
