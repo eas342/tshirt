@@ -672,6 +672,9 @@ class spec(phot_pipeline.phot):
         
         HDUList.close()
     
+    def wavebin_specFile(self,nbins=10):
+        return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
+    
     def make_wavebin_series(self,specType='Optimal',src=0,nbins=10):
         if os.path.exists(self.dyn_specFile(src)) == False:
             self.plot_dynamic_spec(src=src,saveFits=True)
@@ -681,7 +684,6 @@ class spec(phot_pipeline.phot):
         goodp = np.isfinite(dynSpec_err) & (dynSpec_err != 0)
         
         time = HDUList['TIME'].data
-        offset_time = np.floor(np.min(time))
         nTime = len(time)
         
         ## Time variable weights
@@ -701,17 +703,55 @@ class spec(phot_pipeline.phot):
         
         binGrid = np.zeros([nTime,nbins])
         binGrid_err = np.zeros_like(binGrid)
+        
+        binned_disp = np.zeros(nbins)
+        
         for ind, binStart, binEnd in zip(binIndices,binStarts,binEnds):
             binGrid[:,ind] = np.nansum(dynSpec[:,binStart:binEnd] * weights[:,binStart:binEnd] ,1)
+            binned_disp[ind] = np.mean([binStart,binEnd])
             #binGrid_err[:,ind] = np.sqrt(np.nansum(dynSpec_err[:,binStart:binEnd]**2,1))
             binGrid[:,ind] = binGrid[:,ind] / np.nanmedian(binGrid[:,ind])
             
-            plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind)
+            #plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind,fmt='o')
             #plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind,
             #             yerr=binGrid_err[:,ind])
-        plt.show()
+        
+        outHDU = fits.PrimaryHDU(binGrid,HDUList[0].header)
+        outHDU.name = 'BINNED F'
+        timeHDU = HDUList['TIME']
+        dispHDU = fits.ImageHDU(binned_disp,HDUList['DISP INDICES'].header)
+        outHDUList = fits.HDUList([outHDU,timeHDU,dispHDU])
+        outHDUList.writeto(self.wavebin_specFile(nbins))
+        
         HDUList.close()
-        return binGrid
+        
+    def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None):
+        """ Plot wavelength-binned time series """
+        if os.path.exists(self.wavebin_specFile(nbins=nbins)) == False:
+            self.make_wavebin_series(nbins=nbins)
+        
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        time = HDUList['TIME'].data
+        offset_time = np.floor(np.min(time))
+        
+        disp = HDUList['DISP INDICES'].data
+        binGrid = HDUList['BINNED F'].data
+        
+        fig, ax = plt.subplots()
+        for ind,oneDisp in enumerate(disp):
+            ax.errorbar(time - offset_time,binGrid[:,ind] - offset * ind,fmt='o')
+        
+        if yLim is not None:
+            ax.set_ylim(yLim[0],yLim[1])
+        
+        if savePlot == True:
+            fig.savefig('plots/spectra/wavebin_tseries/wavebin_tser_{}.pdf'.format(self.dataFileDescrip))
+            plt.close(fig)
+        
+        else:
+            fig.show()
+        
+        HDUList.close()
     
     def get_broadband_series(self,src=0):
         HDUList = fits.open(self.specFile)
