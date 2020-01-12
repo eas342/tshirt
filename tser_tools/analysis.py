@@ -29,7 +29,8 @@ def bin_examine():
     print
 
 def flatten(x,y,flatteningMethod='filter',polyOrd=2,
-            highPassFreq=0.01,normalize=True):
+            highPassFreq=0.01,normalize=True,
+            lowPassFreq=None):
     """
     Flatten a time series/array
     """
@@ -43,8 +44,10 @@ def flatten(x,y,flatteningMethod='filter',polyOrd=2,
             
     elif flatteningMethod == 'filter':
         
-        #sos = signal.butter(3,[1e-6,0.1], 'bandpass',analog=False, output='sos')
-        sos = signal.butter(5,highPassFreq, 'highpass',analog=False, output='sos')
+        if highPassFreq == None:
+            sos = signal.butter(5,highPassFreq, 'highpass',analog=False, output='sos')
+        else:
+            sos = signal.butter(5,[highPassFreq,lowPassFreq], 'bandpass',analog=False, output='sos')
         
         yFlat = signal.sosfiltfilt(sos, y)
         if normalize == False:
@@ -66,7 +69,7 @@ def roll_pad(y,length,pad_value=np.nan):
 
 def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
                     flatteningMethod='filter',
-                    highPassFreq=0.01):
+                    highPassFreq=0.01,lowPassFreq=None):
     """
     Cross correlate two arrays to find the offset
     
@@ -100,7 +103,7 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
     """
     
     Npts = len(x)
-    Noffset = 150
+    
     offsetIndices = (np.arange(2 * Noffset + 1) - Noffset)
     offsets = np.median(np.diff(x)) * offsetIndices
     
@@ -115,8 +118,10 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
         ax.plot(xTmp + Noffset,tmp)
         plt.show()
     
-    y1Flat = flatten(x,y1Norm,flatteningMethod=flatteningMethod,highPassFreq=highPassFreq)
-    y2Flat = flatten(x,y2Norm,flatteningMethod=flatteningMethod,highPassFreq=highPassFreq)
+    y1Flat = flatten(x,y1Norm,flatteningMethod=flatteningMethod,highPassFreq=highPassFreq,
+                              lowPassFreq=lowPassFreq)
+    y2Flat = flatten(x,y2Norm,flatteningMethod=flatteningMethod,highPassFreq=highPassFreq,
+                              lowPassFreq=lowPassFreq)
     
     if diagnostics == True:
         plt.close()
@@ -136,7 +141,7 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
     if diagnostics == True:
         print("Shift = {}, or index {}".format(offsets[peakArg],offsetIndices[peakArg]))
         plt.plot(y1Flat)
-        plt.plot(np.roll(y2Flat,offsetIndices[peakArg]))
+        plt.plot(roll_pad(y2Flat,offsetIndices[peakArg]))
         plt.show()
         
     return offsets[peakArg], offsetIndices[peakArg]

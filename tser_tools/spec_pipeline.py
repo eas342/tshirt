@@ -21,7 +21,7 @@ from astropy.stats import LombScargle
 import multiprocessing
 from multiprocessing import Pool
 import phot_pipeline
-
+import analysis
 
 
 
@@ -630,19 +630,57 @@ class spec(phot_pipeline.phot):
     def dyn_specFile(self,src=0):
         return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
     
-    def plot_dynamic_spec(self,src=0,saveFits=False,specAtTop=True):
+    def align_spec(self,data2D,refInd=None,diagnostics=False):
+        align2D = np.zeros_like(data2D)
+        nImg = data2D.shape[0]
+        dispPix = self.param['dispPixels']
+        
+        if refInd == None:
+            refInd = nImg // 2
+        
+        refSpec = data2D[refInd,dispPix[0]:dispPix[1]]
+        waveIndices = np.arange(dispPix[1] - dispPix[0])
+        
+        
+        for imgInd in np.arange(nImg):
+            thisSpec = data2D[imgInd,dispPix[0]:dispPix[1]]
+            if (imgInd > 199) & (diagnostics == True):
+                doDiagnostics = True
+            else:
+                doDiagnostics = False
+            
+            offsetX, offsetInd = analysis.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=50,
+                                                          diagnostics=doDiagnostics,
+                                                          lowPassFreq=0.1,
+                                                          highPassFreq=0.015)
+            if doDiagnostics == True:
+                pdb.set_trace()
+            align2D[imgInd,:] = analysis.roll_pad(data2D[imgInd,:],offsetInd)
+        
+        return align2D
+    
+    def plot_dynamic_spec(self,src=0,saveFits=False,specAtTop=True,align=True,
+                          alignDiagnostics=False):
         HDUList = fits.open(self.specFile)
-        optSpec = HDUList['OPTIMAL SPEC'].data[src]
-        avgSpec = np.nanmean(optSpec,0)
+        extSpec = HDUList['OPTIMAL SPEC'].data[src]
+        
+        if align == True:
+            useSpec = self.align_spec(extSpec,diagnostics=alignDiagnostics)
+        else:
+            useSpec = extSpec
+        
+        avgSpec = np.nanmean(useSpec,0)
         waveIndices = HDUList['DISP INDICES'].data
-        nImg = optSpec.shape[0]
+        nImg = useSpec.shape[0]
         normImg = np.tile(avgSpec,[nImg,1])
-        dynamicSpec = optSpec / normImg
+        dynamicSpec = useSpec / normImg
         dynamicSpec_err = HDUList['OPT SPEC ERR'].data[src] / normImg
         
         if saveFits == True:
             dynHDU = fits.PrimaryHDU(dynamicSpec,HDUList['OPTIMAL SPEC'].header)
             dynHDU.name = 'DYNAMIC SPEC'
+            dynHDU.header['ALIGNED'] = (align, 'Are the spectra shifted to align with each other?')
+            
             dynHDUerr = fits.ImageHDU(dynamicSpec_err,dynHDU.header)
             dynHDUerr.name = 'DYN SPEC ERR'
             dispHDU = HDUList['DISP INDICES']
@@ -721,13 +759,14 @@ class spec(phot_pipeline.phot):
         timeHDU = HDUList['TIME']
         dispHDU = fits.ImageHDU(binned_disp,HDUList['DISP INDICES'].header)
         outHDUList = fits.HDUList([outHDU,timeHDU,dispHDU])
-        outHDUList.writeto(self.wavebin_specFile(nbins))
+        outHDUList.writeto(self.wavebin_specFile(nbins),overwrite=True)
         
         HDUList.close()
         
-    def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None):
+    def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
+                            recalculate=False):
         """ Plot wavelength-binned time series """
-        if os.path.exists(self.wavebin_specFile(nbins=nbins)) == False:
+        if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins)
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
@@ -843,3 +882,16 @@ def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
     HDUList.close()
     
     return x, y, yerr
+
+comparisonFileNames = glob.glob('tser_data/spec/spec_o9*.fits')
+
+def compare_spectra(fileNames=comparisonFileNames):
+    fig, ax = plt.subplots()
+    for oneFile in fileNames:
+        x, y, yerr = get_spectrum(oneFile)
+        head = fits.getheader(oneFile)
+        ax.plot(x,y,label=head['SRCNAME'])
+    ax.legend()
+    fig.savefig('plots/spectra/comparison_spec/comparison_spec.pdf')
+    plt.close(fig)
+        
