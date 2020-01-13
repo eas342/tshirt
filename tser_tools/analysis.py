@@ -44,7 +44,7 @@ def flatten(x,y,flatteningMethod='filter',polyOrd=2,
             
     elif flatteningMethod == 'filter':
         
-        if highPassFreq == None:
+        if lowPassFreq == None:
             sos = signal.butter(5,highPassFreq, 'highpass',analog=False, output='sos')
         else:
             sos = signal.butter(5,[highPassFreq,lowPassFreq], 'bandpass',analog=False, output='sos')
