@@ -885,13 +885,16 @@ def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
 
 comparisonFileNames = glob.glob('tser_data/spec/spec_o9*.fits')
 
-def compare_spectra(fileNames=comparisonFileNames):
+def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=False):
     fig, ax = plt.subplots()
     for oneFile in fileNames:
-        x, y, yerr = get_spectrum(oneFile)
+        x, y, yerr = get_spectrum(oneFile,specType=specType)
         head = fits.getheader(oneFile)
         ax.plot(x,y,label=head['SRCNAME'])
     ax.legend()
-    fig.savefig('plots/spectra/comparison_spec/comparison_spec.pdf')
-    plt.close(fig)
+    if showPlot == True:
+        plt.show()
+    else:
+        fig.savefig('plots/spectra/comparison_spec/comparison_spec.pdf')
+        plt.close(fig)
         
