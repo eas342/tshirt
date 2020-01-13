@@ -1,0 +1,67 @@
+procFiles:
+   - /fenrirdata1/es_tso/AZLab06/no_refpix_subarray_config_test/proc/raw_separated_MMM/NRCLAMPWARM6P0MA_1_487_S_2019-09-05T06h50m15/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab06/no_refpix_subarray_config_test/proc/raw_separated_MMM/NRCLAMPWARM6P0MA_1_488_S_2019-09-05T06h57m39/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab06/no_refpix_subarray_config_test/proc/raw_separated_MMM/NRCLAMPWARM6P0MA_1_489_S_2019-09-05T07h05m07/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab06/no_refpix_subarray_config_test/proc/raw_separated_MMM/NRCLAMPWARM6P0MA_1_490_S_2019-09-05T07h12m37/*.slp.fits
+srcName:
+   - AZLab06 Baseline with lamp warm 487
+   - AZLab06 Baseline with lamp warm 488
+   - AZLab06 Baseline with lamp warm 489
+   - AZLab06 Baseline with lamp warm 490
+srcNameShort:
+   - azlab06baselinelampWarm487
+   - azlab06baselinelampWarm488
+   - azlab06baselinelampWarm489
+   - azlab06baselinelampWarm490
+nightName: NRCLAMPWARM6P0MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   -
+      - [  1090, 220]
+   -
+      - [  1587, 60]
+   -
+      - [   447, 58]
+   -
+      - [   965, 217]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight:
+   - 63 ## Source aperture height (only for rectangular aperture)
+   - 38
+   - 42
+   - 52
+apWidth:
+   - 113  ## Source aperture width (only for rectangular aperture)
+   - 94
+   - 128
+   - 99
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight:
+   - 63 ## background aperture height (for rectangular background)
+   - 38
+   - 42
+   - 52
+backWidth:
+   - 113 ## background aperture width (only for rectangular aperture)
+   - 134
+   - 168
+   -  99
+backOffset:
+   - [ 213,0] ## Background offset (from source centroid)
+   - [ 260,0]
+   - [-356,0]
+   - [-194,0]
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458729.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

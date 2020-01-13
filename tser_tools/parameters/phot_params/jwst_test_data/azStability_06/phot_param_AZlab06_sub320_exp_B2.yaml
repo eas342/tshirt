@@ -1,0 +1,37 @@
+procFiles:
+   - /fenrirdata1/es_tso/AZLab06/sub320_idle_vs_exp/proc/raw_separated_MMM/NRCSUB320B2TSER_1_487*/*.slp.fits
+srcName:
+   - AZLab06 Sub320 B2 only 487
+srcNameShort:
+   - azlab06sub320_expB2only_487
+nightName: NRCSUB320B2TSER
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   -
+      - [   72 , 160]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight:
+   - 315 ## Source aperture height (only for rectangular aperture)
+apWidth:
+   - 138  ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight:
+   - 315 ## background aperture height (for rectangular background)
+backWidth:
+   - 131 ## background aperture width (only for rectangular aperture)
+backOffset:
+   - [ 179,0] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458729.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

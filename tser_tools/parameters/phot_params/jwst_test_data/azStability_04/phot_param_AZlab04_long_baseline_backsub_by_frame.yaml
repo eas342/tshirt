@@ -1,0 +1,47 @@
+procFiles:
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/long_baseline01/proc/raw_separated_MMM_backsub_by_frame/NRCBSELINE0P9MA_1_487_S_2019-07-10T01h15m54_modhead/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/long_baseline01/proc/raw_separated_MMM_backsub_by_frame/NRCBSELINE0P9MA_1_489_S_2019-07-10T01h15m54_modhead/*.slp.fits
+srcName:
+   - AZLab04 Illum Long Baseline 487 Backsub by frame
+   - AZLab04 Illum Long Baseline 489 Backsub by frame
+srcNameShort:
+   - azlab04backsubByFrameLongBaseline487
+   - azlab04backsubByFrameLongBaseline489
+nightName: NRCBSELINE0P9MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   -
+      - [  1132, 76]
+   -
+      - [  1694, 88]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: False ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight:
+   - 139
+   - 157 ## Source aperture height (only for rectangular aperture)
+apWidth:
+   - 198
+   - 296 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight:
+   - 139
+   - 157 ## background aperture height (for rectangular background)
+backWidth:
+   - 160
+   - 78 ## background aperture width (only for rectangular aperture)
+backOffset:
+   - [300.,0.]
+   - [311.,0.] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458674.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

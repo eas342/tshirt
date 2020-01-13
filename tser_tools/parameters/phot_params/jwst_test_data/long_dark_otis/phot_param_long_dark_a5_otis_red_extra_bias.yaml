@@ -1,0 +1,23 @@
+procFiles: /surtrdata1/tso_analysis/otis_long_dark/pairwise_sub_red_extra_bias_sub/*int_???_???.fits
+srcName: darkRed Extra Bias Sub
+srcNameShort: darkRedXtraBias
+nightName: NRCALONG-DARK-7235074213_1
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [  768, 540]
+   - [ 1280, 540]
+   - [  768, 1250]
+srcGeometry: Circular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: CircularAnnulus ## Background geometry
+apRadius: 70. ## Source aperture radius
+#apHeight: 51 ## Source aperture height (only for rectangular aperture)
+#apWidth: 67 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backStart: 75 ## Background annulus start radius
+backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2457988.8 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: False
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?

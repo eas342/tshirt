@@ -1,0 +1,24 @@
+procFiles: /surtrdata1/tso_analysis/AZLab04_jul2019/long_baseline01/proc/raw_separated_MMM_refpix/NRCBSELINE0P9MA_1_487_S_2019-07-10T01h15m54_modhead/*.slp.fits
+srcName: AZLab04 Illum Long Baseline 487
+srcNameShort: azlab04illumBaseline487
+nightName: NRCBSELINE0P9MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [  1132, 76]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight: 139 ## Source aperture height (only for rectangular aperture)
+apWidth: 198 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight: 139 ## background aperture height (for rectangular background)
+backWidth: 160 ## background aperture width (only for rectangular aperture)
+backOffset: [300.,0.] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458674.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?

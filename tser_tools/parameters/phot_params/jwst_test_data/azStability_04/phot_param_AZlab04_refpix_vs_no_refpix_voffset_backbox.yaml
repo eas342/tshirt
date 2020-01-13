@@ -1,0 +1,115 @@
+procFiles:
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/long_baseline01_savgol_1overf/proc/raw_separated_MMM_refpix/NRCBSELINE0P9MA_1_487_S_2019-07-10T01h15m54/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/long_baseline01_savgol_1overf/proc/raw_separated_MMM_refpix/NRCBSELINE0P9MA_1_489_S_2019-07-10T01h15m54/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab04/all_azlab04/proc/raw_separated_MMM/NRCBSELINE0P9MA_1_487_S_2019-07-10T01h15m54/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab04/all_azlab04/proc/raw_separated_MMM/NRCBSELINE0P9MA_1_489_S_2019-07-10T01h15m54/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat2/proc/raw_separated_MMM_refpix/NRC64STRIPE1P5MA_1_487_S_2019-07-18T23h06m32/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat2/proc/raw_separated_MMM_refpix/NRC64STRIPE1P5MA_1_489_S_2019-07-18T23h17m07/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab04/all_azlab04/proc/raw_separated_MMM/NRC64STRIPE1P5MA_1_487_S_2019-07-18T23h06m32/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab04/all_azlab04/proc/raw_separated_MMM/NRC64STRIPE1P5MA_1_489_S_2019-07-18T23h17m07/*.slp.fits
+srcName:
+   - AZLab04 RPF subgrism256 With vert offset backsub With Refpix 487 
+   - AZLab04 RPF subgrism256 With vert offset backsub With Refpix 489
+   - AZLab04 RPF subgrism256 With vert offset backsub No Refpix 487 
+   - AZLab04 RPF subgrism256 With vert offset backsub No Refpix 489
+   - AZLab04 RPF subgrism064 With vert offset backsub With Refpix 487 
+   - AZLab04 RPF subgrism064 With vert offset backsub With Refpix 489
+   - AZLab04 RPF subgrism064 With vert offset backsub No Refpix 487 
+   - AZLab04 RPF subgrism064 With vert offset backsub No Refpix 489
+srcNameShort:
+   - azlab04_rpf256_voffset_bsub_with_refpx487
+   - azlab04_rpf256_voffset_bsub_with_refpx489
+   - azlab04_rpf256_voffset_bsub_no_refpx487
+   - azlab04_rpf256_voffset_bsub_no_refpx489
+   - azlab04_rpf064_voffset_bsub_with_refpx487
+   - azlab04_rpf064_voffset_bsub_with_refpx489
+   - azlab04_rpf064_voffset_bsub_no_refpx487
+   - azlab04_rpf064_voffset_bsub_no_refpx489
+nightName:
+   - NRCBSELINE0P9MA
+   - NRCBSELINE0P9MA
+   - NRCBSELINE0P9MA
+   - NRCBSELINE0P9MA
+   - NRC64STRIPE1P5MA
+   - NRC64STRIPE1P5MA
+   - NRC64STRIPE1P5MA
+   - NRC64STRIPE1P5MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   -
+      - [  1132, 76] ## only did this one, need to do the other 7
+   -
+      - [  1694, 88]
+   -
+      - [  1132, 76]
+   -
+      - [  1694, 88]
+   -
+      - [  1167, 32]
+   -
+      - [  1700, 26]
+   -
+      - [  1167, 32]
+   -
+      - [  1700, 26]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight:
+   - 139
+   - 157 ## Source aperture height (only for rectangular aperture)
+   - 139
+   - 157 ## Source aperture height (only for rectangular aperture)
+   - 60
+   - 49 ## Source aperture height (only for rectangular aperture)
+   - 60
+   - 49 ## Source aperture height (only for rectangular aperture)
+apWidth:
+   - 198
+   - 296 ## Source aperture width (only for rectangular aperture)
+   - 198
+   - 296 ## Source aperture width (only for rectangular aperture)
+   - 248
+   - 272 ## Source aperture width (only for rectangular aperture)
+   - 248
+   - 272 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight:
+   - 103
+   - 80 ## background aperture height (for rectangular background)
+   - 103
+   - 80 ## background aperture height (for rectangular background)
+   - 42
+   - 13 ## background aperture height (for rectangular background)
+   - 42
+   - 13 ## background aperture height (for rectangular background)
+backWidth:
+   - 88
+   - 296 ## background aperture width (only for rectangular aperture)
+   - 88
+   - 296 ## background aperture width (only for rectangular aperture)
+   - 148
+   - 485 ## background aperture width (only for rectangular aperture)
+   - 148
+   - 485 ## background aperture width (only for rectangular aperture)
+backOffset: ## Background offset (from source centroid)
+   - [353.,123.] ##
+   - [0.,126]
+   - [353.,123.]
+   - [0.,126.] ## Background offset (from source centroid)
+   - [283.,-9.]
+   - [106.,32.] ## Background offset (from source centroid)
+   - [283.,-9.]
+   - [106.,32.] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458674.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

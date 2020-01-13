@@ -1,0 +1,37 @@
+procFiles:
+   - /fenrirdata1/es_tso/gl_dewar/sub6_run112_hi4/proc/raw_separated_MMM/sub6_run112_hi4/*S01.slp.fits
+   - /fenrirdata1/es_tso/gl_dewar/sub6_run112_hi4/proc/raw_separated_MMM/sub6_run112_hi4/*S02.slp.fits
+   - /fenrirdata1/es_tso/gl_dewar/sub6_run112_hi4/proc/raw_separated_MMM/sub6_run112_hi4/*S03.slp.fits
+srcName:
+   - Run 112 Sub6 Hi 4 S01 Side background sub Bigger Ap
+   - Run 112 Sub6 Hi 4 S02 Side background sub Bigger Ap
+   - Run 112 Sub6 Hi 4 S03 Side background sub Bigger Ap
+srcNameShort:
+   - glDewarRun112Sub6_hig4_side_backsub_bigger_ap_s01
+   - glDewarRun112Sub6_hig4_side_backsub_bigger_ap_s02
+   - glDewarRun112Sub6_hig4_side_backsub_bigger_ap_s03
+nightName: GLrun112
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 165, 165]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular  ## Background geometry
+#apRadius: 15. ## Source aperture radius
+apHeight: 300 ## Source aperture height (only for rectangular aperture)
+apWidth: 280 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+#backStart: None ## Background annulus start radius
+#backEnd: None ## Background annulus end radius
+backHeight: 300 ## background aperture height (for rectangular background)
+backWidth: 4 ## background aperture width (only for rectangular aperture)
+backOffset: [-163,0] ## Background offset (from source centroid)
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2457320.5 ## JD reference offset to subtract
+timingMethod: None ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

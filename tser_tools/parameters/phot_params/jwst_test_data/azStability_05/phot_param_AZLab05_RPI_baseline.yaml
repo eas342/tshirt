@@ -1,0 +1,47 @@
+procFiles:
+   - /fenrirdata1/es_tso/AZLab05/baseline_rpi/proc/raw_separated_MMM_refpix/NRCRPIBSELINE6P0MA_1_487_S_2019-08-09T20h39m27/*.slp.fits
+   - /fenrirdata1/es_tso/AZLab05/baseline_rpi/proc/raw_separated_MMM_refpix/NRCRPIBSELINE6P0MA_1_489_S_2019-08-09T20h39m27/*.slp.fits
+srcName:
+   - AZLab05 6.0 mA Baseline RPI 487
+   - AZLab05 6.0 mA Baseline RPI 489
+srcNameShort:
+   - AZlab05RPIBaseline_6p0mA487
+   - AZlab05RPIBaseline_6p0mA489
+nightName: NRCRPIBSELINE6P0MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   -
+      - [  1097, 200]
+   -
+      - [  1633,  42]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight:
+   - 106
+   - 79 ## Source aperture height (only for rectangular aperture)
+apWidth:
+   - 142
+   - 180 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight:
+   - 106
+   - 79 ## background aperture height (for rectangular background)
+backWidth:
+   - 217
+   - 81 ## background aperture width (only for rectangular aperture)
+backOffset:
+   - [281.,0.]
+   - [375.,0.] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458698.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

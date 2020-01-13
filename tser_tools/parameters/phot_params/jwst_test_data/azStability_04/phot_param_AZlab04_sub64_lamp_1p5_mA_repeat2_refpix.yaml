@@ -1,0 +1,35 @@
+procFiles:
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat2/proc/raw_separated_MMM_refpix/NRC64STRIPE1P5MA_1_487_S_2019-07-18T23h06m32/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat2/proc/raw_separated_MMM_refpix/NRC64STRIPE1P5MA_1_489_S_2019-07-18T23h17m07/*.slp.fits
+srcName:
+   - AZLab04 Illum Stripe64 1.5 mA 487 Repeat2 Reference pixels
+   - AZLab04 Illum Stripe64 1.5 mA 489 Repeat2 Reference pixels
+srcNameShort:
+   - azlab04LED1p5mAStripe64n487Rpt2Refpix
+   - azlab04LED1p5mAStripe64n489Rpt2Refpix
+nightName: NRC64STRIPE1P5MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [     1.5, 31.5]
+   - [  2046.5, 31.5]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: False ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight: 64 ## Source aperture height (only for rectangular aperture)
+apWidth: 4 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight: None ## background aperture height (for rectangular background)
+backWidth: None ## background aperture width (only for rectangular aperture)
+backOffset: [None, None] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458676.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 8. ## e-

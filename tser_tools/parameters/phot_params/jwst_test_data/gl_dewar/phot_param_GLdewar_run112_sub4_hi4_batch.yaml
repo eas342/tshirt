@@ -1,0 +1,37 @@
+procFiles:
+   - /fenrirdata1/es_tso/gl_dewar/sub4_run112_hi4/raw_separated_MMM/Run112_sub4_hi_4/*S01.slp.fits
+   - /fenrirdata1/es_tso/gl_dewar/sub4_run112_hi4/raw_separated_MMM/Run112_sub4_hi_4/*S02.slp.fits
+   - /fenrirdata1/es_tso/gl_dewar/sub4_run112_hi4/raw_separated_MMM/Run112_sub4_hi_4/*S03.slp.fits
+srcName:
+   - Run 112 Sub4 Hi 4 S01
+   - Run 112 Sub4 Hi 4 S02
+   - Run 112 Sub4 Hi 4 S03
+srcNameShort:
+   - glDewarRun112Sub4_hig4_s01
+   - glDewarRun112Sub4_hig4_s02
+   - glDewarRun112Sub4_hig4_s03
+nightName: GLrun112
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 170, 240]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular  ## Background geometry
+#apRadius: 15. ## Source aperture radius
+apHeight: 150 ## Source aperture height (only for rectangular aperture)
+apWidth: 200 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+#backStart: None ## Background annulus start radius
+#backEnd: None ## Background annulus end radius
+backHeight: 50 ## background aperture height (for rectangular background)
+backWidth: 200 ## background aperture width (only for rectangular aperture)
+backOffset: [0.,-213.] ## Background offset (from source centroid)
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2457320.5 ## JD reference offset to subtract
+timingMethod: None ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

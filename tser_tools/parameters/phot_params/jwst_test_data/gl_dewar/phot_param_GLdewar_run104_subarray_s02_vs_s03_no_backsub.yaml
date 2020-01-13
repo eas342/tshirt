@@ -1,0 +1,34 @@
+procFiles: 
+   - /fenrirdata1/es_tso/gl_dewar/1mi_tests_run104/raw_separated_MMM/1mi_run104_s02/Run104_subarray_1mi_??.???.S02.slp.fits ## files on which to do Phot
+   - /fenrirdata1/es_tso/gl_dewar/1mi_tests_run104/raw_separated_MMM/1mi_run104_s03/Run104_subarray_1mi_??.???.S03.slp.fits
+srcName:
+   - S02illum All 1mi No Background Subtraction
+   - S03illum All 1mi No Background Subtraction
+srcNameShort:
+   - crossDetectorS02NoBacksub
+   - crossDetectorS03NoBacksub
+nightName: GLrun104
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 80, 105]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: False ## Do background subtraction?
+bkgGeometry: Rectangular  ## Background geometry
+#apRadius: 15. ## Source aperture radius
+apHeight: 72 ## Source aperture height (only for rectangular aperture)
+apWidth: 140 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+#backStart: None ## Background annulus start radius
+#backEnd: None ## Background annulus end radius
+backHeight: 15 ## background aperture height (for rectangular background)
+backWidth: 140 ## background aperture width (only for rectangular aperture)
+backOffset: [0.,-96.] ## Background offset (from source centroid)
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2457320.5 ## JD reference offset to subtract
+timingMethod: None ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-

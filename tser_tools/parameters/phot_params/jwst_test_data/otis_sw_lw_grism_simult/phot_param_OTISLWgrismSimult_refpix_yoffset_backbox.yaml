@@ -1,0 +1,24 @@
+procFiles: /fenrirdata1/es_tso/otis_sw_lw/proc/raw_separated_MMM_refpix/NRCN83-256-O9LW-7251174918_1_485_SE_2017-09-08T21h39m19/*slp.fits ## files on which to do Phot
+srcName: LWgrism MMM and pynrc refpix with horizontally offset backbox
+srcNameShort: LWgrisMMMRefpixHorizBackbox
+nightName: otisSWLWsimult
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 1045, 102.707]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 60. ## Source aperture radius
+apHeight: 40 ## Source aperture height (only for rectangular aperture)
+apWidth: 1502 ## Source aperture width (only for rectangular aperture)
+backHeight: 40 ## background aperture height (for rectangular background)
+backWidth: 266 ## background aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backOffset: [-900.0,0.0]
+backStart: None ## Background annulus start radius
+backEnd: None ## Background annulus end radius
+boxFindSize: None ## the half-width of the box used for source centroiding
+jdRef: 2458005.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?

@@ -1,0 +1,46 @@
+procFiles:
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat3_rpi/proc/raw_separated_MMM_refpix/NRCRPI64STRIPE1P5MA_1_487_S_2019-07-23T01h03m05/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat3_rpi/proc/raw_separated_MMM_refpix/NRCRPI64STRIPE1P5MA_1_489_S_2019-07-23T01h03m05/*.slp.fits
+srcName:
+   - AZLab04 Illum Stripe64 1.5 mA 487 Repeat3 RPI
+   - AZLab04 Illum Stripe64 1.5 mA 489 Repeat3 RPI
+srcNameShort:
+   - azlab04LED1p5mAStripe64n487
+   - azlab04LED1p5mAStripe64n489
+nightName: NRCRPI64STRIPE1P5MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   -
+      - [  1167, 32]
+   -
+      - [  1700, 26]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight:
+   - 60
+   - 49 ## Source aperture height (only for rectangular aperture)
+apWidth:
+   - 248
+   - 272 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight:
+   - 60
+   - 49 ## background aperture height (for rectangular background)
+backWidth:
+   - 152
+   - 201 ## background aperture width (only for rectangular aperture)
+backOffset:
+   - [287.,0.]
+   - [239.,0.] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458676.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+detectorGain: 1.8 ## e-/DN
+readNoise: 8. ## e-

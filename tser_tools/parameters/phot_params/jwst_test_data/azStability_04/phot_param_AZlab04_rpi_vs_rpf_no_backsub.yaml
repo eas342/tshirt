@@ -1,0 +1,91 @@
+procFiles:
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/long_baseline01/proc/raw_separated_MMM_refpix/NRCBSELINE0P9MA_1_487_S_2019-07-10T01h15m54_modhead/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/long_baseline01/proc/raw_separated_MMM_refpix/NRCBSELINE0P9MA_1_489_S_2019-07-10T01h15m54_modhead/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/rpi_baseline/proc/raw_separated_MMM_refpix/NRC*487*/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/rpi_baseline/proc/raw_separated_MMM_refpix/NRC*489*/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat2/proc/raw_separated_MMM_refpix/NRC64STRIPE1P5MA_1_487_S_2019-07-18T23h06m32/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat2/proc/raw_separated_MMM_refpix/NRC64STRIPE1P5MA_1_489_S_2019-07-18T23h17m07/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat3_rpi/proc/raw_separated_MMM_refpix/NRCRPI64STRIPE1P5MA_1_487_S_2019-07-23T01h03m05/*.slp.fits
+   - /surtrdata1/tso_analysis/AZLab04_jul2019/high_led_current_repeat3_rpi/proc/raw_separated_MMM_refpix/NRCRPI64STRIPE1P5MA_1_489_S_2019-07-23T01h03m05/*.slp.fits
+srcName:
+   - AZLab04 RPF subgrism256 No backsub 487 
+   - AZLab04 RPF subgrism256 No backsub 489
+   - AZLab04 RPI subgrism256 No backsub 487
+   - AZLab04 RPI subgrism256 No backsub 489
+   - AZLab04 RPF subgrism064 No backsub 487 
+   - AZLab04 RPF subgrism064 No backsub 489
+   - AZLab04 RPI subgrism064 No backsub 487 
+   - AZLab04 RPI subgrism064 No backsub 489
+srcNameShort:
+   - azlab04_rpf256_no_backsub487
+   - azlab04_rpf256_no_backsub489
+   - azlab04_rpi256_no_backsub487
+   - azlab04_rpi256_no_backsub489
+   - azlab04_rpf064_no_backsub487
+   - azlab04_rpf064_no_backsub489
+   - azlab04_rpi064_no_backsub487
+   - azlab04_rpi064_no_backsub489
+nightName:
+   - NRCBSELINE0P9MA
+   - NRCBSELINE0P9MA
+   - NRCRPIBSELINE0P9MA
+   - NRCRPIBSELINE0P9MA
+   - NRC64STRIPE1P5MA
+   - NRC64STRIPE1P5MA
+   - NRCRPI64STRIPE1P5MA
+   - NRCRPI64STRIPE1P5MA
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   -
+      - [  1132, 76]
+   -
+      - [  1694, 88]
+   -
+      - [  1132, 76]
+   -
+      - [  1694, 88]
+   -
+      - [  1167, 32]
+   -
+      - [  1700, 26]
+   -
+      - [  1167, 32]
+   -
+      - [  1700, 26]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: False ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry
+#apRadius: 70. ## Source aperture radius
+apHeight:
+   - 139
+   - 157 ## Source aperture height (only for rectangular aperture)
+   - 139
+   - 157 ## Source aperture height (only for rectangular aperture)
+   - 60
+   - 49 ## Source aperture height (only for rectangular aperture)
+   - 60
+   - 49 ## Source aperture height (only for rectangular aperture)
+apWidth:
+   - 198
+   - 296 ## Source aperture width (only for rectangular aperture)
+   - 198
+   - 296 ## Source aperture width (only for rectangular aperture)
+   - 248
+   - 272 ## Source aperture width (only for rectangular aperture)
+   - 248
+   - 272 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backHeight: None ## background aperture height (for rectangular background)
+backWidth: None## background aperture width (only for rectangular aperture)
+backOffset: [None, None] ## Background offset (from source centroid)
+#backStart: 75 ## Background annulus start radius
+#backEnd: 100 ## Background annulus end radius
+boxFindSize: 15 ## the half-width of the box used for source centroiding
+jdRef: 2458674.0 ## JD reference offset to subtract
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will calculate from ints
+isCube: True
+cubePlane: 0 ## The plane to choose if images are cubes
+doCentering: False ## Center the aperturess with Gaussian?
+isSlope: True ## data are slope files DN/s
+subpixelMethod: center ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+detectorGain: 1.8 ## e-/DN
+readNoise: 14. ## e-
