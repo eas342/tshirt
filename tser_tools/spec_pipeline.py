@@ -641,6 +641,7 @@ class spec(phot_pipeline.phot):
         refSpec = data2D[refInd,dispPix[0]:dispPix[1]]
         waveIndices = np.arange(dispPix[1] - dispPix[0])
         
+        offsetIndArr = np.zeros(nImg)
         
         for imgInd in np.arange(nImg):
             thisSpec = data2D[imgInd,dispPix[0]:dispPix[1]]
@@ -649,29 +650,33 @@ class spec(phot_pipeline.phot):
             else:
                 doDiagnostics = False
             
-            offsetX, offsetInd = analysis.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=50,
-                                                          diagnostics=doDiagnostics,
-                                                          lowPassFreq=0.1,
-                                                          highPassFreq=0.015)
+            offsetX, offsetInd = analysis.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=20,
+                                                          diagnostics=doDiagnostics,subPixel=True,
+                                                          lowPassFreq=self.param['lowPassFreqCC'],
+                                                          highPassFreq=self.param['hiPassFreqCC'])
             if doDiagnostics == True:
                 pdb.set_trace()
+            
             align2D[imgInd,:] = analysis.roll_pad(data2D[imgInd,:],offsetInd)
+            offsetIndArr[imgInd] = offsetInd
         
-        return align2D
+        return align2D, offsetIndArr
     
-    def plot_dynamic_spec(self,src=0,saveFits=False,specAtTop=True,align=True,
+    def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=True,
                           alignDiagnostics=False):
         HDUList = fits.open(self.specFile)
         extSpec = HDUList['OPTIMAL SPEC'].data[src]
         
+        nImg = extSpec.shape[0]
+        
         if align == True:
-            useSpec = self.align_spec(extSpec,diagnostics=alignDiagnostics)
+            useSpec, specOffsets = self.align_spec(extSpec,diagnostics=alignDiagnostics)
         else:
             useSpec = extSpec
+            specOffsets = np.zeros(nImg)
         
         avgSpec = np.nanmean(useSpec,0)
         waveIndices = HDUList['DISP INDICES'].data
-        nImg = useSpec.shape[0]
         normImg = np.tile(avgSpec,[nImg,1])
         dynamicSpec = useSpec / normImg
         dynamicSpec_err = HDUList['OPT SPEC ERR'].data[src] / normImg
@@ -685,30 +690,43 @@ class spec(phot_pipeline.phot):
             dynHDUerr.name = 'DYN SPEC ERR'
             dispHDU = HDUList['DISP INDICES']
             timeHDU = HDUList['TIME']
-            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU])
+            
+            offsetHDU = fits.ImageHDU(specOffsets)
+            offsetHDU.name = 'SPEC OFFSETS'
+            offsetHDU.header['BUNIT'] = ('pixels','units of Spectral offsets')
+            
+            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU])
             outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
+        
+        if specAtTop == True:
+            fig, axArr = plt.subplots(2, sharex=True,gridspec_kw={'height_ratios': [1, 3]})
+            axTop = axArr[0]
+            axTop.plot(waveIndices,avgSpec)
+            ax = axArr[1]
         else:
-            if specAtTop == True:
-                fig, axArr = plt.subplots(2, sharex=True,gridspec_kw={'height_ratios': [1, 3]})
-                axTop = axArr[0]
-                axTop.plot(waveIndices,avgSpec)
-                ax = axArr[1]
-            else:
-                fig, ax = plt.subplots()
-            
-            ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
-            ax.invert_yaxis()
-            ax.set_aspect('auto')
-            ax.set_xlabel('Disp (pixels)')
-            ax.set_ylabel('Time (Image #)')
-            dispPix = self.param['dispPixels']
-            ax.set_xlim(dispPix[0],dispPix[1])
-            
-            dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
-            fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
-            plt.close(fig)
+            fig, ax = plt.subplots()
+        
+        ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
+        ax.invert_yaxis()
+        ax.set_aspect('auto')
+        ax.set_xlabel('Disp (pixels)')
+        ax.set_ylabel('Time (Image #)')
+        dispPix = self.param['dispPixels']
+        ax.set_xlim(dispPix[0],dispPix[1])
+        
+        dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
+        fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
+        plt.close(fig)
         
         HDUList.close()
+    
+    def plot_spec_offsets(self,src=0):
+        if os.path.exists(self.dyn_specFile(src)) == False:
+            self.plot_dynamic_spec(src=src,saveFits=True)
+        HDUList = fits.open(self.dyn_specFile(src))
+        time = HDUList['TIME'].data
+        specOffset = HDUList['SPEC OFFSETS'].data
+        plt.plot(time,specOffset)
     
     def wavebin_specFile(self,nbins=10):
         return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
