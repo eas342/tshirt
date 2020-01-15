@@ -35,5 +35,5 @@ splinePreScreen: False ## pre-screen the points going into spline fitting?
 sigForBadPx: 100 ## number of sigma difference from smoothed profile where to mark bad pixels
 numSplineKnots: 20 ## number of spline Knots when fitting the Splines along the dispersion direction
 nanTreatment: 'leave' ## How to treat NaNs in image? 'zero' will set to 0, 'leave' will leave at NaN
-lowPassFreqCC: 0.1 ## Below this frequency, all information is included for cross-corr alignment analysis
+lowPassFreqCC: 0.99 ## Below this frequency, all information is included for cross-corr alignment analysis
 hiPassFreqCC: 0.015 ## Above this frequency, all information is included for cross-corr alignment analysis
