@@ -658,7 +658,7 @@ class spec(phot_pipeline.phot):
                 pdb.set_trace()
             
             align2D[imgInd,:] = analysis.roll_pad(data2D[imgInd,:],offsetInd * self.param['specShiftMultiplier'])
-            offsetIndArr[imgInd] = offsetInd
+            offsetIndArr[imgInd] = offsetInd * self.param['specShiftMultiplier']
         
         return align2D, offsetIndArr
     
