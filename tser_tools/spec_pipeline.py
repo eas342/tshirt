@@ -731,7 +731,7 @@ class spec(phot_pipeline.phot):
     def wavebin_specFile(self,nbins=10):
         return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
     
-    def make_wavebin_series(self,specType='Optimal',src=0,nbins=10):
+    def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None):
         if os.path.exists(self.dyn_specFile(src)) == False:
             self.plot_dynamic_spec(src=src,saveFits=True)
         HDUList = fits.open(self.dyn_specFile(src))
@@ -751,7 +751,11 @@ class spec(phot_pipeline.phot):
         
         disp = HDUList['DISP INDICES'].data
         
-        dispSt, dispEnd = self.param['dispPixels']
+        if dispIndices == None:
+            dispSt, dispEnd = self.param['dispPixels']
+        else:
+            dispSt, dispEnd = dispIndices
+        
         binEdges = np.array(np.linspace(dispSt,dispEnd,nbins+1),dtype=np.int)
         binStarts = binEdges[0:-1]
         binEnds = binEdges[1:]
@@ -782,10 +786,10 @@ class spec(phot_pipeline.phot):
         HDUList.close()
         
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
-                            recalculate=False):
+                            recalculate=False,dispIndices=None):
         """ Plot wavelength-binned time series """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
-            self.make_wavebin_series(nbins=nbins)
+            self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices)
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         time = HDUList['TIME'].data
