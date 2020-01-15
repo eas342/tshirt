@@ -657,7 +657,7 @@ class spec(phot_pipeline.phot):
             if doDiagnostics == True:
                 pdb.set_trace()
             
-            align2D[imgInd,:] = analysis.roll_pad(data2D[imgInd,:],offsetInd)
+            align2D[imgInd,:] = analysis.roll_pad(data2D[imgInd,:],offsetInd * self.param['specShiftMultiplier'])
             offsetIndArr[imgInd] = offsetInd
         
         return align2D, offsetIndArr
