@@ -137,7 +137,7 @@ class prep():
             if self.check_if_nonlin_needed(head) == True:
                 if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
                     ## neeed to convert back to ADU for Non-linearity, then e- for result
-                    nccd = lbt_luci2_lincor(nccd / thisGain,dataUnit=outUnit) * thisGain
+                    nccd = lbt_luci2_lincor(nccd.data / thisGain) * thisGain
                 else:
                     raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
                 head['LINCOR'] = (True, "Is a non-linearity correction applied?")
