@@ -124,18 +124,32 @@ class prep():
         for oneFile in fileL:
             head, dataCCD = self.getData(oneFile)
             
-            nccd = ccd_process(dataCCD,gain=self.get_gain(head) * u.electron/u.adu,
+            thisGain = self.get_gain(head)
+            
+            nccd = ccd_process(dataCCD,gain=thisGain * u.electron/u.adu,
                                master_flat=flat,
                                master_bias=bias)
             head['ZEROFILE'] = 'master_zero.fits'
             head['FLATFILE'] = 'master_flat.fits'
             head['GAINCOR'] = ('T','Gain correction applied (units are e)')
             head['BUNIT'] = ('electron','Physical unit of array values')
+            
+            if self.check_if_nonlin_needed(head) == True:
+                if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
+                    ## neeed to convert back to ADU for Non-linearity, then e- for result
+                    nccd = lbt_luci2_lincor(nccd / thisGain,dataUnit=outUnit) * thisGain
+                else:
+                    raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
+                head['LINCOR'] = (True, "Is a non-linearity correction applied?")
+                head['LINCFUNC'] = (self.pipePrefs['nonLinFunction'], "Name of non-linearity function applied")
+            else:
+                head['LINCOR'] = (False, "Is a non-linearity correction applied?")
+            
             hdu = fits.PrimaryHDU(data=nccd,header=head)
             HDUList = fits.HDUList([hdu])
             newFile = os.path.basename(oneFile)
             HDUList.writeto(os.path.join(self.procDir,newFile),overwrite=True)
-        
+    
     def check_if_nonlin_needed(self,head):
         """
         Check if non-linearity correction should be applied
@@ -168,16 +182,6 @@ class prep():
                 outUnit = u.adu
         else:
             outUnit = u.adu
-        
-        if self.check_if_nonlin_needed(head) == True:
-            if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
-                data = lbt_luci2_lincor(data,dataUnit=outUnit)
-            else:
-                raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
-            head['LINCOR'] = (True, "Is a non-linearity correction applied?")
-            head['LINCFUNC'] = (self.pipePrefs['nonLinFunction'], "Name of non-linearity function applied")
-        else:
-            head['LINCOR'] = (False, "Is a non-linearity correction applied?")
         
         outData = CCDData(data,unit=outUnit)
         return head, outData
