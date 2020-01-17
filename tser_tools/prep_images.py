@@ -171,7 +171,7 @@ class prep():
         
         if self.check_if_nonlin_needed(head) == True:
             if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
-                data = lbt_luci2_lincor(data,dataUnit=outUnit)
+                data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'])
             else:
                 raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
             head['LINCOR'] = (True, "Is a non-linearity correction applied?")
@@ -182,18 +182,23 @@ class prep():
         outData = CCDData(data,unit=outUnit)
         return head, outData
 
-def lbt_luci2_lincor(img,dataUnit=u.adu):
+def lbt_luci2_lincor(img,dataUnit=u.adu,ndit):
     """
     LUCI2 linearity correction from 
     https://sites.google.com/a/lbto.org/luci/observing/calibrations/calibration-details
     Input image should be in ADU
+    
+    Parameters
+    ----------
+    Ruquires the NDIT to give the non-linearity for one integration
     """
     if dataUnit == u.adu:
         imgUse = img
     else:
         raise Exception("Unit {} not the right unit for this nonlin correction".format(datUnit))
+    imgUse = imgUse / ndit
     ADUlin=imgUse + 4.155e-6 * (imgUse)**2
-    return ADUlin
+    return ADUlin * ndit
 
 def reduce_all(testMode=False):
     """ Reduce all files listed in reduction parameters """
