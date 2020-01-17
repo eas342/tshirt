@@ -726,7 +726,14 @@ class spec(phot_pipeline.phot):
         HDUList = fits.open(self.dyn_specFile(src))
         time = HDUList['TIME'].data
         specOffset = HDUList['SPEC OFFSETS'].data
-        plt.plot(time,specOffset)
+        fig, ax = plt.subplots()
+        offset_time = self.get_offset_time(time)
+        ax.plot(time - offset_time,specOffset)
+        ax.set_xlabel("JD - {} (days)".format(offset_time))
+        ax.set_ylabel("Dispersion Offset (px)")
+        
+        fig.savefig('plots/spectra/spec_offsets/spec_offsets_{}.pdf'.format(self.dataFileDescrip))
+        plt.close(fig)
     
     def wavebin_specFile(self,nbins=10):
         return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
@@ -784,7 +791,10 @@ class spec(phot_pipeline.phot):
         outHDUList.writeto(self.wavebin_specFile(nbins),overwrite=True)
         
         HDUList.close()
-        
+    
+    def get_offset_time(self,time):
+        return np.floor(np.min(time))
+    
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
                             recalculate=False,dispIndices=None):
         """ Plot wavelength-binned time series """
@@ -793,7 +803,7 @@ class spec(phot_pipeline.phot):
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         time = HDUList['TIME'].data
-        offset_time = np.floor(np.min(time))
+        offset_time = sefl.get_offset_time(time)
         
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
@@ -834,7 +844,7 @@ class spec(phot_pipeline.phot):
     
     def plot_broadband_series(self,src=0,savePlot=False):
         t = self.get_broadband_series(src=src)
-        offset_time = np.floor(np.min(t['time']))
+        offset_time = self.get_offset_time(t['time'])
         
         err_ppm = np.nanmedian(t['Norm Flux Err']) * 1e6
         print('Formal Err = {} ppm '.format(err_ppm))
