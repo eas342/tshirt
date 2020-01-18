@@ -1343,110 +1343,101 @@ def do_binning(x,y,nBin=20):
     yErrShow = stdErrM
 
     return xShow, yShow, yErrShow
-#
-# def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
-#                    binMin=50,binMax=2000,
-#                    logPlot=True):
-#     """
-#     Make an Allan Variance plot for a time series
-#
-#     Parameters
-#     ------------
-#     x:
-#     removeLinear: bool
-#         Remove a linear trend from the time series first?
-#
-#     """
-#
-#     if tserFormat == 'apRatio':
-#         detector = detectors[0]
-#         dat = ascii.read(tserFile.format(detector))
-#         dat['min'] = dat['days'] * 24. * 60.
-#     else:
-#         allT, names = [], []
-#         for detector in detectors:
-#             oneFile = tserFile.format(detector)
-#             t, name = get_tser('../tser_data/{}'.format(oneFile),
-#                                normalize=normalize,
-#                                trimLampOff=trimLampOff)
-#             allT.append(t)
-#             names.append(name)
-#
-#         if len(detectors) == 1:
-#             dat = Table()
-#             dat['min'] = t['minutes']
-#             dat['ratio_ppm'] = t['y'] * 1e6
-#             dat['ratio_err_ppm'] = t['yerr'] * 1e6
-#         else:
-#             t1, t2 = allT[0], allT[1]
-#
-#             dat = Table()
-#             dat['min'] = t1['minutes']
-#             dat['ratio_ppm'] = t1['y'] / t2['y'] * 1e6
-#             dat['ratio_err_ppm'] = np.sqrt(t1['yerr']**2+t2['yerr']**2) * 1e6
-#
-#     if clip == True:
-#         dat = dat[10:]
-#         print("clipping to {} points".format(len(dat)))
-#
-#     if removeLinear == True:
-#         coeff = np.polyfit(dat['min'],dat['ratio_ppm'],1)
-#         yPoly = np.poly1d(coeff)
-#         ymod = yPoly(dat['min'])
-#         dat['ratio_ppm'] = dat['ratio_ppm'] / ymod * 1e6
-#
-#     nPt = len(dat)
-#     #logBinNums = np.linspace(np.log10(50.),np.log10(2000),20)
-#     logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),20)
-#     binNums = np.array(10**logBinNums,dtype=np.int)
-# #    binNums = [50,100,500,1000,3917]#np.arange(20,100,20)
-#     binSizes, stds, theoNoise, wNoise = [], [], [], []
-#
-#     theoNoiseNoBin = np.median(dat['ratio_err_ppm'])
-#     cadence = np.median(np.diff(dat['min']))
-#     whiteNoiseStart = np.std(dat['ratio_ppm'])
-#
-#     for oneBin in binNums:
-#         #if oneBin > 0.8 * nPt:
-#         #    x,y = dat['min'],dat['ratio_ppm']
-#         #    nAvg = 1
-#         #else:
-#         x,y,yerr = do_binning(dat['min'],dat['ratio_ppm'],nBin=oneBin)
-#         binSize = np.median(np.diff(x))
-#         nAvg = binSize/cadence#nPt / oneBin
-#
-#         stds.append(np.std(y))
-#         binSizes.append(binSize)
-#         theoNoise.append(theoNoiseNoBin / np.sqrt(nAvg))
-#         wNoise.append(whiteNoiseStart / np.sqrt(nAvg))
-#
-#     ## do the unbinned Allan variance
-#     stds.append(whiteNoiseStart)
-#     binSizes.append(cadence)
-#     theoNoise.append(theoNoiseNoBin)
-#     wNoise.append(whiteNoiseStart)
-#
-#
-#     ## only Use finite values (ignore NaNs where binning isn't possible)
-#     usePts = np.isfinite(stds)
-#
-#     fig, ax = plt.subplots(figsize=(5,4))
-#     if logPlot == True:
-#         ax.loglog(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
-#     else:
-#         ax.semilogx(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
-#     ax.plot(binSizes,theoNoise,label='Read + Photon Noise')
-#     ax.plot(binSizes,wNoise,label='White noise scaling')
-#     ax.set_xlabel('Bin Size (min)')
-#     ax.set_ylabel('$\sigma$ (ppm)')
-#     ax.set_ylim(yLim)
-#     ax.legend()
-#     ax.set_title("Ratio Time Series (Linear De-trend = {}, {})".format(removeLinear,detector))
-#     fig.savefig('../tser_plot_output/allan_variance/all_var_{}_removelinear_{}_{}.pdf'.format(testName,removeLinear,detector),
-#                 bbox_inches='tight')
-#
-#
-#     plt.close(fig)
+
+def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
+                   binMin=50,binMax=2000,customShortName=None,
+                   logPlot=True,clip=False):
+    """
+    Make an Allan Variance plot for a time series
+    to see if it bins as sqrt(N) statistics
+    
+    Parameters
+    ------------
+    x: numpy array
+        Independent variable
+    y: numpy array
+        Dependent variable like flux
+    (optional keywords)
+    yerr: numpy array
+        Theoretical error
+    customShortName: str
+        Name for file
+    yLim: 2 element list
+        Specify custom Y values for the plot
+    binMin: int
+        Bin size for the smallest # of bins
+    binMax: int
+        Bin size for the largest # of bins
+    removeLinear: bool
+        Remove a linear trend from the time series first?
+    clip: bool
+        Clip the first few points?
+    """
+
+    if clip == True:
+        x = x[2:]
+        y = y[2:]
+        if yerr is not None:
+            y = y[2:]
+        print("clipping to {} points".format(len(x)))
+
+    if removeLinear == True:
+        yPoly = robust_poly(x,y,1)
+        ymod = np.polyval(yPoly,x)
+        y = y / ymod
+    
+    nPt = len(y)
+    
+    logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),20)
+    binNums = np.array(10**logBinNums,dtype=np.int)
+    
+    binSizes, stds, theoNoise, wNoise = [], [], [], []
+    
+    if yerr is not None:
+        theoNoiseNoBin = np.median(yerr)
+    else:
+        theoNoiseNoBin = np.nan
+    
+    cadence = np.median(np.diff(x))
+    whiteNoiseStart = np.std(y)
+    
+    for oneBin in binNums:
+        xBin,yBin,yBinErr = do_binning(x,y,nBin=oneBin)
+        binSize = np.median(np.diff(xBin))
+        nAvg = binSize/cadence
+        
+        stds.append(np.std(yBin))
+        binSizes.append(binSize)
+        theoNoise.append(theoNoiseNoBin / np.sqrt(nAvg))
+        wNoise.append(whiteNoiseStart / np.sqrt(nAvg))
+
+    ## do the unbinned Allan variance
+    stds.append(whiteNoiseStart)
+    binSizes.append(cadence)
+    theoNoise.append(theoNoiseNoBin)
+    wNoise.append(whiteNoiseStart)
+
+
+    ## only Use finite values (ignore NaNs where binning isn't possible)
+    usePts = np.isfinite(stds)
+
+    fig, ax = plt.subplots(figsize=(5,4))
+    if logPlot == True:
+        ax.loglog(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
+    else:
+        ax.semilogx(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
+    ax.plot(binSizes,theoNoise,label='Read + Photon Noise')
+    ax.plot(binSizes,wNoise,label='White noise scaling')
+    ax.set_xlabel('Bin Size (min)')
+    ax.set_ylabel('$\sigma$ (ppm)')
+    ax.set_ylim(yLim)
+    ax.legend()
+    ax.set_title("Allan Variance (Linear De-trend = {})".format(removeLinear))
+    fig.savefig('plots/allan_variance/all_var_{}_removelinear_{}.pdf'.format(customShortName,removeLinear),
+                bbox_inches='tight')
+    
+    
+    plt.close(fig)
 
 def test_centroiding(useMultiprocessing=True):
     photObj = phot()

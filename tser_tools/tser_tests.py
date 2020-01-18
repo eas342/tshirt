@@ -27,3 +27,16 @@ def test_binning():
     plt.errorbar(xBin,yBin,yErr,fmt='o')
     plt.show()
     
+def test_allan_variance(doYerr=True):
+    """ Test the binning function"""
+    yMultiplier = 500.
+    x = np.linspace(0,100,2048)
+    y = np.random.randn(2048) * yMultiplier
+    if doYerr == True:
+        yerr = np.ones_like(x) * yMultiplier
+    else:
+        yerr = None
+    
+    phot_pipeline.allan_variance(x,y,yerr)
+    
+    
