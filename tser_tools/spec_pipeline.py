@@ -803,7 +803,7 @@ class spec(phot_pipeline.phot):
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         time = HDUList['TIME'].data
-        offset_time = sefl.get_offset_time(time)
+        offset_time = self.get_offset_time(time)
         
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
@@ -859,6 +859,26 @@ class spec(phot_pipeline.phot):
             fig.savefig(outName)
         else:
             fig.show()
+    
+    def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3):
+        """
+        Examine the time series for adjacent bins
+        """
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        
+        time = HDUList['TIME'].data
+        offset_time = self.get_offset_time(time)
+        
+        dat2D = HDUList['BINNED F'].data
+        ratioSeries = dat2D[:,bin2] / dat2D[:,bin1]
+        
+        stdRatio = np.std(ratioSeries) * 1e6
+        print("stdev = {} ppm".format(stdRatio))
+        
+        plt.plot(time - offset_time,ratioSeries)
+        plt.show()
+        HDUList.close()
+        
         
 
 class batch_spec(phot_pipeline.batchPhot):
