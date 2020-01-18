@@ -24,7 +24,6 @@ import astropy.units as u
 import pdb
 from copy import deepcopy
 import yaml
-import os
 import warnings
 from scipy.stats import binned_statistic
 from scipy.interpolate import UnivariateSpline, LSQUnivariateSpline
@@ -1303,6 +1302,151 @@ def allTser(refCorrect=False,showBestFit=False):
         fig.savefig('plots/photometry/tser_refcor/all_kic1255.pdf')
     else:
         fig.savefig('plots/photometry/tser_allstar/all_kic1255.pdf')
+
+
+def do_binning(x,y,nBin=20):
+    """
+    A function that uses scipy binned_statistic to bin data
+
+    It also calculates the standard error in each bin,
+    which can be used as an error estimate
+
+    Parameters:
+    --------------
+    x: numpy array
+        Independent variable for use in assigning data to bins
+    y: numpy array
+        Dependent variable to be binned
+
+    Outputs:
+    -------------
+    3 item tuple:
+    xBin, yBin, yStd
+
+    xBin: numpy array
+        Middles of the bins
+    yBin: numpy array
+        mean value in bin
+    yStd: numpy array
+        standard error of each bin
+    """
+    yBins = Table()
+    for oneStatistic in ['mean','std','count']:
+        yBin, xEdges, binNum = binned_statistic(x,y,
+                                                statistic=oneStatistic,bins=nBin)
+        yBins[oneStatistic] = yBin
+
+    ## Standard error in the mean
+    stdErrM = yBins['std'] / np.sqrt(yBins['count'])
+    xShow = (xEdges[:-1] + xEdges[1:])/2.
+    yShow = yBins['mean']
+    yErrShow = stdErrM
+
+    return xShow, yShow, yErrShow
+#
+# def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
+#                    binMin=50,binMax=2000,
+#                    logPlot=True):
+#     """
+#     Make an Allan Variance plot for a time series
+#
+#     Parameters
+#     ------------
+#     x:
+#     removeLinear: bool
+#         Remove a linear trend from the time series first?
+#
+#     """
+#
+#     if tserFormat == 'apRatio':
+#         detector = detectors[0]
+#         dat = ascii.read(tserFile.format(detector))
+#         dat['min'] = dat['days'] * 24. * 60.
+#     else:
+#         allT, names = [], []
+#         for detector in detectors:
+#             oneFile = tserFile.format(detector)
+#             t, name = get_tser('../tser_data/{}'.format(oneFile),
+#                                normalize=normalize,
+#                                trimLampOff=trimLampOff)
+#             allT.append(t)
+#             names.append(name)
+#
+#         if len(detectors) == 1:
+#             dat = Table()
+#             dat['min'] = t['minutes']
+#             dat['ratio_ppm'] = t['y'] * 1e6
+#             dat['ratio_err_ppm'] = t['yerr'] * 1e6
+#         else:
+#             t1, t2 = allT[0], allT[1]
+#
+#             dat = Table()
+#             dat['min'] = t1['minutes']
+#             dat['ratio_ppm'] = t1['y'] / t2['y'] * 1e6
+#             dat['ratio_err_ppm'] = np.sqrt(t1['yerr']**2+t2['yerr']**2) * 1e6
+#
+#     if clip == True:
+#         dat = dat[10:]
+#         print("clipping to {} points".format(len(dat)))
+#
+#     if removeLinear == True:
+#         coeff = np.polyfit(dat['min'],dat['ratio_ppm'],1)
+#         yPoly = np.poly1d(coeff)
+#         ymod = yPoly(dat['min'])
+#         dat['ratio_ppm'] = dat['ratio_ppm'] / ymod * 1e6
+#
+#     nPt = len(dat)
+#     #logBinNums = np.linspace(np.log10(50.),np.log10(2000),20)
+#     logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),20)
+#     binNums = np.array(10**logBinNums,dtype=np.int)
+# #    binNums = [50,100,500,1000,3917]#np.arange(20,100,20)
+#     binSizes, stds, theoNoise, wNoise = [], [], [], []
+#
+#     theoNoiseNoBin = np.median(dat['ratio_err_ppm'])
+#     cadence = np.median(np.diff(dat['min']))
+#     whiteNoiseStart = np.std(dat['ratio_ppm'])
+#
+#     for oneBin in binNums:
+#         #if oneBin > 0.8 * nPt:
+#         #    x,y = dat['min'],dat['ratio_ppm']
+#         #    nAvg = 1
+#         #else:
+#         x,y,yerr = do_binning(dat['min'],dat['ratio_ppm'],nBin=oneBin)
+#         binSize = np.median(np.diff(x))
+#         nAvg = binSize/cadence#nPt / oneBin
+#
+#         stds.append(np.std(y))
+#         binSizes.append(binSize)
+#         theoNoise.append(theoNoiseNoBin / np.sqrt(nAvg))
+#         wNoise.append(whiteNoiseStart / np.sqrt(nAvg))
+#
+#     ## do the unbinned Allan variance
+#     stds.append(whiteNoiseStart)
+#     binSizes.append(cadence)
+#     theoNoise.append(theoNoiseNoBin)
+#     wNoise.append(whiteNoiseStart)
+#
+#
+#     ## only Use finite values (ignore NaNs where binning isn't possible)
+#     usePts = np.isfinite(stds)
+#
+#     fig, ax = plt.subplots(figsize=(5,4))
+#     if logPlot == True:
+#         ax.loglog(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
+#     else:
+#         ax.semilogx(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
+#     ax.plot(binSizes,theoNoise,label='Read + Photon Noise')
+#     ax.plot(binSizes,wNoise,label='White noise scaling')
+#     ax.set_xlabel('Bin Size (min)')
+#     ax.set_ylabel('$\sigma$ (ppm)')
+#     ax.set_ylim(yLim)
+#     ax.legend()
+#     ax.set_title("Ratio Time Series (Linear De-trend = {}, {})".format(removeLinear,detector))
+#     fig.savefig('../tser_plot_output/allan_variance/all_var_{}_removelinear_{}_{}.pdf'.format(testName,removeLinear,detector),
+#                 bbox_inches='tight')
+#
+#
+#     plt.close(fig)
 
 def test_centroiding(useMultiprocessing=True):
     photObj = phot()
