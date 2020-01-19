@@ -875,7 +875,14 @@ class spec(phot_pipeline.phot):
         stdRatio = np.std(ratioSeries) * 1e6
         print("stdev = {} ppm".format(stdRatio))
         
+        phot_pipeline.allan_variance(time * 24. * 60.,ratioSeries * 1e6,
+                                     xUnit='min',yUnit='ppm',
+                                     binMin=10,binMax=250)
+        
         plt.plot(time - offset_time,ratioSeries)
+        
+        
+        
         plt.show()
         HDUList.close()
         

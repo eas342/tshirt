@@ -1346,7 +1346,8 @@ def do_binning(x,y,nBin=20):
 
 def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    binMin=50,binMax=2000,customShortName=None,
-                   logPlot=True,clip=False):
+                   logPlot=True,clip=False,xUnit='min',
+                   yUnit='ppm'):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -1372,6 +1373,10 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         Remove a linear trend from the time series first?
     clip: bool
         Clip the first few points?
+    xUnit: str
+        Name of units for X axis of input series
+    yUnit: str
+        Name of units for Y axis to be binned
     """
 
     if clip == True:
@@ -1428,8 +1433,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         ax.semilogx(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
     ax.plot(binSizes,theoNoise,label='Read + Photon Noise')
     ax.plot(binSizes,wNoise,label='White noise scaling')
-    ax.set_xlabel('Bin Size (min)')
-    ax.set_ylabel('$\sigma$ (ppm)')
+    ax.set_xlabel('Bin Size ({})'.format(xUnit))
+    ax.set_ylabel('$\sigma$ ({})'.format(yUnit))
     ax.set_ylim(yLim)
     ax.legend()
     ax.set_title("Allan Variance (Linear De-trend = {})".format(removeLinear))
