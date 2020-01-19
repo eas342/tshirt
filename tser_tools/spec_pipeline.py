@@ -774,10 +774,14 @@ class spec(phot_pipeline.phot):
         binned_disp = np.zeros(nbins)
         
         for ind, binStart, binEnd in zip(binIndices,binStarts,binEnds):
-            binGrid[:,ind] = np.nansum(dynSpec[:,binStart:binEnd] * weights[:,binStart:binEnd] ,1)
+            theseWeights = weights[:,binStart:binEnd]
+            binGrid[:,ind] = np.nansum(dynSpec[:,binStart:binEnd] * theseWeights ,1)
+            normFactor = np.nanmedian(binGrid[:,ind])
+            binGrid[:,ind] = binGrid[:,ind] / normFactor
+            binGrid_err[:,ind] = np.sqrt(np.nansum((dynSpec_err[:,binStart:binEnd] * theseWeights)**2,1))
+            binGrid_err[:,ind] = binGrid_err[:,ind] / normFactor
+            
             binned_disp[ind] = np.mean([binStart,binEnd])
-            #binGrid_err[:,ind] = np.sqrt(np.nansum(dynSpec_err[:,binStart:binEnd]**2,1))
-            binGrid[:,ind] = binGrid[:,ind] / np.nanmedian(binGrid[:,ind])
             
             #plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind,fmt='o')
             #plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind,
@@ -785,9 +789,12 @@ class spec(phot_pipeline.phot):
         
         outHDU = fits.PrimaryHDU(binGrid,HDUList[0].header)
         outHDU.name = 'BINNED F'
+        errHDU = fits.ImageHDU(binGrid_err,outHDU.header)
+        errHDU.name = 'BINNED ERR'
+        offsetHDU = HDUList['SPEC OFFSETS']
         timeHDU = HDUList['TIME']
         dispHDU = fits.ImageHDU(binned_disp,HDUList['DISP INDICES'].header)
-        outHDUList = fits.HDUList([outHDU,timeHDU,dispHDU])
+        outHDUList = fits.HDUList([outHDU,errHDU,timeHDU,offsetHDU,dispHDU])
         outHDUList.writeto(self.wavebin_specFile(nbins),overwrite=True)
         
         HDUList.close()
@@ -870,12 +877,15 @@ class spec(phot_pipeline.phot):
         offset_time = self.get_offset_time(time)
         
         dat2D = HDUList['BINNED F'].data
+        dat2Derr = HDUList['BINNED ERR'].data
         ratioSeries = dat2D[:,bin2] / dat2D[:,bin1]
+        fracErr = np.sqrt((dat2Derr[:,bin2]/dat2D[:,bin2])**2 + (dat2Derr[:,bin1]/dat2D[:,bin1])**2)
+        yerr = ratioSeries * fracErr
         
         stdRatio = np.std(ratioSeries) * 1e6
         print("stdev = {} ppm".format(stdRatio))
         
-        phot_pipeline.allan_variance(time * 24. * 60.,ratioSeries * 1e6,
+        phot_pipeline.allan_variance(time * 24. * 60.,ratioSeries * 1e6,yerr=yerr * 1e6,
                                      xUnit='min',yUnit='ppm',
                                      binMin=10,binMax=250)
         
