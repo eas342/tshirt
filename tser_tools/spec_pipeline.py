@@ -706,13 +706,20 @@ class spec(phot_pipeline.phot):
         else:
             fig, ax = plt.subplots()
         
-        ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
+        imShowData = ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
         ax.invert_yaxis()
         ax.set_aspect('auto')
         ax.set_xlabel('Disp (pixels)')
         ax.set_ylabel('Time (Image #)')
         dispPix = self.param['dispPixels']
         ax.set_xlim(dispPix[0],dispPix[1])
+        fig.colorbar(imShowData,label='Normalized Flux')
+        if specAtTop == True:
+            ## Fix the axes to be the same
+            pos = ax.get_position()
+            pos2 = axTop.get_position()
+            axTop.set_position([pos.x0,pos2.y0,pos.width,pos2.height])
+            
         
         dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
         fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
