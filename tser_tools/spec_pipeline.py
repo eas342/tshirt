@@ -793,7 +793,14 @@ class spec(phot_pipeline.phot):
         errHDU.name = 'BINNED ERR'
         offsetHDU = HDUList['SPEC OFFSETS']
         timeHDU = HDUList['TIME']
-        dispHDU = fits.ImageHDU(binned_disp,HDUList['DISP INDICES'].header)
+        
+        dispTable = Table()
+        dispTable['Bin Start'] = binStarts
+        dispTable['Bin Middle'] = binned_disp
+        dispTable['Bin End'] = binEnds
+        
+        dispHDU = fits.BinTableHDU(dispTable)
+        dispHDU.name = "DISP INDICES"
         outHDUList = fits.HDUList([outHDU,errHDU,timeHDU,offsetHDU,dispHDU])
         outHDUList.writeto(self.wavebin_specFile(nbins),overwrite=True)
         
