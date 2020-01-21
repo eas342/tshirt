@@ -663,11 +663,28 @@ class spec(phot_pipeline.phot):
         return align2D, offsetIndArr
     
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=True,
-                          alignDiagnostics=False):
+                          alignDiagnostics=False,extraFF=False):
         HDUList = fits.open(self.specFile)
         extSpec = HDUList['OPTIMAL SPEC'].data[src]
         
         nImg = extSpec.shape[0]
+        
+        if extraFF == True:
+            x, y, yerr = self.get_spec(src=src)
+            cleanY = np.zeros_like(y)
+            goodPts = np.isfinite(y)
+            cleanY[goodPts] = y[goodPts]
+            yFlat = analysis.flatten(x,cleanY,highPassFreq=0.05)
+            ySmooth = y - yFlat
+            specFF = np.ones_like(y)
+            dispPix = self.param['dispPixels']
+            
+            disp1, disp2 = dispPix[0] + 10, dispPix[1] - 10
+            specFF[disp1:disp2] = y[disp1:disp2] / ySmooth[disp1:disp2]
+            badPt = np.isfinite(specFF) == False
+            specFF[badPt] = 1.0
+            specFF2D = np.tile(specFF,[nImg,1])
+            extSpec = extSpec / specFF2D
         
         if align == True:
             useSpec, specOffsets = self.align_spec(extSpec,diagnostics=alignDiagnostics)
@@ -817,7 +834,7 @@ class spec(phot_pipeline.phot):
         return np.floor(np.min(time))
     
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
-                            recalculate=False,dispIndices=None):
+                            recalculate=False,dispIndices=None,differential=False):
         """ Plot wavelength-binned time series """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices)
@@ -827,7 +844,10 @@ class spec(phot_pipeline.phot):
         offset_time = self.get_offset_time(time)
         
         disp = HDUList['DISP INDICES'].data
+        
         binGrid = HDUList['BINNED F'].data
+        if differential == True:
+            avgSeries = np.nanmean(binGrid,1)
         
         fig, ax = plt.subplots()
         for ind,oneDisp in enumerate(disp):
