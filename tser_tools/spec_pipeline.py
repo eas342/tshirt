@@ -846,8 +846,15 @@ class spec(phot_pipeline.phot):
         disp = HDUList['DISP INDICES'].data
         
         binGrid = HDUList['BINNED F'].data
+        binGrid_err = HDUList['BINNED ERR'].data
         if differential == True:
-            avgSeries = np.nanmean(binGrid,1)
+            weights = 1./(np.nanmean(binGrid_err,0))**2
+            weights2D = np.tile(weights,[binGrid.shape[0],1])
+            
+            avgSeries = (np.nansum(binGrid * weights2D,1)) / np.nansum(weights2D,1)
+            
+            avgSeries2D = np.tile(avgSeries,[len(disp),1]).transpose()
+            binGrid = binGrid / avgSeries2D
         
         fig, ax = plt.subplots()
         for ind,oneDisp in enumerate(disp):
