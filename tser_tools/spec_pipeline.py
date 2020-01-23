@@ -353,7 +353,10 @@ class spec(phot_pipeline.phot):
             endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
             for oneSpatialInd in np.arange(startSpatial,endSpatial + 1):
                 if self.param['dispDirection'] == 'x':
-                    dep_var = img[oneSpatialInd,dispStart:dispEnd]
+                    try:
+                        dep_var = img[oneSpatialInd,dispStart:dispEnd]
+                    except IndexError:
+                        pdb.set_trace()
                 else:
                     dep_var = img[dispStart:dispEnd,oneSpatialInd]
                 
@@ -364,20 +367,9 @@ class spec(phot_pipeline.phot):
                 positivep[finitep] = (dep_var[finitep] > 0. - self.floor_delta)
                 fitY[positivep] = np.log10(dep_var[positivep] + self.floor_delta)
                 
-                try:
-                    spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
-                                                        knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
-                                                        plotEachStep=False,preScreen=self.param['splinePreScreen'])
-                except ValueError as inst:
-                    if str(inst) == 'Interior knots t must satisfy Schoenberg-Whitney conditions':
-                        print(inst)
-                        print("Trying my debugging mode")
-                        
-                        print("Value error")
-                        pdb.set_trace()
-                    else:
-                        raise inst
-                
+                spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
+                                                    knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
+                                                    plotEachStep=False,preScreen=self.param['splinePreScreen'])
                 
                 modelF = 10**spline1(ind_var) - self.floor_delta
                 
@@ -442,7 +434,7 @@ class spec(phot_pipeline.phot):
         img, head = self.getImg(oneImgName)
         t0 = self.get_date(head)
         
-        imgSub, bkgModel, subHead = self.do_backsub(img,head,ind)
+        imgSub, bkgModel, subHead = self.do_backsub(img,head,ind,saveFits=saveFits)
         readNoise = self.get_read_noise(head)
         ## Background and read noise only.
         ## Smoothed source flux added below

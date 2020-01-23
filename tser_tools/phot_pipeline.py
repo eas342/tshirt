@@ -1522,17 +1522,61 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
         goodp = finitep ## Start with the finite points
         
     for iter in range(iteration):
-        if np.sum(goodp) < polyord:
+        if (useSpline == True) & (knots is not None):
+            pointsThreshold = len(knots) + polyord
+        else:
+            pointsThreshold = polyord
+        
+        if np.sum(goodp) < pointsThreshold:
             warntext = "Less than "+str(polyord)+"points accepted, returning flat line"
             warnings.warn(warntext)
-            coeff = np.zeros(polyord)
-            coeff[0] = 1.0
+            
+            if useSpline == True:
+                spl = UnivariateSpline([0,1,2],[0,0,0],k=1)
+            else:
+                coeff = np.zeros(polyord)
+                coeff[0] = 1.0
         else:
             if useSpline == True:
+                
                 if knots is None:
                     spl = UnivariateSpline(x[goodp], y[goodp], k=polyord, s=sSpline)
                 else:
-                    spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
+                    try:
+                        spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
+                    except ValueError as inst:
+                        knownFailures = ((str(inst) == 'Interior knots t must satisfy Schoenberg-Whitney conditions') | 
+                                         ("The input parameters have been rejected by fpchec." in str(inst)))
+                        if knownFailures:
+                            warnings.warn("Spline fitting failed because of Schoenberg-Whitney conditions. Trying to eliminate knots without sufficient data")
+                            
+                            if plotEachStep == True:
+                                plt.plot(x[goodp],y[goodp],'o',label='data')
+                                plt.plot(knots,np.ones_like(knots) * np.median(y[goodp]),'o',label='knots',markersize=10)
+                            
+                            keepKnots = np.zeros_like(knots,dtype=np.bool)
+                            nKnots = len(knots)
+                            for ind,oneKnot in enumerate(knots):
+                                if ind == 0:
+                                    if np.sum(x[goodp] < oneKnot) > 0:
+                                        keepKnots[ind] = True
+                                elif ind == nKnots - 1:
+                                    if np.sum(x[goodp] > oneKnot) > 0:
+                                        keepKnots[ind] = True
+                                else:
+                                    pointsTest = ((np.sum((x[goodp] > knots[ind-1]) & (x[goodp] < oneKnot)) > 0 ) &
+                                                  (np.sum((x[goodp] > oneKnot) & (x[goodp] < knots[ind+1])) > 0 ))
+                                    if pointsTest == True:
+                                        keepKnots[ind] = True
+                            if plotEachStep == True:
+                                plt.plot(knots[keepKnots],np.ones_like(knots[keepKnots]) * np.median(y[goodp]),'o',label='knots to keep')
+                                plt.show()
+                            
+                            knots = knots[keepKnots] 
+                            spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
+                            
+                        else:
+                            raise inst
                 ymod = spl(x)
             else:
                 coeff = np.polyfit(x[goodp],y[goodp],polyord)
