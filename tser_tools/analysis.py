@@ -107,9 +107,13 @@ def test_roll(length):
 
 def subpixel_peak(x,y):
     polyFit = robust_poly(x,y,polyord=2)
-    yModel = np.polyval(polyFit,x)
-    xPeak = -polyFit[1]/(2. * polyFit[0])
-    yPeak = polyFit[2] - polyFit[1]**2 / (4. * polyFit[0])
+    if len(polyFit) != 3:
+        ## Peak fitting failed
+        xPeak, yPeak, yModel = np.nan, np.nan, np.nan
+    else:
+        yModel = np.polyval(polyFit,x)
+        xPeak = -polyFit[1]/(2. * polyFit[0])
+        yPeak = polyFit[2] - polyFit[1]**2 / (4. * polyFit[0])
     
     return xPeak, yPeak, yModel
 
