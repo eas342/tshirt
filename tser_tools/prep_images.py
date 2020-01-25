@@ -27,7 +27,8 @@ class prep():
                          'gainValue': None,## manually specify the gain, if not in header
                          'procName': 'proc', ## directory name for processed files
                          'doNonLin': False, ## apply nonlinearity correction?
-                         'nonLinFunction': None ## non-linearity function
+                         'nonLinFunction': None, ## non-linearity function
+                         'sciExtension': None ## extension for science data
                      } 
         
         for oneKey in defaultParams.keys():
@@ -157,7 +158,12 @@ class prep():
     def getData(self,fileName):
         """ Gets the data and converts to CCDData type"""
         HDUList = fits.open(fileName)
-        data = HDUList[0].data
+        if self.pipePrefs['sciExtension'] is None:
+            sciExtension = 0
+        else:
+            sciExtension = self.pipePrefs['sciExtension']
+        
+        data = HDUList[sciExtension].data
         head = HDUList[0].header
         HDUList.close()
         
@@ -182,7 +188,7 @@ class prep():
         outData = CCDData(data,unit=outUnit)
         return head, outData
 
-def lbt_luci2_lincor(img,dataUnit=u.adu,ndit):
+def lbt_luci2_lincor(img,dataUnit=u.adu,ndit=1.0):
     """
     LUCI2 linearity correction from 
     https://sites.google.com/a/lbto.org/luci/observing/calibrations/calibration-details
