@@ -279,7 +279,8 @@ class phot:
                     bbox_inches='tight')
         plt.close(fig)
 
-    def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
+    def showStamps(self,img=None,head=None,custPos=None,custFWHM=None,
+                   vmin=None,vmax=None,showPlot=False,boxsize=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
@@ -289,7 +290,8 @@ class phot:
         
         img, head = self.get_default_im(img=img,head=head)
         
-        boxsize = self.param['boxFindSize']
+        if boxsize == None:
+            boxsize = self.param['boxFindSize']
         
         showApPos = self.get_default_cen(custPos=custPos)
         
@@ -301,7 +303,18 @@ class phot:
             
             stamp = img[yStamp[0]:yStamp[1],xStamp[0]:xStamp[1]]
             
-            imData = ax.imshow(stamp,cmap='viridis',vmin=0,vmax=1.2e4,interpolation='nearest')
+            if vmin == None:
+                useVmin = np.nanpercentile(stamp,1)
+            else:
+                useVmin = vmin
+            
+            if vmax == None:
+                useVmax = np.nanpercentile(stamp,99)
+            else:
+                useVmax = vmax
+            
+            
+            imData = ax.imshow(stamp,cmap='viridis',vmin=useVmin,vmax=useVmax,interpolation='nearest')
             ax.set_title(self.srcNames[ind])
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
@@ -309,6 +322,12 @@ class phot:
             circ = plt.Circle((srcX,srcY),
                               self.param['apRadius'],edgecolor='red',facecolor='none')
             ax.add_patch(circ)
+            if self.param['bkgSub'] == True:
+                for oneRad in [self.param['backStart'],self.param['backEnd']]:
+                    
+                    circ = plt.Circle((srcX,srcY),
+                                      oneRad,edgecolor='blue',facecolor='none')
+                    ax.add_patch(circ)
             
             if custFWHM is not None:
                 circFWHM = plt.Circle((srcX,srcY),
@@ -331,8 +350,9 @@ class phot:
             #ax.set_xlim(onePos[0] - boxsize,onePos[0] + boxsize)
             #ax.set_ylim(onePos[1] - boxsize,onePos[1] + boxsize)
         
-            
-        fig.show()
+        if showPlot == True:
+            fig.show()
+        
         fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
         
     def showCustSet(self,index=None,ptype='Stamps',defaultCen=False):
@@ -790,7 +810,8 @@ class phot:
         warnings.resetwarnings()
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
-                  normReg=None,doBin=None,doNorm=True,yLim=[None,None]):
+                  normReg=None,doBin=None,doNorm=True,yLim=[None,None],
+                  excludeSrc=None):
         """ Plots previously calculated photometry 
         Parameters
         ---------------------
@@ -814,6 +835,10 @@ class phot:
             Normalize the individual time series?
         yLim: List
             List of Y limit to show
+        excludeSrc: List or None
+            Custom sources to exclude in the averaging (to exclude specific sources in the reference time series)
+              For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
+        
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
@@ -830,7 +855,7 @@ class phot:
             fig, ax = plt.subplots()
         
         if refCorrect == True:
-            yCorrected = self.refSeries(photArr)
+            yCorrected = self.refSeries(photArr,excludeSrc=excludeSrc)
             x = jdArr - jdRef
             if normReg == None:
                 yShow = yCorrected
@@ -906,7 +931,7 @@ class phot:
         HDUList.close()
         plt.close(fig)
     
-    def plot_state_params(self):
+    def plot_state_params(self,excludeSrc=None):
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
@@ -920,37 +945,42 @@ class phot:
         cenData = HDUList['CENTROIDS'].data
         fwhmData = HDUList['FWHM'].data
         
-        fig, axArr = plt.subplots(5,sharex=True)
+        fig, axArr = plt.subplots(6,sharex=True)
+        yCorr = self.refSeries(photArr,excludeSrc=excludeSrc)
+        axArr[0].plot(t,yCorr)
+        axArr[0].set_ylabel('Ref Cor F')
+        
         
         for oneSrc in range(self.nsrc):
             yFlux = photArr[:,oneSrc]
-            axArr[0].plot(t,yFlux / np.median(yFlux))
-            axArr[0].set_ylabel('Norm Flux')
+            axArr[1].plot(t,yFlux / np.median(yFlux))
+            axArr[1].set_ylabel('Norm Flux')
             xCen = cenData[:,oneSrc,0]
-            axArr[1].plot(t,xCen - np.median(xCen))
-            axArr[1].set_ylabel('X Pos')
+            axArr[2].plot(t,xCen - np.median(xCen))
+            axArr[2].set_ylabel('X Pos')
             yCen = cenData[:,oneSrc,1]
-            axArr[2].plot(t,yCen - np.median(yCen))
-            axArr[2].set_ylabel('Y Pos')
+            axArr[3].plot(t,yCen - np.median(yCen))
+            axArr[3].set_ylabel('Y Pos')
             fwhm1 = fwhmData[:,oneSrc,0]
-            axArr[3].plot(t,fwhm1)
-            axArr[3].set_ylabel('FWHM 1')
-            fwhm2 = fwhmData[:,oneSrc,1]
             axArr[4].plot(t,fwhm1)
-            axArr[4].set_ylabel('FWHM 2')
+            axArr[4].set_ylabel('FWHM 1')
+            fwhm2 = fwhmData[:,oneSrc,1]
+            axArr[5].plot(t,fwhm1)
+            axArr[5].set_ylabel('FWHM 2')
         
         fig.show()
         
     
-    def refSeries(self,photArr,reNorm=False,custSrc=None,sigRej=5.):
+    def refSeries(self,photArr,reNorm=False,excludeSrc=None,sigRej=5.):
         """ Average together the reference stars
         Parameters
         -------------
         reNorm: bool
             Re-normalize all stars before averaging? If set all stars have equal weight
             Otherwise, the stars are summed together, which weights by flux
-        custSrc: arr
-            Custom sources to use in the averaging (to include/exclude specific sources)
+        excludeSrc: arr
+            Custom sources to use in the averaging (to exclude specific sources in the reference time series
+                For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
         sigRej: int
             Sigma rejection threshold
         """
@@ -958,16 +988,20 @@ class phot:
         
         srcArray = np.arange(self.nsrc,dtype=np.int)
         
-        if custSrc == None:
-            refArrayTruth = (srcArray == 0)
+        if excludeSrc == None:
+            maskOut = (srcArray == 0)
         else:
-            refArrayTruth = np.ones(self.nrc,dtype=np.bool)
-            for ind, oneSrc in enumerate(custSrc):
-                if oneSrc in srcArray:
-                    refArrayTruth[ind] = False
+            maskOut = np.zeros(self.nsrc,dtype=np.bool)
+            maskOut[0] = True
+            for oneSrc in excludeSrc:
+                if (oneSrc < 0) | (oneSrc >= self.nsrc):
+                    pdb.set_trace()
+                    raise Exception("{} is an invalid source among {}".format(oneSrc,self.nsrc))
+                else:
+                    maskOut[oneSrc] = True
         
-        refMask = np.tile(refArrayTruth,(self.nImg,1))
-        refPhot = np.ma.array(photArr,mask=refMask)
+        refMask2D = np.tile(maskOut,(self.nImg,1))
+        refPhot = np.ma.array(photArr,mask=refMask2D)
         
         ## Normalize all time series
         norm1D = np.nanmedian(photArr,axis=0)
@@ -987,8 +1021,8 @@ class phot:
         # Points that deviate above threshold
         badP = (absDeviation > sigRej * np.ones((self.nImg,self.nsrc),dtype=np.float) * MADphot)
         
-        normPhot.mask = refMask | badP
-        refPhot.mask = refMask | badP
+        normPhot.mask = refMask2D | badP
+        refPhot.mask = refMask2D | badP
         
         if reNorm == True:
             ## Weight all stars equally
