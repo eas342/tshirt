@@ -906,6 +906,42 @@ class phot:
         HDUList.close()
         plt.close(fig)
     
+    def plot_state_params(self):
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        head = photHDU.header
+        
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        t = jdArr - np.round(np.min(jdArr))
+        timeHead = jdHDU.header
+        
+        cenData = HDUList['CENTROIDS'].data
+        fwhmData = HDUList['FWHM'].data
+        
+        fig, axArr = plt.subplots(5,sharex=True)
+        
+        for oneSrc in range(self.nsrc):
+            yFlux = photArr[:,oneSrc]
+            axArr[0].plot(t,yFlux / np.median(yFlux))
+            axArr[0].set_ylabel('Norm Flux')
+            xCen = cenData[:,oneSrc,0]
+            axArr[1].plot(t,xCen - np.median(xCen))
+            axArr[1].set_ylabel('X Pos')
+            yCen = cenData[:,oneSrc,1]
+            axArr[2].plot(t,yCen - np.median(yCen))
+            axArr[2].set_ylabel('Y Pos')
+            fwhm1 = fwhmData[:,oneSrc,0]
+            axArr[3].plot(t,fwhm1)
+            axArr[3].set_ylabel('FWHM 1')
+            fwhm2 = fwhmData[:,oneSrc,1]
+            axArr[4].plot(t,fwhm1)
+            axArr[4].set_ylabel('FWHM 2')
+        
+        fig.show()
+        
+    
     def refSeries(self,photArr,reNorm=False,custSrc=None,sigRej=5.):
         """ Average together the reference stars
         Parameters
@@ -1046,7 +1082,7 @@ class batchPhot:
     Create several photometry objects and run phot over all of them
     """
     def __init__(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
-        self.alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1}
+        self.alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1,'excludeList': 1}
         self.general_init(batchFile=batchFile)
     
     def general_init(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
