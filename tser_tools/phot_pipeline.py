@@ -714,7 +714,7 @@ class phot:
         srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
         
         
-        return [t0.jd,srcPhot,srcPhotErr]
+        return [t0.jd,srcPhot,srcPhotErr, bkgVals]
     
     def return_self(self):
         return self
@@ -726,6 +726,7 @@ class phot:
         
         photArr = np.zeros((self.nImg,self.nsrc))
         errArr = np.zeros_like(photArr)
+        backArr = np.zeros_like(photArr)
         
         jdArr = []
         
@@ -743,6 +744,7 @@ class phot:
             jdArr.append(val[0])
             photArr[ind,:] = val[1]
             errArr[ind,:] = val[2]
+            backArr[ind,:] = val[3]
             
         ## Save the photometry results
         hdu = fits.PrimaryHDU(photArr)
@@ -750,6 +752,8 @@ class phot:
         hdu.header['NIMG'] = (self.nImg,'Number of images')
         hdu.header['AXIS1'] = ('src','source axis')
         hdu.header['AXIS2'] = ('image','image axis')
+        basicHeader = deepcopy(hdu.header)
+        
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
         hdu.header['SRCGEOM'] = (self.param['srcGeometry'], 'Source Aperture Geometry')
@@ -786,8 +790,12 @@ class phot:
         hduTime = fits.ImageHDU(jdArr)
         hduTime.header['UNITS'] = ('days','JD time, UT')
         
-        hduErr = fits.ImageHDU(data=errArr)
+        hduErr = fits.ImageHDU(data=errArr,header=basicHeader)
         hduErr.name = 'Phot Err'
+        
+        hduBack = fits.ImageHDU(data=backArr,header=basicHeader)
+        hduBack.name = 'Backg Phot'
+        
         hduCen = fits.ImageHDU(data=self.cenArr,header=self.cenHead)
         
         hdu.name = 'Photometry'
@@ -800,7 +808,7 @@ class phot:
         hduOrigHeader = fits.ImageHDU(None,exHeader)
         hduOrigHeader.name = 'Orig Header'
         
-        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen,hduFileNames,hduOrigHeader])
+        HDUList = fits.HDUList([hdu,hduErr,hduBack,hduTime,hduCen,hduFileNames,hduOrigHeader])
         
         if self.keepFWHM == True:
             hduFWHM = fits.ImageHDU(self.fwhmArr,header=self.headFWHM)
