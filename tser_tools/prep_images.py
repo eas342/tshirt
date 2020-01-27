@@ -1,5 +1,6 @@
 import glob
 from ccdproc import Combiner, CCDData, ccd_process, gain_correct
+import ccdproc
 import yaml
 import os
 from astropy.io import fits
@@ -22,7 +23,9 @@ class prep():
                          'sciFiles': 'k1255*.fits', ## Science files
                          'nSkip': 2, ## number of files to skip at the beginning
                          'doBias': True, ## Calculate and apply a bias correction?
-                         'doFlat': True,
+                         'doFlat': True, ## Calculate and apply a flat field correction
+                         'doFlatBias': False, ## use a specific bias or dark for the flat field
+                         'darksForFlat': None, ## dark frames for master flat frame
                          'gainKeyword': 'GAIN1', ## Calculate and apply a flat correction?
                          'gainValue': None,## manually specify the gain, if not in header
                          'procName': 'proc', ## directory name for processed files
@@ -63,9 +66,13 @@ class prep():
         if self.pipePrefs['doFlat'] == True:
             allCals.append('flatFiles')
         
-        for oneCal in allCals:
+        if self.pipePrefs['doFlatBias'] == True:
+            allCals.append('darksForFlat')
         
-            fileL = glob.glob(os.path.join(self.rawDir,self.pipePrefs[oneCal]))
+        for oneCal in allCals:
+            fileSearchInfo = self.pipePrefs[oneCal]
+            fileL = self.get_fileL(fileSearchInfo)
+            
             if self.testMode == True:
                 fileL = fileL[0:4]
             
@@ -92,6 +99,8 @@ class prep():
             
             if oneCal == 'biasFiles':
                 outName = 'zero'
+            elif oneCal == 'darksForFlat':
+                outName = 'dark_for_flat'
             else:
                 outName = 'flat'
             HDUList.writeto(os.path.join(self.procDir,'master_'+outName+'.fits'),overwrite=True)
@@ -104,10 +113,24 @@ class prep():
         else:
             gain = 1.0
         return gain
-
+    
+    def get_fileL(self,fileSearchInfo):
+        """
+        Search for a list of files
+        Tests out if the user put in a string w/ wildcard or a list of files
+        """
+        if type(fileSearchInfo) == list:
+            fileL = []
+            for oneFile in fileSearchInfo:
+                fileL.append(os.path.join(self.rawDir,oneFile))
+        else:
+            fileL = np.sort(glob.glob(os.path.join(self.rawDir,fileSearchInfo)))
+        return fileL
+    
+    
     def procSciFiles(self):
         """ Process the science images """
-        fileL = glob.glob(os.path.join(self.rawDir,self.pipePrefs['sciFiles']))
+        fileL = self.get_fileL(self.pipePrefs['sciFiles'])
         if self.testMode == True:
             fileL = fileL[0:4]
         
@@ -118,9 +141,13 @@ class prep():
         
         if self.pipePrefs['doFlat'] == True:
             hflat, flat = self.getData(os.path.join(self.procDir,'master_flat.fits'))
+            
+            if self.pipePrefs['doFlatBias'] == True:
+                hFlatDark, flatDark = self.getData(os.path.join(self.procDir,'master_dark_for_flat.fits'))
+                flat = ccdproc.subtract_bias(flat,flatDark)
+            
         else:
             hflat, flat = None, None
-        
         
         for oneFile in fileL:
             head, dataCCD = self.getData(oneFile)
