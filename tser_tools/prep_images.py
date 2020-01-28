@@ -7,6 +7,7 @@ from astropy.io import fits
 import astropy.units as u
 import numpy as np
 import pdb
+import warnings
 
 defaultParamFile = 'parameters/reduction_parameters/example_reduction_parameters.yaml'
 class prep():
@@ -31,7 +32,9 @@ class prep():
                          'procName': 'proc', ## directory name for processed files
                          'doNonLin': False, ## apply nonlinearity correction?
                          'nonLinFunction': None, ## non-linearity function
-                         'sciExtension': None ## extension for science data
+                         'sciExtension': None, ## extension for science data
+                         'sciExcludeList': None, ## list of files to exclude for science data
+                         'fixWindow': False ## fix the window between bias, flat & science?
                      } 
         
         for oneKey in defaultParams.keys():
@@ -114,7 +117,7 @@ class prep():
             gain = 1.0
         return gain
     
-    def get_fileL(self,fileSearchInfo):
+    def get_fileL(self,fileSearchInfo,searchType='generic'):
         """
         Search for a list of files
         Tests out if the user put in a string w/ wildcard or a list of files
@@ -125,12 +128,21 @@ class prep():
                 fileL.append(os.path.join(self.rawDir,oneFile))
         else:
             fileL = np.sort(glob.glob(os.path.join(self.rawDir,fileSearchInfo)))
-        return fileL
+            
+        if (self.pipePrefs['sciExcludeList'] is not None) & (searchType == 'science'):
+            outList = []
+            
+            for oneFile in fileL:
+                if os.path.basename(oneFile) not in self.pipePrefs['sciExcludeList']:
+                    outList.append(oneFile)
+        else:
+            outList = fileL
+        return outList
     
     
     def procSciFiles(self):
         """ Process the science images """
-        fileL = self.get_fileL(self.pipePrefs['sciFiles'])
+        fileL = self.get_fileL(self.pipePrefs['sciFiles'],searchType='science')
         if self.testMode == True:
             fileL = fileL[0:4]
         
@@ -149,12 +161,29 @@ class prep():
         else:
             hflat, flat = None, None
         
-        for oneFile in fileL:
+        for ind,oneFile in enumerate(fileL):
             head, dataCCD = self.getData(oneFile)
             
+            sciHead = fits.getheader(oneFile,ext=self.pipePrefs['sciExtension'])
+            if ('CCDSEC' in sciHead) & (self.pipePrefs['fixWindow'] == True):
+                yFix =  np.array(sciHead['CCDSEC'].split(',')[1].split(']')[0].split(':'),dtype=np.int) - 1
+                
+                if flat is not None:
+                    useFlat = flat[yFix[0]:yFix[1]+1]
+                    if ind == 0:
+                        flatSave = fits.PrimaryHDU(useFlat)
+                        flatSave.writeto('diagnostics/trimmed_flat/trimmed_flat.fits',overwrite=True)
+                if bias is not None:
+                    useBias = bias[yFix[0]:yFix[1]+1]#ccdproc.trim_image(bias,sciHead['CCDSEC'])
+                    
+            else:
+                useFlat = flat
+                useBias = bias
+            
+            
             nccd = ccd_process(dataCCD,gain=self.get_gain(head) * u.electron/u.adu,
-                               master_flat=flat,
-                               master_bias=bias)
+                               master_flat=useFlat,
+                               master_bias=useBias)
             head['ZEROFILE'] = 'master_zero.fits'
             head['FLATFILE'] = 'master_flat.fits'
             head['GAINCOR'] = ('T','Gain correction applied (units are e)')
@@ -188,7 +217,14 @@ class prep():
         if self.pipePrefs['sciExtension'] is None:
             sciExtension = 0
         else:
-            sciExtension = self.pipePrefs['sciExtension']
+            if ('master_flat' in fileName) | ('master_zero' in fileName):
+                sciExtension = 0
+            else:
+                sciExtension = self.pipePrefs['sciExtension']
+        
+        if sciExtension >= len(HDUList):
+            print('No extension {} for {}. Trying 0'.format(sciExtension,fileName))
+            sciExtension = 1
         
         data = HDUList[sciExtension].data
         head = HDUList[0].header
@@ -212,7 +248,11 @@ class prep():
         else:
             head['LINCOR'] = (False, "Is a non-linearity correction applied?")
         
-        outData = CCDData(data,unit=outUnit)
+        try:
+            outData = CCDData(data,unit=outUnit)
+        except TypeError as err1:
+            pdb.set_trace()
+        
         return head, outData
 
 def lbt_luci2_lincor(img,dataUnit=u.adu,ndit=1.0):
