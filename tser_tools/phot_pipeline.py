@@ -819,7 +819,7 @@ class phot:
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
                   normReg=None,doBin=None,doNorm=True,yLim=[None,None],
-                  excludeSrc=None):
+                  excludeSrc=None,allErrBar=False):
         """ Plots previously calculated photometry 
         Parameters
         ---------------------
@@ -851,6 +851,7 @@ class phot:
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
         head = photHDU.header
         
         jdHDU = HDUList['TIME']
@@ -863,7 +864,7 @@ class phot:
             fig, ax = plt.subplots()
         
         if refCorrect == True:
-            yCorrected = self.refSeries(photArr,excludeSrc=excludeSrc)
+            yCorrected, yCorrected_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
             x = jdArr - jdRef
             if normReg == None:
                 yShow = yCorrected
@@ -873,7 +874,16 @@ class phot:
                 yBase = np.polyval(polyBase,x)
                 
                 yShow = yCorrected / yBase
-            ax.plot(x,yShow,label='data',marker='o',linestyle='',markersize=3.)
+                
+            if allErrBar == True:
+                ax.errorbar(x,yShow,label='data',marker='o',linestyle='',markersize=3.,yerr=yCorrected_err)
+            else:
+                ax.plot(x,yShow,label='data',marker='o',linestyle='',markersize=3.)
+            
+                madY = np.nanmedian(np.abs(yShow - np.nanmedian(yShow)))
+                ax.errorbar([np.median(x)],[np.median(yShow) - 4. * madY],
+                            yerr=np.median(yCorrected_err),fmt='o',mfc='none')
+            #pdb.set_trace()
             
             if doBin is not None:
                 minValue, maxValue = 0.98, 1.02 ## clip for cosmic rays
@@ -954,7 +964,7 @@ class phot:
         fwhmData = HDUList['FWHM'].data
         
         fig, axArr = plt.subplots(6,sharex=True)
-        yCorr = self.refSeries(photArr,excludeSrc=excludeSrc)
+        yCorr, yCorr_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
         axArr[0].plot(t,yCorr)
         axArr[0].set_ylabel('Ref Cor F')
         
@@ -979,7 +989,7 @@ class phot:
         fig.show()
         
     
-    def refSeries(self,photArr,reNorm=False,excludeSrc=None,sigRej=5.):
+    def refSeries(self,photArr,errPhot,reNorm=False,excludeSrc=None,sigRej=5.):
         """ Average together the reference stars
         Parameters
         -------------
@@ -1016,6 +1026,7 @@ class phot:
         norm2D = np.tile(norm1D,(self.nImg,1))
         
         normPhot = refPhot / norm2D
+        normErr = errPhot / norm2D
         
         ## Find outliers
         # Median time series
@@ -1035,6 +1046,8 @@ class phot:
         if reNorm == True:
             ## Weight all stars equally
             combRef = np.nanmean(normPhot,axis=1)
+            combErr = np.sqrt(np.nansum(normErr**2,axis=1)) / (self.nsrc - np.sum(maskOut))
+            
         else:
             ## Weight by the flux, but only for the valid points left
             weights = np.ma.array(norm2D,mask=normPhot.mask)
@@ -1043,10 +1056,14 @@ class phot:
             weightSums2D = np.tile(weightSums1D,(self.nsrc,1)).transpose()
             weights = weights / weightSums2D
             combRef = np.nansum(normPhot * weights,axis=1)
+            combErr = np.sqrt(np.nansum((errPhot * weights)**2,axis=1)) / (self.nsrc - np.sum(maskOut))
         
         yCorrected = photArr[:,0] / combRef
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
-        return yCorrNorm
+        
+        yErrNorm = np.sqrt(normErr[:,0]**2 + (combRef / combErr)**2)
+        
+        return yCorrNorm, yErrNorm
 
     def getImg(self,path):
         """ Load an image from a given path and extensions"""
@@ -1093,6 +1110,7 @@ class phot:
         ## Grab the metadata from the header
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
         head = photHDU.header
         head.pop('NAXIS')
         head.pop('NAXIS1')
@@ -1106,7 +1124,7 @@ class phot:
         jdArr = jdHDU.data
         
         t['Time'] = jdArr
-        t['Y Corrected'] = self.refSeries(photArr)
+        t['Y Corrected'], yCorrErr = self.refSeries(photArr,errArr)
         
         if 'PHOT ERR' in HDUList:
             ## Error from the photometry point
