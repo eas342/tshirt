@@ -819,7 +819,7 @@ class phot:
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
                   normReg=None,doBin=None,doNorm=True,yLim=[None,None],
-                  excludeSrc=None,allErrBar=False):
+                  excludeSrc=None,errBar=None):
         """ Plots previously calculated photometry 
         Parameters
         ---------------------
@@ -875,14 +875,15 @@ class phot:
                 
                 yShow = yCorrected / yBase
                 
-            if allErrBar == True:
+            if errBar == 'all':
                 ax.errorbar(x,yShow,label='data',marker='o',linestyle='',markersize=3.,yerr=yCorrected_err)
             else:
                 ax.plot(x,yShow,label='data',marker='o',linestyle='',markersize=3.)
             
                 madY = np.nanmedian(np.abs(yShow - np.nanmedian(yShow)))
-                ax.errorbar([np.median(x)],[np.median(yShow) - 4. * madY],
-                            yerr=np.median(yCorrected_err),fmt='o',mfc='none')
+                if errBar == 'one':
+                    ax.errorbar([np.median(x)],[np.median(yShow) - 4. * madY],
+                                yerr=np.median(yCorrected_err),fmt='o',mfc='none')
             #pdb.set_trace()
             
             if doBin is not None:
@@ -954,6 +955,7 @@ class phot:
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
         head = photHDU.header
+        errArr = HDUList['PHOT ERR'].data
         
         jdHDU = HDUList['TIME']
         jdArr = jdHDU.data
