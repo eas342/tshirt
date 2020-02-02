@@ -25,6 +25,7 @@ class prep():
                          'nSkip': 2, ## number of files to skip at the beginning
                          'doBias': True, ## Calculate and apply a bias correction?
                          'doFlat': True, ## Calculate and apply a flat field correction
+                         'doBadPxMask': False, ## Appply a bad pixel mask?
                          'doFlatBias': False, ## use a specific bias or dark for the flat field
                          'darksForFlat': None, ## dark frames for master flat frame
                          'gainKeyword': 'GAIN1', ## Calculate and apply a flat correction?
@@ -161,6 +162,11 @@ class prep():
         else:
             hflat, flat = None, None
         
+        if self.pipePrefs['doBadPxMask'] == True:
+            badPx = fits.getdata(os.path.join(self.procDir,'master_badpx_mask.fits'))
+        else:
+            hbadPx, badPx = None, None
+        
         for ind,oneFile in enumerate(fileL):
             head, dataCCD = self.getData(oneFile)
             
@@ -183,9 +189,14 @@ class prep():
             
             nccd = ccd_process(dataCCD,gain=self.get_gain(head) * u.electron/u.adu,
                                master_flat=useFlat,
-                               master_bias=useBias)
+                               master_bias=useBias,
+                               bad_pixel_mask=badPx)
+            
+            nccd.data[nccd.mask] = np.nan
+            
             head['ZEROFILE'] = 'master_zero.fits'
             head['FLATFILE'] = 'master_flat.fits'
+            head['BADPXFIL'] = 'master_badpx_mask.fits'
             head['GAINCOR'] = ('T','Gain correction applied (units are e)')
             head['BUNIT'] = ('electron','Physical unit of array values')
             hdu = fits.PrimaryHDU(data=nccd,header=head)
