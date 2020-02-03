@@ -315,6 +315,8 @@ class phot:
             
             
             imData = ax.imshow(stamp,cmap='viridis',vmin=useVmin,vmax=useVmax,interpolation='nearest')
+            ax.invert_yaxis()
+            
             ax.set_title(self.srcNames[ind])
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
@@ -354,6 +356,7 @@ class phot:
             fig.show()
         
         fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
+        plt.close(fig)
         
     def showCustSet(self,index=None,ptype='Stamps',defaultCen=False):
         """ Show a custom stamp or star identification plot for a given image index 
