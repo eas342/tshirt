@@ -985,10 +985,10 @@ class phot:
             axArr[3].plot(t,yCen - np.median(yCen))
             axArr[3].set_ylabel('Y Pos')
             fwhm1 = fwhmData[:,oneSrc,0]
-            axArr[4].plot(t,fwhm1)
+            axArr[4].plot(t,np.abs(fwhm1))
             axArr[4].set_ylabel('FWHM 1')
             fwhm2 = fwhmData[:,oneSrc,1]
-            axArr[5].plot(t,fwhm1)
+            axArr[5].plot(t,np.abs(fwhm1))
             axArr[5].set_ylabel('FWHM 2')
         
         fig.show()
