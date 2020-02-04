@@ -247,12 +247,18 @@ class phot:
 
         showApPos = self.get_default_cen(custPos=custPos)
         if showAps == True:
-            self.srcApertures.plot(ax=ax)
+            apsShow = deepcopy(self.srcApertures)
+            apsShow.positions = showApPos
+            
+            
+            apsShow.plot(ax=ax)
             if self.param['bkgSub'] == True:
-                self.bkgApertures.plot(ax=ax)
+                backApsShow = deepcopy(self.bkgApertures)
+                backApsShow.positions = showApPos
+                backApsShow.plot(ax=ax)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
-            ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
+            ax.scatter(showApPos[:,0],showApPos[:,1], s=rad, facecolors='none', edgecolors='r')
             
             outName = 'st_labels_{}.pdf'.format(self.dataFileDescrip)
         
@@ -385,7 +391,7 @@ class phot:
         if ptype == 'Stamps':
             self.showStamps(custPos=cen,img=img,head=head)
         elif ptype == 'Map':
-            self.showStarChoices(custPos=cen,img=img,head=head)
+            self.showStarChoices(custPos=cen,img=img,head=head)#,showAps=True)
         else:
             print('Unrecognized plot type')
             
