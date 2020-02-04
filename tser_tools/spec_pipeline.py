@@ -619,9 +619,6 @@ class spec(phot_pipeline.phot):
         x, y, yerr = get_spectrum(self.specFile,specType=specType,ind=ind,src=src)
         return x, y, yerr
     
-    def dyn_specFile(self,src=0):
-        return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
-    
     def align_spec(self,data2D,refInd=None,diagnostics=False):
         align2D = np.zeros_like(data2D)
         nImg = data2D.shape[0]
@@ -654,6 +651,25 @@ class spec(phot_pipeline.phot):
         
         return align2D, offsetIndArr
     
+    def get_avg_spec(self,src=0):
+        """
+        Get the average spectrum across all time series
+        """
+        dyn_specFile = self.dyn_specFile(src=src)
+        if os.path.exists(dyn_specFile) == False:
+            self.plot_dynamic_spec(src=src,saveFits=True)
+            
+        HDUList = fits.open(dyn_specFile)
+        x = HDUList['DISP INDICES'].data
+        y = HDUList['AVG SPEC'].data
+        
+        HDUList.close()
+        
+        return x, y
+    
+    def dyn_specFile(self,src=0):
+        return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
+        
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=True,
                           alignDiagnostics=False,extraFF=False):
         HDUList = fits.open(self.specFile)
@@ -704,7 +720,10 @@ class spec(phot_pipeline.phot):
             offsetHDU.name = 'SPEC OFFSETS'
             offsetHDU.header['BUNIT'] = ('pixels','units of Spectral offsets')
             
-            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU])
+            avgHDU = fits.ImageHDU(avgSpec)
+            avgHDU.name = 'AVG SPEC'
+            
+            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU])
             outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
         
         if specAtTop == True:
