@@ -578,9 +578,9 @@ class spec(phot_pipeline.phot):
         normY = self.norm_spec(x,y,numSplineKnots=200)
         yerr_Norm = yerr / y
         #x1, x2 = 
-        pts = np.isfinite(normY)
+        pts = np.isfinite(normY) & np.isfinite(yerr_Norm)
         ls = LombScargle(x[pts],normY[pts],yerr_Norm[pts])
-        #pdb.set_trace()
+        
         frequency, power = ls.autopower()
         period = 1./frequency
         
