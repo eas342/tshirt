@@ -570,12 +570,17 @@ class spec(phot_pipeline.phot):
         plt.close(fig)
         
     def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False):
-        x, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
+        if ind == None:
+            x, y, yerr = self.get_avg_spec(src=src)
+        else:
+            x, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
         
-        normY = self.norm_spec(x,y,numSplineKnots=40)
+        normY = self.norm_spec(x,y,numSplineKnots=200)
+        yerr_Norm = yerr / y
         #x1, x2 = 
         pts = np.isfinite(normY)
-        ls = LombScargle(x[pts],normY[pts],yerr[pts])
+        ls = LombScargle(x[pts],normY[pts],yerr_Norm[pts])
+        #pdb.set_trace()
         frequency, power = ls.autopower()
         period = 1./frequency
         
@@ -662,10 +667,11 @@ class spec(phot_pipeline.phot):
         HDUList = fits.open(dyn_specFile)
         x = HDUList['DISP INDICES'].data
         y = HDUList['AVG SPEC'].data
+        yerr = HDUList['AVG SPEC ERR'].data
         
         HDUList.close()
         
-        return x, y
+        return x, y, yerr
     
     def dyn_specFile(self,src=0):
         return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
@@ -674,6 +680,7 @@ class spec(phot_pipeline.phot):
                           alignDiagnostics=False,extraFF=False):
         HDUList = fits.open(self.specFile)
         extSpec = HDUList['OPTIMAL SPEC'].data[src]
+        errSpec = HDUList['OPT SPEC ERR'].data[src]
         
         nImg = extSpec.shape[0]
         
@@ -701,10 +708,16 @@ class spec(phot_pipeline.phot):
             specOffsets = np.zeros(nImg)
         
         avgSpec = np.nanmean(useSpec,0)
+        specCounts = np.ones_like(errSpec)
+        nanPt = (np.isfinite(useSpec) == False) | (np.isfinite(errSpec) == False)
+        specCounts[nanPt] = np.nan
+        
+        avgSpec_err = np.sqrt(np.nansum(errSpec**2,0)) / np.nansum(specCounts,0)
+        
         waveIndices = HDUList['DISP INDICES'].data
         normImg = np.tile(avgSpec,[nImg,1])
         dynamicSpec = useSpec / normImg
-        dynamicSpec_err = HDUList['OPT SPEC ERR'].data[src] / normImg
+        dynamicSpec_err = errSpec / normImg
         
         if saveFits == True:
             dynHDU = fits.PrimaryHDU(dynamicSpec,HDUList['OPTIMAL SPEC'].header)
@@ -723,7 +736,10 @@ class spec(phot_pipeline.phot):
             avgHDU = fits.ImageHDU(avgSpec)
             avgHDU.name = 'AVG SPEC'
             
-            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU])
+            avgErrHDU = fits.ImageHDU(avgSpec_err)
+            avgErrHDU.name = 'AVG SPEC ERR'
+            
+            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU])
             outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
         
         if specAtTop == True:
