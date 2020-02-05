@@ -391,7 +391,7 @@ class phot:
         if ptype == 'Stamps':
             self.showStamps(custPos=cen,img=img,head=head)
         elif ptype == 'Map':
-            self.showStarChoices(custPos=cen,img=img,head=head)#,showAps=True)
+            self.showStarChoices(custPos=cen,img=img,head=head,showAps=True)
         else:
             print('Unrecognized plot type')
             
