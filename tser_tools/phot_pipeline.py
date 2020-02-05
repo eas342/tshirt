@@ -407,8 +407,21 @@ class phot:
         
         return hduFileNames
     
-    def save_centroids(self,cenArr,fwhmArr):
-        """ Saves the image centroid data"""
+    def save_centroids(self,cenArr,fwhmArr,fixesApplied=True,origCen=None,origFWHM=None):
+        """ Saves the image centroid data
+        Parameters
+        -----------
+        cenArr: numpy array
+            3d array of centroids (nImg x nsrc x 2 for x/y)
+        fwhmArr: numpy array
+            3d array of fwhm (nImg x nsrc x 2 for x/y)
+        fixesApplied: bool
+            Are fixes applied to the centroids?
+        origCen: None or numpy array
+            Original array of centroids
+        origFWHM: None or numpy array
+            Original array of FWHMs
+        """
         hdu = fits.PrimaryHDU(cenArr)
         hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
         hdu.header['NIMG'] = (self.nImg,'Number of images')
@@ -417,6 +430,7 @@ class phot:
         hdu.header['AXIS3'] = ('image','image axis')
         hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
         hdu.header['REFCENS'] = (self.param['refPhotCentering'],'Reference Photometry file used to shift the centroids (or empty if none)')
+        hdu.header['FIXES'] = (fixesApplied, 'Have centroid fixes been applied from trends in other sources?')
         hdu.name = 'Centroids'
         
         hdu2 = fits.ImageHDU(fwhmArr)
@@ -431,6 +445,18 @@ class phot:
         hduFileNames = self.make_filename_hdu()
         
         HDUList = fits.HDUList([hdu,hdu2,hduFileNames])
+        
+        if fixesApplied == True:
+            if origCen is not None:
+                hduCenOrig = fits.ImageHDU(origCen,hdu.header)
+                hduCenOrig.header['FIXES'] = ('Unknown','Have centroid fixes been applied from trends in other sources?')
+                hduCenOrig.name = 'ORIG CEN'
+                HDUList.append(hduCenOrig)
+            if origFWHM is not None:
+                hduFWHMOrig = fits.ImageHDU(origFWHM,hdu2.header)
+                hduFWHMOrig.name = 'ORIG FWHM'
+                HDUList.append(hduFWHMOrig)
+        
         HDUList.writeto(self.centroidFile,overwrite=True)
         
         head = hdu.header
@@ -471,6 +497,55 @@ class phot:
             cenArr[ind,:,1] = pos[:,1] + yVec
         fwhmArr = np.zeros_like(cenArr)
         return cenArr, fwhmArr
+    
+    def fix_centroids(self,diagnostics=False,nsigma=10.):
+        """
+        Fix the centroids for outlier positions for stars
+        """
+        HDUList = fits.open(self.centroidFile)
+        cenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
+        fwhmArr, headFWHM = HDUList["FWHM"].data, HDUList["FWHM"].header
+        
+        fixedCenArr = deepcopy(cenArr)
+        fixedFWHMArr = deepcopy(fwhmArr)
+        
+        medCen = np.nanmedian(cenArr,0)
+        medCen3D = np.tile(medCen,[self.nImg,1,1])
+        
+        diffCen = cenArr - medCen3D ## differential motion
+        fixedDiffCen = deepcopy(diffCen)
+        
+        if diagnostics == True:
+            fig, axArr = plt.subplots(2,sharex=True)
+        
+        for oneAxis in [0,1]:
+            trend = np.nanmedian(diffCen[:,:,oneAxis],1) ## median trend
+            trend2D = np.tile(trend,[self.nsrc,1]).transpose()
+            diffFromTrend = diffCen[:,:,oneAxis] - trend2D
+            mad = np.nanmedian(np.abs(diffFromTrend))
+            
+            badPt = np.abs(diffFromTrend) > nsigma * mad
+            fixedDiffFromTrend = deepcopy(diffFromTrend)
+            fixedDiffFromTrend[badPt] = 0
+            fwhmArr2D = fixedFWHMArr[:,:,oneAxis]
+            fwhmArr2D[badPt] = np.nan ## w/ different position FWHM is no longer relvant
+            fixedFWHMArr[:,:,oneAxis] = fwhmArr2D
+            
+            fixedDiffCen[:,:,oneAxis] = fixedDiffFromTrend + trend2D
+            
+            if diagnostics == True:
+                for oneSrc in np.arange(self.nsrc):
+                    showData, = axArr[oneAxis].plot(diffCen[:,oneSrc,oneAxis],'o')
+                    axArr[oneAxis].plot(fixedDiffCen[:,oneSrc,oneAxis],color=showData.get_color())
+        
+        fixedCenArr = fixedDiffCen + medCen3D
+        
+        if diagnostics == True:
+            plt.show()
+        
+        self.save_centroids(fixedCenArr,fixedFWHMArr,fixesApplied=True,origCen=cenArr,origFWHM=fwhmArr)
+        
+        HDUList.close()
     
     def get_allimg_cen(self,recenter=False,useMultiprocessing=False):
         """ Get all image centroids
