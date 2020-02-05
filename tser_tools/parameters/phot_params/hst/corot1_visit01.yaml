@@ -1,0 +1,34 @@
+procFiles: /Users/everettschlawin/Documents/hst/corot1/visit01/*_flt.fits ## files on which to do Phot
+srcName: CoRoT-1
+srcNameShort: corot1
+nightName: HSTVis1
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [ 12, 74.5]
+   - [ 32, 74.5]
+   - [ 52, 74.5]
+   - [ 72, 74.5]
+   - [ 92, 74.5]
+   - [112, 74.5]
+srcGeometry: Rectangular ## Source aperture geometry
+bkgSub: True ## Do background subtraction?
+bkgGeometry: Rectangular ## Background geometry, Circular Annulus or Rectangle
+#apRadius: 9. ## Source aperture radius
+apHeight: 32 ## Source aperture height (only for rectangular aperture)
+apWidth: 20 ## Source aperture width (only for rectangular aperture)
+nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+#backStart: 9. ## Background annulus start radius
+#backEnd: 12. ## Background annulus end radius
+backHeight: 32 ## background aperture height (for rectangular background)
+backWidth: 20 ## background aperture width (only for rectangular aperture)
+backOffset: [0.,33.] ## Background offset (from source centroid)
+boxFindSize: 17 ## the half-width of the box used for source centroiding
+jdRef: 2457876 ## JD reference offset to subtract
+#timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time
+scaleAperture: False ## Scale the aperture with the FWHM?
+apScale: 2.5 ## number of times the FWHM for aperture-scaling
+apRange: [2,17] ## min/max range of allowed FHWM, when scaling
+isCube: False ## Is the data a cube (3D)?
+cubePlane: 0 ## The plane to choose if data is in cubes
+doCentering: False ## Center the aperturess with Gaussian?
+FITSextension: 1 ## FITS extension of science frames
+HEADextension: 0 ## FITS extension of the header info (for exposure and timing)

@@ -1,0 +1,34 @@
+rawDir:
+   - /Users/everettschlawin/Documents/single_systems/k2-22/UT2020_01_28
+biasFiles: ../UT2020_01_25/raw/lbcb.20200125.00*.fits ## Bias files
+flatFiles: ../UT2020_01_25/prev_night_flats/lbcb.*.fits ## Flat field files
+sciFiles: raw/lbcb.20200128.??????.fits ## Science files
+nSkip: 1 ## number of files to skip at the beginning
+doBias: True ## Calculate and apply a bias correction?
+doFlat: True ## Calculate and apply a flat correction?
+gainKeyword: GAIN ## header keyword for gain correction
+procName: proc_lbc ## proc directory name
+doNonLin: False
+nonLinFunction: null
+sciExtension: 2
+fixWindow: True
+sciExcludeList:
+   - lbcb.20200128.075218.fits
+   - lbcb.20200128.075614.fits
+   - lbcb.20200128.075748.fits
+   - lbcb.20200128.075911.fits
+   - lbcb.20200128.080204.fits
+   - lbcb.20200128.080845.fits
+   - lbcb.20200128.081024.fits
+   - lbcb.20200128.081202.fits
+   - lbcb.20200128.081340.fits
+   - lbcb.20200128.081523.fits
+   - lbcb.20200128.081708.fits
+   - lbcb.20200128.081850.fits
+   - lbcb.20200128.082032.fits
+   - lbcb.20200128.082221.fits
+   - lbcb.20200128.082358.fits
+   - lbcb.20200128.082539.fits
+   - lbcb.20200128.083104.fits
+   - lbcb.20200128.083241.fits
+   - lbcb.20200128.083420.fits
