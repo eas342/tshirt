@@ -54,15 +54,45 @@ def k2_22(date='jan25'):
     
     fig.savefig('plots/photometry/custom_plots/k2_22_ut{}_lbc.pdf'.format(date))
     plt.close(fig)
-    
+
+#def fringing_function(x,amp=0.1,period=0.09,periodSlope=.04,offset=0.1):
+def fringing_function(x,amp=0.1,period=6.0,periodSlope=2.0,offset=0.1,phase=0.0):
+    modelY = 1.0 - offset + amp * np.sin(x * np.pi * 2. / (period - (periodSlope * (x - 1100.) / 2048.)) - phase)
+    return modelY
+
 def show_fringing():
-    spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
-    x, y, yerr = spec.get_avg_spec()
-    normY = spec.norm_spec(x,y,numSplineKnots=200)
-    fig, ax = plt.subplots(figsize=(10,4))
-    ax.set_xlim(1000,1800)
-    ax.set_xlabel('X (px)')
-    ax.set_ylabel('Normalized Flux')
-    ax.plot(x,normY)
-    fig.savefig('plots/spectra/custom_plots/otis_grism_fringing.pdf',bbox_inches='tight')
-    
+    modelX = np.array(np.arange(0,2048),dtype=np.float)
+    for oneTest in ['otis','cv3']:
+        if oneTest == 'otis':
+            spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
+            numSplineKnots = 200
+            fringAmpGuess = 0.003
+            fringOffset = 0.01
+        elif oneTest == 'cv3':
+            spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
+            numSplineKnots = 400
+            fringAmpGuess = 0.05
+            fringOffset = 0.15
+        else:
+            raise Exception("Unrecognized test data {}.".format(oneTest))
+        
+        modelY = fringing_function(modelX,amp=fringAmpGuess,offset=fringOffset)
+        
+        x, y, yerr = spec.get_avg_spec()
+        normY = spec.norm_spec(x,y,numSplineKnots=400)
+        fig, ax = plt.subplots(figsize=(10,4))
+        ax.set_xlim(1000,1800)
+        ax.plot(x,normY,label='Extracted Spectrum')
+        ax.plot(modelX,modelY,label='Illustrative Model')
+        reprPoint = 1500
+        ax.errorbar([modelX[reprPoint]],[np.nanpercentile(normY,99)],yerr=yerr[reprPoint]/y[reprPoint],
+                    color='green',fmt='o',markerfacecolor='none',label='Representative Error')
+        ax.set_xlabel('X (px)')
+        ax.set_ylabel('Normalized Flux')
+        ax.legend()
+        
+        fig.show()
+        #pdb.set_trace()
+        fig.savefig('plots/spectra/custom_plots/fringing_grism_{}.pdf'.format(oneTest),bbox_inches='tight')
+        plt.close(fig)
+        
