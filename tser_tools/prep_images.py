@@ -251,7 +251,11 @@ class prep():
         
         if self.check_if_nonlin_needed(head) == True:
             if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
-                data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'])
+                if 'NDIT' not in head:
+                    print("No NDIT found for {} so no non-linearity correction applied".format(fileName))
+                    data = data
+                else:
+                    data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'])
             else:
                 raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
             head['LINCOR'] = (True, "Is a non-linearity correction applied?")
