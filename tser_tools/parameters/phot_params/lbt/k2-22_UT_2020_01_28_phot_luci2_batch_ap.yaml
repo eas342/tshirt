@@ -3,9 +3,13 @@ srcName: K2-22 LUCI2
 srcNameShort:
    - k2-22luci2_ap_10_41_60
    - k2-22luci2_ap_15_41_60
+   - k2-22luci2_ap_17_41_60
    - k2-22luci2_ap_20_41_60
+   - k2-22luci2_ap_22_41_60
    - k2-22luci2_ap_25_41_60
+   - k2-22luci2_ap_27_41_60
    - k2-22luci2_ap_30_41_60
+   - k2-22luci2_ap_32_41_60
    - k2-22luci2_ap_35_41_60
    - k2-22luci2_ap_40_41_60
 nightName: UT2020_01_28
@@ -16,15 +20,20 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [ 1069.3, 1575.9] #- [ 1082.3, 1583.9]
    - [ 1232.8, 1424.7]
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
+copyCentroidFile: tser_data/phot/phot_k2-22luci2_UT2020_01_28.fits ## photometry file to copy centroids from
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
 apRadius:
    - 10.0 ## Source aperture radius
    - 15.0
+   - 17.0
    - 20.0
+   - 22.0
    - 25.0
+   - 27.0
    - 30.0
+   - 32.0
    - 35.0
    - 40.0
 backStart: 41. ## Background annulus start radius

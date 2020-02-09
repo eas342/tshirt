@@ -119,7 +119,7 @@ class phot:
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
-                         'dateFormat': 'Two Part'}
+                         'dateFormat': 'Two Part','copyCentroidFile': None}
         
 
         for oneKey in defaultParams.keys():
@@ -547,6 +547,19 @@ class phot:
         
         HDUList.close()
     
+    def copy_centroids_from_file(self,fileName):
+        HDUList = fits.open(fileName)
+        cenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
+        if "FWHM" in HDUList:
+            fwhmArr, headFWHM = HDUList["FWHM"].data, HDUList["FWHM"].header
+            self.keepFWHM = True
+        else:
+            self.keepFWHM = False ## allow for legacy centroid files
+            fwhmArr, headFWHM = None, None
+        
+        HDUList.close()
+        return cenArr, head, fwhmArr, headFWHM
+    
     def get_allimg_cen(self,recenter=False,useMultiprocessing=False):
         """ Get all image centroids
         If self.param['doCentering'] is False, it will just use the input aperture positions 
@@ -560,17 +573,10 @@ class phot:
         
         ndim=2 ## Number of dimensions in image (assuming 2D)
         
-            
         if os.path.exists(self.centroidFile) and (recenter == False):
-            HDUList = fits.open(self.centroidFile)
-            cenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
-            if "FWHM" in HDUList:
-                fwhmArr, headFWHM = HDUList["FWHM"].data, HDUList["FWHM"].header
-                self.keepFWHM = True
-            else:
-                self.keepFWHM = False ## allow for legacy centroid files
-            
-            HDUList.close()
+            cenArr, head, fwhmArr, headFWHM = self.copy_centroids_from_file(self.centroidFile)
+        elif (self.param['copyCentroidFile'] is not None) and (recenter == False):
+            cenArr, head, fwhmArr, headFWHM = self.copy_centroids_from_file(self.param['copyCentroidFile'])
         elif self.param['refPhotCentering'] is not None:
             cenArr, fwhmArr = self.shift_centroids_from_other_file(self.param['refPhotCentering'])
             head, headFWHM = self.save_centroids(cenArr,fwhmArr)
