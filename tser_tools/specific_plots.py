@@ -6,7 +6,7 @@ from astropy.time import Time
 import numpy as np
 import pdb
 
-def k2_22(date='jan25'):
+def k2_22(date='jan25',showTiming=False):
     dat = ascii.read('tser_data/reference_dat/k2-22_phased_transit.txt',
                      names=['phase','flux','flux err','junk'],
                      format='fixed_width',delimiter=' ')
@@ -49,10 +49,22 @@ def k2_22(date='jan25'):
     ax.plot(dat['time'][pts],dat['flux'][pts],color='red',label='Kepler K2-22 Avg')
     ax.set_xlabel('Time (JD - {})'.format(jdRef))
     ax.set_ylabel('Normalized Flux')
-    ax.legend()
     ax.set_ylim(0.991,1.005)
     
-    fig.savefig('plots/photometry/custom_plots/k2_22_ut{}_lbc.pdf'.format(date))
+    if showTiming == True:
+        cenTime = t0.jd - jdRef
+        ax.axvline(cenTime, color='orange')
+        
+        ax.axvline(cenTime - 2.04 / 24.,color='green',label='Good Start/End')
+        ax.axvline(cenTime - 1.00 / 24.,color='purple',label='Absolute Latest Start/End')
+        ax.axvline(cenTime + 1.00 / 24.,color='purple')
+        ax.axvline(cenTime + 2.04 / 24.,color='green')
+        extraInfo = '_timing'
+    else:
+        extraInfo = ''
+    ax.legend()
+    
+    fig.savefig('plots/photometry/custom_plots/k2_22_ut{}{}_lbc.pdf'.format(date,extraInfo))
     plt.close(fig)
 
 #def fringing_function(x,amp=0.1,period=0.09,periodSlope=.04,offset=0.1):
