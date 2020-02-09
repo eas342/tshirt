@@ -1073,7 +1073,26 @@ class phot:
             axArr[5].set_ylabel('FWHM 2')
         
         fig.show()
+    
+    def plot_flux_vs_pos(self):
+        """
+        Plot flux versus centroid to look for flat fielding effects
+        """
+        HDUList = fits.open(self.photFile)
+        yNorm, yErrNorm = self.refSeries(HDUList['PHOTOMETRY'].data,HDUList['PHOT ERR'].data)
+        cenX = HDUList['CENTROIDS'].data[:,0,0]
+        cenY = HDUList['CENTROIDS'].data[:,0,1]
         
+        fig, axArr = plt.subplots(1,2,sharey=True,figsize=(9,4.5))
+        
+        for ind,oneDir, coord in zip([0,1],['X','Y'],[cenX,cenY]):
+            axArr[ind].plot(coord,yNorm,'o')
+            axArr[ind].set_xlabel('{} (px)'.format(oneDir))
+            axArr[ind].set_ylabel('Norm F')
+        
+        #yPoly = 
+        
+        fig.show()
     
     def refSeries(self,photArr,errPhot,reNorm=False,excludeSrc=None,sigRej=5.):
         """ Average together the reference stars
