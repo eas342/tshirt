@@ -17,7 +17,10 @@ tser_tools/parameters/phot_param_2016_06_14.yaml
 tser_tools/parameters/phot_param_2016_07_12.yaml
 tser_tools/parameters/phot_param_2016_07_14.yaml
 tser_tools/parameters/phot_param_2016_07_16.yaml
+tser_tools/parameters/phot_params/lbt/bixel_example/
 tser_tools/parameters/reduction_parameters_all_kic1255.yaml
+tser_tools/parameters/reduction_parameters/lbt/luci_20180913*.yaml
+tser_tools/parameters/reduction_parameters/lbt/redparam_luci_20180913*.yaml
 tser_tools/parameters/spec_params/hst/kelt9/*.yaml
 tser_tools/tser_data/refcor_phot/*.fits
 tser_tools/tser_data/best_fit_models/kic1255/kic1255_best_fit*.csv
