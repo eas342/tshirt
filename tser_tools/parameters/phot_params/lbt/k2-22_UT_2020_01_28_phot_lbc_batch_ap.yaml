@@ -1,6 +1,13 @@
 procFiles: /Users/everettschlawin/Documents/single_systems/k2-22/UT2020_01_28/proc_lbc/lbcb.20200128.??????.fits ## files one which to do Phot
 srcName: K2-22
-srcNameShort: k2-22lbc
+srcNameShort:
+   - k2-22lbc_ap_10_23_30
+   - k2-22lbc_ap_14_23_30
+   - k2-22lbc_ap_16_23_30
+   - k2-22lbc_ap_18_23_30
+   - k2-22lbc_ap_20_23_30
+   - k2-22lbc_ap_22_23_30
+   - k2-22lbc_ap_23_23_30
 nightName: UT2020_01_28
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [1229.1 ,  703.6]
@@ -16,14 +23,22 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [1654.0 , 765.13]
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
+copyCentroidFile: tser_data/phot/phot_k2-22lbc_UT2020_01_28.fits ## photometry file to copy centroids from
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
-apRadius: 18. ## Source aperture radius
+apRadius: 
+   - 10. ## Source aperture radius
+   - 14.
+   - 16.
+   - 18.
+   - 20.
+   - 22.
+   - 23.
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
 #nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
-backStart: 18. ## Background annulus start radius
-backEnd: 50. ## Background annulus end radius
+backStart: 23. ## Background annulus start radius
+backEnd: 33. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
 #backWidth: 1502 ## background aperture width (only for rectangular aperture)
 backOffset: [0.,0.] ## Background offset (from source centroid)
