@@ -353,7 +353,10 @@ class spec(phot_pipeline.phot):
             endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
             for oneSpatialInd in np.arange(startSpatial,endSpatial + 1):
                 if self.param['dispDirection'] == 'x':
-                    dep_var = img[oneSpatialInd,dispStart:dispEnd]
+                    try:
+                        dep_var = img[oneSpatialInd,dispStart:dispEnd]
+                    except IndexError:
+                        pdb.set_trace()
                 else:
                     dep_var = img[dispStart:dispEnd,oneSpatialInd]
                 
@@ -364,20 +367,9 @@ class spec(phot_pipeline.phot):
                 positivep[finitep] = (dep_var[finitep] > 0. - self.floor_delta)
                 fitY[positivep] = np.log10(dep_var[positivep] + self.floor_delta)
                 
-                try:
-                    spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
-                                                        knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
-                                                        plotEachStep=False,preScreen=self.param['splinePreScreen'])
-                except ValueError as inst:
-                    if str(inst) == 'Interior knots t must satisfy Schoenberg-Whitney conditions':
-                        print(inst)
-                        print("Trying my debugging mode")
-                        
-                        print("Value error")
-                        pdb.set_trace()
-                    else:
-                        raise inst
-                
+                spline1 = phot_pipeline.robust_poly(ind_var,fitY,self.param['splineSpecFitOrder'],
+                                                    knots=knots,useSpline=True,sigreject=self.param['splineSigRej'],
+                                                    plotEachStep=False,preScreen=self.param['splinePreScreen'])
                 
                 modelF = 10**spline1(ind_var) - self.floor_delta
                 
@@ -442,7 +434,7 @@ class spec(phot_pipeline.phot):
         img, head = self.getImg(oneImgName)
         t0 = self.get_date(head)
         
-        imgSub, bkgModel, subHead = self.do_backsub(img,head,ind)
+        imgSub, bkgModel, subHead = self.do_backsub(img,head,ind,saveFits=saveFits)
         readNoise = self.get_read_noise(head)
         ## Background and read noise only.
         ## Smoothed source flux added below
@@ -578,12 +570,17 @@ class spec(phot_pipeline.phot):
         plt.close(fig)
         
     def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False):
-        x, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
+        if ind == None:
+            x, y, yerr = self.get_avg_spec(src=src)
+        else:
+            x, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
         
-        normY = self.norm_spec(x,y,numSplineKnots=40)
+        normY = self.norm_spec(x,y,numSplineKnots=200)
+        yerr_Norm = yerr / y
         #x1, x2 = 
-        pts = np.isfinite(normY)
-        ls = LombScargle(x[pts],normY[pts],yerr[pts])
+        pts = np.isfinite(normY) & np.isfinite(yerr_Norm)
+        ls = LombScargle(x[pts],normY[pts],yerr_Norm[pts])
+        
         frequency, power = ls.autopower()
         period = 1./frequency
         
@@ -627,9 +624,6 @@ class spec(phot_pipeline.phot):
         x, y, yerr = get_spectrum(self.specFile,specType=specType,ind=ind,src=src)
         return x, y, yerr
     
-    def dyn_specFile(self,src=0):
-        return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
-    
     def align_spec(self,data2D,refInd=None,diagnostics=False):
         align2D = np.zeros_like(data2D)
         nImg = data2D.shape[0]
@@ -662,12 +656,50 @@ class spec(phot_pipeline.phot):
         
         return align2D, offsetIndArr
     
+    def get_avg_spec(self,src=0):
+        """
+        Get the average spectrum across all time series
+        """
+        dyn_specFile = self.dyn_specFile(src=src)
+        if os.path.exists(dyn_specFile) == False:
+            self.plot_dynamic_spec(src=src,saveFits=True)
+            
+        HDUList = fits.open(dyn_specFile)
+        x = HDUList['DISP INDICES'].data
+        y = HDUList['AVG SPEC'].data
+        yerr = HDUList['AVG SPEC ERR'].data
+        
+        HDUList.close()
+        
+        return x, y, yerr
+    
+    def dyn_specFile(self,src=0):
+        return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
+        
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=True,
-                          alignDiagnostics=False):
+                          alignDiagnostics=False,extraFF=False):
         HDUList = fits.open(self.specFile)
         extSpec = HDUList['OPTIMAL SPEC'].data[src]
+        errSpec = HDUList['OPT SPEC ERR'].data[src]
         
         nImg = extSpec.shape[0]
+        
+        if extraFF == True:
+            x, y, yerr = self.get_spec(src=src)
+            cleanY = np.zeros_like(y)
+            goodPts = np.isfinite(y)
+            cleanY[goodPts] = y[goodPts]
+            yFlat = analysis.flatten(x,cleanY,highPassFreq=0.05)
+            ySmooth = y - yFlat
+            specFF = np.ones_like(y)
+            dispPix = self.param['dispPixels']
+            
+            disp1, disp2 = dispPix[0] + 10, dispPix[1] - 10
+            specFF[disp1:disp2] = y[disp1:disp2] / ySmooth[disp1:disp2]
+            badPt = np.isfinite(specFF) == False
+            specFF[badPt] = 1.0
+            specFF2D = np.tile(specFF,[nImg,1])
+            extSpec = extSpec / specFF2D
         
         if align == True:
             useSpec, specOffsets = self.align_spec(extSpec,diagnostics=alignDiagnostics)
@@ -676,10 +708,16 @@ class spec(phot_pipeline.phot):
             specOffsets = np.zeros(nImg)
         
         avgSpec = np.nanmean(useSpec,0)
+        specCounts = np.ones_like(errSpec)
+        nanPt = (np.isfinite(useSpec) == False) | (np.isfinite(errSpec) == False)
+        specCounts[nanPt] = np.nan
+        
+        avgSpec_err = np.sqrt(np.nansum(errSpec**2,0)) / np.nansum(specCounts,0)
+        
         waveIndices = HDUList['DISP INDICES'].data
         normImg = np.tile(avgSpec,[nImg,1])
         dynamicSpec = useSpec / normImg
-        dynamicSpec_err = HDUList['OPT SPEC ERR'].data[src] / normImg
+        dynamicSpec_err = errSpec / normImg
         
         if saveFits == True:
             dynHDU = fits.PrimaryHDU(dynamicSpec,HDUList['OPTIMAL SPEC'].header)
@@ -695,7 +733,13 @@ class spec(phot_pipeline.phot):
             offsetHDU.name = 'SPEC OFFSETS'
             offsetHDU.header['BUNIT'] = ('pixels','units of Spectral offsets')
             
-            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU])
+            avgHDU = fits.ImageHDU(avgSpec)
+            avgHDU.name = 'AVG SPEC'
+            
+            avgErrHDU = fits.ImageHDU(avgSpec_err)
+            avgErrHDU.name = 'AVG SPEC ERR'
+            
+            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU])
             outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
         
         if specAtTop == True:
@@ -706,13 +750,20 @@ class spec(phot_pipeline.phot):
         else:
             fig, ax = plt.subplots()
         
-        ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
+        imShowData = ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
         ax.invert_yaxis()
         ax.set_aspect('auto')
         ax.set_xlabel('Disp (pixels)')
         ax.set_ylabel('Time (Image #)')
         dispPix = self.param['dispPixels']
         ax.set_xlim(dispPix[0],dispPix[1])
+        fig.colorbar(imShowData,label='Normalized Flux')
+        if specAtTop == True:
+            ## Fix the axes to be the same
+            pos = ax.get_position()
+            pos2 = axTop.get_position()
+            axTop.set_position([pos.x0,pos2.y0,pos.width,pos2.height])
+            
         
         dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
         fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
@@ -774,10 +825,14 @@ class spec(phot_pipeline.phot):
         binned_disp = np.zeros(nbins)
         
         for ind, binStart, binEnd in zip(binIndices,binStarts,binEnds):
-            binGrid[:,ind] = np.nansum(dynSpec[:,binStart:binEnd] * weights[:,binStart:binEnd] ,1)
+            theseWeights = weights[:,binStart:binEnd]
+            binGrid[:,ind] = np.nansum(dynSpec[:,binStart:binEnd] * theseWeights ,1)
+            normFactor = np.nanmedian(binGrid[:,ind])
+            binGrid[:,ind] = binGrid[:,ind] / normFactor
+            binGrid_err[:,ind] = np.sqrt(np.nansum((dynSpec_err[:,binStart:binEnd] * theseWeights)**2,1))
+            binGrid_err[:,ind] = binGrid_err[:,ind] / normFactor
+            
             binned_disp[ind] = np.mean([binStart,binEnd])
-            #binGrid_err[:,ind] = np.sqrt(np.nansum(dynSpec_err[:,binStart:binEnd]**2,1))
-            binGrid[:,ind] = binGrid[:,ind] / np.nanmedian(binGrid[:,ind])
             
             #plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind,fmt='o')
             #plt.errorbar(time - offset_time,binGrid[:,ind] - 0.005 * ind,
@@ -785,9 +840,19 @@ class spec(phot_pipeline.phot):
         
         outHDU = fits.PrimaryHDU(binGrid,HDUList[0].header)
         outHDU.name = 'BINNED F'
+        errHDU = fits.ImageHDU(binGrid_err,outHDU.header)
+        errHDU.name = 'BINNED ERR'
+        offsetHDU = HDUList['SPEC OFFSETS']
         timeHDU = HDUList['TIME']
-        dispHDU = fits.ImageHDU(binned_disp,HDUList['DISP INDICES'].header)
-        outHDUList = fits.HDUList([outHDU,timeHDU,dispHDU])
+        
+        dispTable = Table()
+        dispTable['Bin Start'] = binStarts
+        dispTable['Bin Middle'] = binned_disp
+        dispTable['Bin End'] = binEnds
+        
+        dispHDU = fits.BinTableHDU(dispTable)
+        dispHDU.name = "DISP INDICES"
+        outHDUList = fits.HDUList([outHDU,errHDU,timeHDU,offsetHDU,dispHDU])
         outHDUList.writeto(self.wavebin_specFile(nbins),overwrite=True)
         
         HDUList.close()
@@ -796,17 +861,27 @@ class spec(phot_pipeline.phot):
         return np.floor(np.min(time))
     
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
-                            recalculate=False,dispIndices=None):
+                            recalculate=False,dispIndices=None,differential=False):
         """ Plot wavelength-binned time series """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices)
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         time = HDUList['TIME'].data
-        offset_time = sefl.get_offset_time(time)
+        offset_time = self.get_offset_time(time)
         
         disp = HDUList['DISP INDICES'].data
+        
         binGrid = HDUList['BINNED F'].data
+        binGrid_err = HDUList['BINNED ERR'].data
+        if differential == True:
+            weights = 1./(np.nanmean(binGrid_err,0))**2
+            weights2D = np.tile(weights,[binGrid.shape[0],1])
+            
+            avgSeries = (np.nansum(binGrid * weights2D,1)) / np.nansum(weights2D,1)
+            
+            avgSeries2D = np.tile(avgSeries,[len(disp),1]).transpose()
+            binGrid = binGrid / avgSeries2D
         
         fig, ax = plt.subplots()
         for ind,oneDisp in enumerate(disp):
@@ -859,6 +934,36 @@ class spec(phot_pipeline.phot):
             fig.savefig(outName)
         else:
             fig.show()
+    
+    def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3):
+        """
+        Examine the time series for adjacent bins
+        """
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        
+        time = HDUList['TIME'].data
+        offset_time = self.get_offset_time(time)
+        
+        dat2D = HDUList['BINNED F'].data
+        dat2Derr = HDUList['BINNED ERR'].data
+        ratioSeries = dat2D[:,bin2] / dat2D[:,bin1]
+        fracErr = np.sqrt((dat2Derr[:,bin2]/dat2D[:,bin2])**2 + (dat2Derr[:,bin1]/dat2D[:,bin1])**2)
+        yerr = ratioSeries * fracErr
+        
+        stdRatio = np.std(ratioSeries) * 1e6
+        print("stdev = {} ppm".format(stdRatio))
+        
+        phot_pipeline.allan_variance(time * 24. * 60.,ratioSeries * 1e6,yerr=yerr * 1e6,
+                                     xUnit='min',yUnit='ppm',
+                                     binMin=10,binMax=250)
+        
+        plt.plot(time - offset_time,ratioSeries)
+        
+        
+        
+        plt.show()
+        HDUList.close()
+        
         
 
 class batch_spec(phot_pipeline.batchPhot):

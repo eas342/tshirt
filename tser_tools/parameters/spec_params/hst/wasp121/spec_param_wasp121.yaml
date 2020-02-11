@@ -1,0 +1,34 @@
+procFiles: /Users/everettschlawin/Documents/single_systems/wasp121/MAST_2020-01-23T1705/HST/*/*_flt.fits  ## files on which to do spec extraction
+excludeList:
+   - id9ma3eqq_flt.fits
+srcName: WASP-121
+srcNameShort: wasp121
+nightName: UT2016_11_10
+dispDirection: x ## dispersion direction 'x' or 'y'
+starPositions: ## positions of the stars in the spatial direction. The first one is the target
+   - 139
+refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
+bkgSubX: True ## Do background subtraction along the X direction?
+bkgRegionsX: ## a list of background regions in the X direction
+   - [0, 56]
+   - [207, 255]
+bkgOrderX: 1 ## order of polynomial subtraction in the X direction
+bkgSubY: True ## Do background subtraction along the Y direction?
+bkgRegionsY: ## a list of background regions in the Y direction
+   - [0, 78]
+   - [198, 255]
+bkgOrderY: 1 ## order of polynomial subtraction in the Y direction
+apWidth: 110. ## Source aperture width
+dispPixels: [60, 205] ## pixels to use in the dispersion direction
+jdRef: 2457551 ## JD reference offset to subtract for plotting
+timingMethod: null ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
+isCube: False ## Is the data a cube (3D)?
+cubePlane: 0 ## The plane to choose if data is in cubes
+doCentering: False ## Center the aperturess with Gaussian?
+FITSextension: 1 ## FITS extension of science frames
+HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
+isSlope: False ## Is the FITS image a slope image that should be multiplied by the int time?
+readNoise: 17 ## Read noise in electrons
+detectorGain: 2.5 ## Optionally specify the detector gain e-/DN
+dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+numSplineKnots: 10 ## number of spline Knots when fitting the Splines along the dispersion direction

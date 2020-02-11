@@ -1,0 +1,18 @@
+rawDir:
+   - /Users/everettschlawin/Documents/single_systems/k2-22/UT2020_01_25
+biasFiles: ## Bias files
+   - raw/luci2.20200125.0001.fits
+   - raw/luci2.20200125.0002.fits
+   - raw/luci2.20200125.0003.fits
+   - raw/luci2.20200125.0004.fits
+   - raw/luci2.20200125.0005.fits
+flatFiles: miv/es_average_hiflat_sub*.fits ## Flat field files
+sciFiles: raw/luci2.20200125.????.fits ## Science files
+nSkip: 15 ## number of files to skip at the beginning
+doBias: False ## Calculate and apply a bias correction?
+doFlat: True ## Calculate and apply a flat correction?
+gainKeyword: GAIN ## header keyword for gain correction
+procName: proc_w_lincor ## proc directory name
+doNonLin: LBT LUCI2
+nonLinFunction: null
+sciExtension: null

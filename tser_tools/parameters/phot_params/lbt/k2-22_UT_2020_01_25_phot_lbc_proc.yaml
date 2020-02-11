@@ -1,0 +1,122 @@
+procFiles: /Users/everettschlawin/Documents/single_systems/k2-22/UT2020_01_25/proc_lbc/lbcb.20200125.0?????.fits ## files on which to do Phot
+srcName: K2-22
+srcNameShort: k2-22
+nightName: UT2020_01_25
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [1232.6 , 675.7]
+   - [ 802.6 , 482.2]
+   - [1032.0 , 586.1]
+   - [1092.9 ,1012.5]
+   - [ 849.2 ,1184.5]
+   - [ 530.3 , 779.6] ##   - [ 541.1 , 532.4]
+   - [ 605.6 , 170.5]
+   - [ 637.8 ,1274.1]
+   - [1454.8 ,1206.0]
+refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
+srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
+bkgSub: True ## Do background subtraction?
+bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
+apRadius: 22. ## Source aperture radius
+#apHeight: 40 ## Source aperture height (only for rectangular aperture)
+#apWidth: 1502 ## Source aperture width (only for rectangular aperture)
+#nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+backStart: 23. ## Background annulus start radius
+backEnd: 33. ## Background annulus end radius
+#backHeight: 40 ## background aperture height (for rectangular background)
+#backWidth: 1502 ## background aperture width (only for rectangular aperture)
+backOffset: [0.,0.] ## Background offset (from source centroid)
+boxFindSize: 18 ## the half-width of the box used for source centroiding
+jdRef: 2458874 ## JD reference offset to subtract
+#timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time
+scaleAperture: False ## Scale the aperture with the FWHM?
+apScale: 2.5 ## number of times the FWHM for aperture-scaling
+apRange: [2,17] ## min/max range of allowed FHWM, when scaling
+isCube: False ## Is the data a cube (3D)?
+cubePlane: 0 ## The plane to choose if data is in cubes
+doCentering: True ## Center the aperturess with Gaussian?
+FITSextension: 0 ## FITS extension of science frames
+HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
+isSlope: False ## Is the FITS image a slope image that should be multiplied by the int time?
+subpixelMethod: exact ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+readNoise: null ## Read noise in electrons
+detectorGain: null ## Optionally specify the detector gain e-/DN
+dateFormat: One Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+excludeList:
+   - lbcb.20200125.083808.fits
+   - lbcb.20200125.081615.fits
+   - lbcb.20200125.082253.fits
+   - lbcb.20200125.082430.fits
+   - lbcb.20200125.082631.fits
+   - lbcb.20200125.082755.fits
+   - lbcb.20200125.083135.fits
+   - lbcb.20200125.083434.fits
+   - lbcb.20200125.081359.fits
+   - lbcb.20200125.002351.fits
+   - lbcb.20200125.002426.fits
+   - lbcb.20200125.002500.fits
+   - lbcb.20200125.002534.fits
+   - lbcb.20200125.002608.fits
+   - lbcb.20200125.002642.fits
+   - lbcb.20200125.002717.fits
+   - lbcb.20200125.002751.fits
+   - lbcb.20200125.002825.fits
+   - lbcb.20200125.002900.fits
+   - lbcb.20200125.002934.fits
+   - lbcb.20200125.003008.fits
+   - lbcb.20200125.003042.fits
+   - lbcb.20200125.003116.fits
+   - lbcb.20200125.003151.fits
+   - lbcb.20200125.003225.fits
+   - lbcb.20200125.003259.fits
+   - lbcb.20200125.003333.fits
+   - lbcb.20200125.003407.fits
+   - lbcb.20200125.003441.fits
+   - lbcb.20200125.003516.fits
+   - lbcb.20200125.003550.fits
+   - lbcb.20200125.003624.fits
+   - lbcb.20200125.003658.fits
+   - lbcb.20200125.003732.fits
+   - lbcb.20200125.012354.fits
+   - lbcb.20200125.013053.fits
+   - lbcb.20200125.013410.fits
+   - lbcb.20200125.013530.fits
+   - lbcb.20200125.013644.fits
+   - lbcb.20200125.013808.fits
+   - lbcb.20200125.013925.fits
+   - lbcb.20200125.014505.fits
+   - lbcb.20200125.015005.fits
+   - lbcb.20200125.015144.fits
+   - lbcb.20200125.015333.fits
+   - lbcb.20200125.015914.fits
+   - lbcb.20200125.020315.fits
+   - lbcb.20200125.020445.fits
+   - lbcb.20200125.020614.fits
+   - lbcb.20200125.020739.fits
+   - lbcb.20200125.020901.fits
+   - lbcb.20200125.021027.fits
+   - lbcb.20200125.021151.fits
+   - lbcb.20200125.021321.fits
+   - lbcb.20200125.021443.fits
+   - lbcb.20200125.021822.fits
+   - lbcb.20200125.022826.fits
+   - lbcb.20200125.022955.fits
+   - lbcb.20200125.023123.fits
+   - lbcb.20200125.023335.fits
+   - lbcb.20200125.023751.fits
+   - lbcb.20200125.024136.fits
+   - lbcb.20200125.024526.fits
+   - lbcb.20200125.024908.fits
+   - lbcb.20200125.025258.fits
+   - lbcb.20200125.025834.fits
+   - lbcb.20200125.030009.fits
+   - lbcb.20200125.030142.fits
+   - lbcb.20200125.030312.fits
+   - lbcb.20200125.030447.fits
+   - lbcb.20200125.030617.fits
+   - lbcb.20200125.031242.fits
+   - lbcb.20200125.031425.fits
+   - lbcb.20200125.031556.fits
+   - lbcb.20200125.032427.fits
+   - lbcb.20200125.032603.fits
+   - lbcb.20200125.032738.fits
+   - lbcb.20200125.081359.fits

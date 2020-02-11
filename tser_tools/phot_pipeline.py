@@ -24,7 +24,6 @@ import astropy.units as u
 import pdb
 from copy import deepcopy
 import yaml
-import os
 import warnings
 from scipy.stats import binned_statistic
 from scipy.interpolate import UnivariateSpline, LSQUnivariateSpline
@@ -120,7 +119,7 @@ class phot:
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
-                         'dateFormat': 'Two Part'}
+                         'dateFormat': 'Two Part','copyCentroidFile': None}
         
 
         for oneKey in defaultParams.keys():
@@ -248,12 +247,18 @@ class phot:
 
         showApPos = self.get_default_cen(custPos=custPos)
         if showAps == True:
-            self.srcApertures.plot(ax=ax)
+            apsShow = deepcopy(self.srcApertures)
+            apsShow.positions = showApPos
+            
+            
+            apsShow.plot(ax=ax)
             if self.param['bkgSub'] == True:
-                self.bkgApertures.plot(ax=ax)
+                backApsShow = deepcopy(self.bkgApertures)
+                backApsShow.positions = showApPos
+                backApsShow.plot(ax=ax)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
-            ax.scatter(self.xCoors, self.yCoors, s=rad, facecolors='none', edgecolors='r')
+            ax.scatter(showApPos[:,0],showApPos[:,1], s=rad, facecolors='none', edgecolors='r')
             
             outName = 'st_labels_{}.pdf'.format(self.dataFileDescrip)
         
@@ -280,7 +285,8 @@ class phot:
                     bbox_inches='tight')
         plt.close(fig)
 
-    def showStamps(self,img=None,head=None,custPos=None,custFWHM=None):
+    def showStamps(self,img=None,head=None,custPos=None,custFWHM=None,
+                   vmin=None,vmax=None,showPlot=False,boxsize=None):
         """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
@@ -290,7 +296,8 @@ class phot:
         
         img, head = self.get_default_im(img=img,head=head)
         
-        boxsize = self.param['boxFindSize']
+        if boxsize == None:
+            boxsize = self.param['boxFindSize']
         
         showApPos = self.get_default_cen(custPos=custPos)
         
@@ -302,7 +309,20 @@ class phot:
             
             stamp = img[yStamp[0]:yStamp[1],xStamp[0]:xStamp[1]]
             
-            imData = ax.imshow(stamp,cmap='viridis',vmin=0,vmax=1.2e4,interpolation='nearest')
+            if vmin == None:
+                useVmin = np.nanpercentile(stamp,1)
+            else:
+                useVmin = vmin
+            
+            if vmax == None:
+                useVmax = np.nanpercentile(stamp,99)
+            else:
+                useVmax = vmax
+            
+            
+            imData = ax.imshow(stamp,cmap='viridis',vmin=useVmin,vmax=useVmax,interpolation='nearest')
+            ax.invert_yaxis()
+            
             ax.set_title(self.srcNames[ind])
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
@@ -310,6 +330,12 @@ class phot:
             circ = plt.Circle((srcX,srcY),
                               self.param['apRadius'],edgecolor='red',facecolor='none')
             ax.add_patch(circ)
+            if self.param['bkgSub'] == True:
+                for oneRad in [self.param['backStart'],self.param['backEnd']]:
+                    
+                    circ = plt.Circle((srcX,srcY),
+                                      oneRad,edgecolor='blue',facecolor='none')
+                    ax.add_patch(circ)
             
             if custFWHM is not None:
                 circFWHM = plt.Circle((srcX,srcY),
@@ -332,9 +358,11 @@ class phot:
             #ax.set_xlim(onePos[0] - boxsize,onePos[0] + boxsize)
             #ax.set_ylim(onePos[1] - boxsize,onePos[1] + boxsize)
         
-            
-        fig.show()
+        if showPlot == True:
+            fig.show()
+        
         fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
+        plt.close(fig)
         
     def showCustSet(self,index=None,ptype='Stamps',defaultCen=False):
         """ Show a custom stamp or star identification plot for a given image index 
@@ -363,7 +391,7 @@ class phot:
         if ptype == 'Stamps':
             self.showStamps(custPos=cen,img=img,head=head)
         elif ptype == 'Map':
-            self.showStarChoices(custPos=cen,img=img,head=head)
+            self.showStarChoices(custPos=cen,img=img,head=head,showAps=True)
         else:
             print('Unrecognized plot type')
             
@@ -379,8 +407,21 @@ class phot:
         
         return hduFileNames
     
-    def save_centroids(self,cenArr,fwhmArr):
-        """ Saves the image centroid data"""
+    def save_centroids(self,cenArr,fwhmArr,fixesApplied=True,origCen=None,origFWHM=None):
+        """ Saves the image centroid data
+        Parameters
+        -----------
+        cenArr: numpy array
+            3d array of centroids (nImg x nsrc x 2 for x/y)
+        fwhmArr: numpy array
+            3d array of fwhm (nImg x nsrc x 2 for x/y)
+        fixesApplied: bool
+            Are fixes applied to the centroids?
+        origCen: None or numpy array
+            Original array of centroids
+        origFWHM: None or numpy array
+            Original array of FWHMs
+        """
         hdu = fits.PrimaryHDU(cenArr)
         hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with centroids')
         hdu.header['NIMG'] = (self.nImg,'Number of images')
@@ -389,6 +430,7 @@ class phot:
         hdu.header['AXIS3'] = ('image','image axis')
         hdu.header['BOXSZ'] = (self.param['boxFindSize'],'half-width of the box used for source centroids')
         hdu.header['REFCENS'] = (self.param['refPhotCentering'],'Reference Photometry file used to shift the centroids (or empty if none)')
+        hdu.header['FIXES'] = (fixesApplied, 'Have centroid fixes been applied from trends in other sources?')
         hdu.name = 'Centroids'
         
         hdu2 = fits.ImageHDU(fwhmArr)
@@ -403,6 +445,18 @@ class phot:
         hduFileNames = self.make_filename_hdu()
         
         HDUList = fits.HDUList([hdu,hdu2,hduFileNames])
+        
+        if fixesApplied == True:
+            if origCen is not None:
+                hduCenOrig = fits.ImageHDU(origCen,hdu.header)
+                hduCenOrig.header['FIXES'] = ('Unknown','Have centroid fixes been applied from trends in other sources?')
+                hduCenOrig.name = 'ORIG CEN'
+                HDUList.append(hduCenOrig)
+            if origFWHM is not None:
+                hduFWHMOrig = fits.ImageHDU(origFWHM,hdu2.header)
+                hduFWHMOrig.name = 'ORIG FWHM'
+                HDUList.append(hduFWHMOrig)
+        
         HDUList.writeto(self.centroidFile,overwrite=True)
         
         head = hdu.header
@@ -444,6 +498,68 @@ class phot:
         fwhmArr = np.zeros_like(cenArr)
         return cenArr, fwhmArr
     
+    def fix_centroids(self,diagnostics=False,nsigma=10.):
+        """
+        Fix the centroids for outlier positions for stars
+        """
+        HDUList = fits.open(self.centroidFile)
+        cenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
+        fwhmArr, headFWHM = HDUList["FWHM"].data, HDUList["FWHM"].header
+        
+        fixedCenArr = deepcopy(cenArr)
+        fixedFWHMArr = deepcopy(fwhmArr)
+        
+        medCen = np.nanmedian(cenArr,0)
+        medCen3D = np.tile(medCen,[self.nImg,1,1])
+        
+        diffCen = cenArr - medCen3D ## differential motion
+        fixedDiffCen = deepcopy(diffCen)
+        
+        if diagnostics == True:
+            fig, axArr = plt.subplots(2,sharex=True)
+        
+        for oneAxis in [0,1]:
+            trend = np.nanmedian(diffCen[:,:,oneAxis],1) ## median trend
+            trend2D = np.tile(trend,[self.nsrc,1]).transpose()
+            diffFromTrend = diffCen[:,:,oneAxis] - trend2D
+            mad = np.nanmedian(np.abs(diffFromTrend))
+            
+            badPt = np.abs(diffFromTrend) > nsigma * mad
+            fixedDiffFromTrend = deepcopy(diffFromTrend)
+            fixedDiffFromTrend[badPt] = 0
+            fwhmArr2D = fixedFWHMArr[:,:,oneAxis]
+            fwhmArr2D[badPt] = np.nan ## w/ different position FWHM is no longer relvant
+            fixedFWHMArr[:,:,oneAxis] = fwhmArr2D
+            
+            fixedDiffCen[:,:,oneAxis] = fixedDiffFromTrend + trend2D
+            
+            if diagnostics == True:
+                for oneSrc in np.arange(self.nsrc):
+                    showData, = axArr[oneAxis].plot(diffCen[:,oneSrc,oneAxis],'o')
+                    axArr[oneAxis].plot(fixedDiffCen[:,oneSrc,oneAxis],color=showData.get_color())
+        
+        fixedCenArr = fixedDiffCen + medCen3D
+        
+        if diagnostics == True:
+            plt.show()
+        
+        self.save_centroids(fixedCenArr,fixedFWHMArr,fixesApplied=True,origCen=cenArr,origFWHM=fwhmArr)
+        
+        HDUList.close()
+    
+    def copy_centroids_from_file(self,fileName):
+        HDUList = fits.open(fileName)
+        cenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
+        if "FWHM" in HDUList:
+            fwhmArr, headFWHM = HDUList["FWHM"].data, HDUList["FWHM"].header
+            self.keepFWHM = True
+        else:
+            self.keepFWHM = False ## allow for legacy centroid files
+            fwhmArr, headFWHM = None, None
+        
+        HDUList.close()
+        return cenArr, head, fwhmArr, headFWHM
+    
     def get_allimg_cen(self,recenter=False,useMultiprocessing=False):
         """ Get all image centroids
         If self.param['doCentering'] is False, it will just use the input aperture positions 
@@ -457,17 +573,10 @@ class phot:
         
         ndim=2 ## Number of dimensions in image (assuming 2D)
         
-            
         if os.path.exists(self.centroidFile) and (recenter == False):
-            HDUList = fits.open(self.centroidFile)
-            cenArr, head = HDUList["CENTROIDS"].data, HDUList["CENTROIDS"].header
-            if "FWHM" in HDUList:
-                fwhmArr, headFWHM = HDUList["FWHM"].data, HDUList["FWHM"].header
-                self.keepFWHM = True
-            else:
-                self.keepFWHM = False ## allow for legacy centroid files
-            
-            HDUList.close()
+            cenArr, head, fwhmArr, headFWHM = self.copy_centroids_from_file(self.centroidFile)
+        elif (self.param['copyCentroidFile'] is not None) and (recenter == False):
+            cenArr, head, fwhmArr, headFWHM = self.copy_centroids_from_file(self.param['copyCentroidFile'])
         elif self.param['refPhotCentering'] is not None:
             cenArr, fwhmArr = self.shift_centroids_from_other_file(self.param['refPhotCentering'])
             head, headFWHM = self.save_centroids(cenArr,fwhmArr)
@@ -695,7 +804,7 @@ class phot:
         srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
         
         
-        return [t0.jd,srcPhot,srcPhotErr]
+        return [t0.jd,srcPhot,srcPhotErr, bkgVals]
     
     def return_self(self):
         return self
@@ -707,6 +816,7 @@ class phot:
         
         photArr = np.zeros((self.nImg,self.nsrc))
         errArr = np.zeros_like(photArr)
+        backArr = np.zeros_like(photArr)
         
         jdArr = []
         
@@ -724,6 +834,7 @@ class phot:
             jdArr.append(val[0])
             photArr[ind,:] = val[1]
             errArr[ind,:] = val[2]
+            backArr[ind,:] = val[3]
             
         ## Save the photometry results
         hdu = fits.PrimaryHDU(photArr)
@@ -731,6 +842,8 @@ class phot:
         hdu.header['NIMG'] = (self.nImg,'Number of images')
         hdu.header['AXIS1'] = ('src','source axis')
         hdu.header['AXIS2'] = ('image','image axis')
+        basicHeader = deepcopy(hdu.header)
+        
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
         hdu.header['SRCGEOM'] = (self.param['srcGeometry'], 'Source Aperture Geometry')
@@ -767,8 +880,12 @@ class phot:
         hduTime = fits.ImageHDU(jdArr)
         hduTime.header['UNITS'] = ('days','JD time, UT')
         
-        hduErr = fits.ImageHDU(data=errArr)
+        hduErr = fits.ImageHDU(data=errArr,header=basicHeader)
         hduErr.name = 'Phot Err'
+        
+        hduBack = fits.ImageHDU(data=backArr,header=basicHeader)
+        hduBack.name = 'Backg Phot'
+        
         hduCen = fits.ImageHDU(data=self.cenArr,header=self.cenHead)
         
         hdu.name = 'Photometry'
@@ -781,7 +898,7 @@ class phot:
         hduOrigHeader = fits.ImageHDU(None,exHeader)
         hduOrigHeader.name = 'Orig Header'
         
-        HDUList = fits.HDUList([hdu,hduErr,hduTime,hduCen,hduFileNames,hduOrigHeader])
+        HDUList = fits.HDUList([hdu,hduErr,hduBack,hduTime,hduCen,hduFileNames,hduOrigHeader])
         
         if self.keepFWHM == True:
             hduFWHM = fits.ImageHDU(self.fwhmArr,header=self.headFWHM)
@@ -791,7 +908,8 @@ class phot:
         warnings.resetwarnings()
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
-                  normReg=None,doBin=None,doNorm=True,yLim=[None,None]):
+                  normReg=None,doBin=None,doNorm=True,yLim=[None,None],
+                  excludeSrc=None,errBar=None):
         """ Plots previously calculated photometry 
         Parameters
         ---------------------
@@ -815,10 +933,15 @@ class phot:
             Normalize the individual time series?
         yLim: List
             List of Y limit to show
+        excludeSrc: List or None
+            Custom sources to exclude in the averaging (to exclude specific sources in the reference time series)
+              For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
+        
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
         head = photHDU.header
         
         jdHDU = HDUList['TIME']
@@ -831,7 +954,7 @@ class phot:
             fig, ax = plt.subplots()
         
         if refCorrect == True:
-            yCorrected = self.refSeries(photArr)
+            yCorrected, yCorrected_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
             x = jdArr - jdRef
             if normReg == None:
                 yShow = yCorrected
@@ -841,7 +964,17 @@ class phot:
                 yBase = np.polyval(polyBase,x)
                 
                 yShow = yCorrected / yBase
-            ax.plot(x,yShow,label='data',marker='o',linestyle='',markersize=3.)
+                
+            if errBar == 'all':
+                ax.errorbar(x,yShow,label='data',marker='o',linestyle='',markersize=3.,yerr=yCorrected_err)
+            else:
+                ax.plot(x,yShow,label='data',marker='o',linestyle='',markersize=3.)
+            
+                madY = np.nanmedian(np.abs(yShow - np.nanmedian(yShow)))
+                if errBar == 'one':
+                    ax.errorbar([np.median(x)],[np.median(yShow) - 4. * madY],
+                                yerr=np.median(yCorrected_err),fmt='o',mfc='none')
+            #pdb.set_trace()
             
             if doBin is not None:
                 minValue, maxValue = 0.98, 1.02 ## clip for cosmic rays
@@ -907,15 +1040,76 @@ class phot:
         HDUList.close()
         plt.close(fig)
     
-    def refSeries(self,photArr,reNorm=False,custSrc=None,sigRej=5.):
+    def plot_state_params(self,excludeSrc=None):
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        head = photHDU.header
+        errArr = HDUList['PHOT ERR'].data
+        
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        t = jdArr - np.round(np.min(jdArr))
+        timeHead = jdHDU.header
+        
+        cenData = HDUList['CENTROIDS'].data
+        fwhmData = HDUList['FWHM'].data
+        
+        fig, axArr = plt.subplots(6,sharex=True)
+        yCorr, yCorr_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
+        axArr[0].plot(t,yCorr)
+        axArr[0].set_ylabel('Ref Cor F')
+        
+        
+        for oneSrc in range(self.nsrc):
+            yFlux = photArr[:,oneSrc]
+            axArr[1].plot(t,yFlux / np.median(yFlux))
+            axArr[1].set_ylabel('Norm Flux')
+            xCen = cenData[:,oneSrc,0]
+            axArr[2].plot(t,xCen - np.median(xCen))
+            axArr[2].set_ylabel('X Pos')
+            yCen = cenData[:,oneSrc,1]
+            axArr[3].plot(t,yCen - np.median(yCen))
+            axArr[3].set_ylabel('Y Pos')
+            fwhm1 = fwhmData[:,oneSrc,0]
+            axArr[4].plot(t,np.abs(fwhm1))
+            axArr[4].set_ylabel('FWHM 1')
+            fwhm2 = fwhmData[:,oneSrc,1]
+            axArr[5].plot(t,np.abs(fwhm1))
+            axArr[5].set_ylabel('FWHM 2')
+        
+        fig.show()
+    
+    def plot_flux_vs_pos(self):
+        """
+        Plot flux versus centroid to look for flat fielding effects
+        """
+        HDUList = fits.open(self.photFile)
+        yNorm, yErrNorm = self.refSeries(HDUList['PHOTOMETRY'].data,HDUList['PHOT ERR'].data)
+        cenX = HDUList['CENTROIDS'].data[:,0,0]
+        cenY = HDUList['CENTROIDS'].data[:,0,1]
+        
+        fig, axArr = plt.subplots(1,2,sharey=True,figsize=(9,4.5))
+        
+        for ind,oneDir, coord in zip([0,1],['X','Y'],[cenX,cenY]):
+            axArr[ind].plot(coord,yNorm,'o')
+            axArr[ind].set_xlabel('{} (px)'.format(oneDir))
+            axArr[ind].set_ylabel('Norm F')
+        
+        #yPoly = 
+        
+        fig.show()
+    
+    def refSeries(self,photArr,errPhot,reNorm=False,excludeSrc=None,sigRej=5.):
         """ Average together the reference stars
         Parameters
         -------------
         reNorm: bool
             Re-normalize all stars before averaging? If set all stars have equal weight
             Otherwise, the stars are summed together, which weights by flux
-        custSrc: arr
-            Custom sources to use in the averaging (to include/exclude specific sources)
+        excludeSrc: arr
+            Custom sources to use in the averaging (to exclude specific sources in the reference time series
+                For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
         sigRej: int
             Sigma rejection threshold
         """
@@ -923,22 +1117,27 @@ class phot:
         
         srcArray = np.arange(self.nsrc,dtype=np.int)
         
-        if custSrc == None:
-            refArrayTruth = (srcArray == 0)
+        if excludeSrc == None:
+            maskOut = (srcArray == 0)
         else:
-            refArrayTruth = np.ones(self.nrc,dtype=np.bool)
-            for ind, oneSrc in enumerate(custSrc):
-                if oneSrc in srcArray:
-                    refArrayTruth[ind] = False
+            maskOut = np.zeros(self.nsrc,dtype=np.bool)
+            maskOut[0] = True
+            for oneSrc in excludeSrc:
+                if (oneSrc < 0) | (oneSrc >= self.nsrc):
+                    pdb.set_trace()
+                    raise Exception("{} is an invalid source among {}".format(oneSrc,self.nsrc))
+                else:
+                    maskOut[oneSrc] = True
         
-        refMask = np.tile(refArrayTruth,(self.nImg,1))
-        refPhot = np.ma.array(photArr,mask=refMask)
+        refMask2D = np.tile(maskOut,(self.nImg,1))
+        refPhot = np.ma.array(photArr,mask=refMask2D)
         
         ## Normalize all time series
         norm1D = np.nanmedian(photArr,axis=0)
         norm2D = np.tile(norm1D,(self.nImg,1))
         
         normPhot = refPhot / norm2D
+        normErr = errPhot / norm2D
         
         ## Find outliers
         # Median time series
@@ -952,12 +1151,14 @@ class phot:
         # Points that deviate above threshold
         badP = (absDeviation > sigRej * np.ones((self.nImg,self.nsrc),dtype=np.float) * MADphot)
         
-        normPhot.mask = refMask | badP
-        refPhot.mask = refMask | badP
+        normPhot.mask = refMask2D | badP
+        refPhot.mask = refMask2D | badP
         
         if reNorm == True:
             ## Weight all stars equally
             combRef = np.nanmean(normPhot,axis=1)
+            combErr = np.sqrt(np.nansum(normErr**2,axis=1)) / (self.nsrc - np.sum(maskOut))
+            
         else:
             ## Weight by the flux, but only for the valid points left
             weights = np.ma.array(norm2D,mask=normPhot.mask)
@@ -966,10 +1167,14 @@ class phot:
             weightSums2D = np.tile(weightSums1D,(self.nsrc,1)).transpose()
             weights = weights / weightSums2D
             combRef = np.nansum(normPhot * weights,axis=1)
+            combErr = np.sqrt(np.nansum((errPhot * weights)**2,axis=1)) / (self.nsrc - np.sum(maskOut))
         
         yCorrected = photArr[:,0] / combRef
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
-        return yCorrNorm
+        
+        yErrNorm = np.sqrt(normErr[:,0]**2 + (combRef / combErr)**2)
+        
+        return yCorrNorm, yErrNorm
 
     def getImg(self,path):
         """ Load an image from a given path and extensions"""
@@ -1016,6 +1221,7 @@ class phot:
         ## Grab the metadata from the header
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
         head = photHDU.header
         head.pop('NAXIS')
         head.pop('NAXIS1')
@@ -1029,7 +1235,7 @@ class phot:
         jdArr = jdHDU.data
         
         t['Time'] = jdArr
-        t['Y Corrected'] = self.refSeries(photArr)
+        t['Y Corrected'], yCorrErr = self.refSeries(photArr,errArr)
         
         if 'PHOT ERR' in HDUList:
             ## Error from the photometry point
@@ -1047,7 +1253,7 @@ class batchPhot:
     Create several photometry objects and run phot over all of them
     """
     def __init__(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
-        self.alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1}
+        self.alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1,'excludeList': 1}
         self.general_init(batchFile=batchFile)
     
     def general_init(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
@@ -1304,6 +1510,147 @@ def allTser(refCorrect=False,showBestFit=False):
     else:
         fig.savefig('plots/photometry/tser_allstar/all_kic1255.pdf')
 
+
+def do_binning(x,y,nBin=20):
+    """
+    A function that uses scipy binned_statistic to bin data
+
+    It also calculates the standard error in each bin,
+    which can be used as an error estimate
+
+    Parameters:
+    --------------
+    x: numpy array
+        Independent variable for use in assigning data to bins
+    y: numpy array
+        Dependent variable to be binned
+
+    Outputs:
+    -------------
+    3 item tuple:
+    xBin, yBin, yStd
+
+    xBin: numpy array
+        Middles of the bins
+    yBin: numpy array
+        mean value in bin
+    yStd: numpy array
+        standard error of each bin
+    """
+    yBins = Table()
+    for oneStatistic in ['mean','std','count']:
+        yBin, xEdges, binNum = binned_statistic(x,y,
+                                                statistic=oneStatistic,bins=nBin)
+        yBins[oneStatistic] = yBin
+
+    ## Standard error in the mean
+    stdErrM = yBins['std'] / np.sqrt(yBins['count'])
+    xShow = (xEdges[:-1] + xEdges[1:])/2.
+    yShow = yBins['mean']
+    yErrShow = stdErrM
+
+    return xShow, yShow, yErrShow
+
+def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
+                   binMin=50,binMax=2000,customShortName=None,
+                   logPlot=True,clip=False,xUnit='min',
+                   yUnit='ppm'):
+    """
+    Make an Allan Variance plot for a time series
+    to see if it bins as sqrt(N) statistics
+    
+    Parameters
+    ------------
+    x: numpy array
+        Independent variable
+    y: numpy array
+        Dependent variable like flux
+    (optional keywords)
+    yerr: numpy array
+        Theoretical error
+    customShortName: str
+        Name for file
+    yLim: 2 element list
+        Specify custom Y values for the plot
+    binMin: int
+        Bin size for the smallest # of bins
+    binMax: int
+        Bin size for the largest # of bins
+    removeLinear: bool
+        Remove a linear trend from the time series first?
+    clip: bool
+        Clip the first few points?
+    xUnit: str
+        Name of units for X axis of input series
+    yUnit: str
+        Name of units for Y axis to be binned
+    """
+
+    if clip == True:
+        x = x[2:]
+        y = y[2:]
+        if yerr is not None:
+            y = y[2:]
+        print("clipping to {} points".format(len(x)))
+
+    if removeLinear == True:
+        yPoly = robust_poly(x,y,1)
+        ymod = np.polyval(yPoly,x)
+        y = y / ymod
+    
+    nPt = len(y)
+    
+    logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),20)
+    binNums = np.array(10**logBinNums,dtype=np.int)
+    
+    binSizes, stds, theoNoise, wNoise = [], [], [], []
+    
+    if yerr is not None:
+        theoNoiseNoBin = np.median(yerr)
+    else:
+        theoNoiseNoBin = np.nan
+    
+    cadence = np.median(np.diff(x))
+    whiteNoiseStart = np.std(y)
+    
+    for oneBin in binNums:
+        xBin,yBin,yBinErr = do_binning(x,y,nBin=oneBin)
+        binSize = np.median(np.diff(xBin))
+        nAvg = binSize/cadence
+        
+        stds.append(np.std(yBin))
+        binSizes.append(binSize)
+        theoNoise.append(theoNoiseNoBin / np.sqrt(nAvg))
+        wNoise.append(whiteNoiseStart / np.sqrt(nAvg))
+
+    ## do the unbinned Allan variance
+    stds.append(whiteNoiseStart)
+    binSizes.append(cadence)
+    theoNoise.append(theoNoiseNoBin)
+    wNoise.append(whiteNoiseStart)
+
+
+    ## only Use finite values (ignore NaNs where binning isn't possible)
+    usePts = np.isfinite(stds)
+
+    fig, ax = plt.subplots(figsize=(5,4))
+    if logPlot == True:
+        ax.loglog(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
+    else:
+        ax.semilogx(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
+    ax.plot(binSizes,theoNoise,label='Read + Photon Noise')
+    ax.plot(binSizes,wNoise,label='White noise scaling')
+    ax.set_xlabel('Bin Size ({})'.format(xUnit))
+    ax.set_ylabel('$\sigma$ ({})'.format(yUnit))
+    ax.set_ylim(yLim)
+    ax.legend()
+    ax.set_title("Allan Variance (Linear De-trend = {})".format(removeLinear))
+    fig.savefig('plots/allan_variance/all_var_{}_removelinear_{}.pdf'.format(customShortName,removeLinear),
+                bbox_inches='tight')
+    
+    
+    plt.close(fig)
+
 def test_centroiding(useMultiprocessing=True):
     photObj = phot()
     photObj.fileL = photObj.fileL[0:30]; photObj.nImg = 30; photObj.param['doCentering'] = True
@@ -1382,17 +1729,61 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
         goodp = finitep ## Start with the finite points
         
     for iter in range(iteration):
-        if np.sum(goodp) < polyord:
+        if (useSpline == True) & (knots is not None):
+            pointsThreshold = len(knots) + polyord
+        else:
+            pointsThreshold = polyord
+        
+        if np.sum(goodp) < pointsThreshold:
             warntext = "Less than "+str(polyord)+"points accepted, returning flat line"
             warnings.warn(warntext)
-            coeff = np.zeros(polyord)
-            coeff[0] = 1.0
+            
+            if useSpline == True:
+                spl = UnivariateSpline([0,1,2],[0,0,0],k=1)
+            else:
+                coeff = np.zeros(polyord)
+                coeff[0] = 1.0
         else:
             if useSpline == True:
+                
                 if knots is None:
                     spl = UnivariateSpline(x[goodp], y[goodp], k=polyord, s=sSpline)
                 else:
-                    spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
+                    try:
+                        spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
+                    except ValueError as inst:
+                        knownFailures = ((str(inst) == 'Interior knots t must satisfy Schoenberg-Whitney conditions') | 
+                                         ("The input parameters have been rejected by fpchec." in str(inst)))
+                        if knownFailures:
+                            warnings.warn("Spline fitting failed because of Schoenberg-Whitney conditions. Trying to eliminate knots without sufficient data")
+                            
+                            if plotEachStep == True:
+                                plt.plot(x[goodp],y[goodp],'o',label='data')
+                                plt.plot(knots,np.ones_like(knots) * np.median(y[goodp]),'o',label='knots',markersize=10)
+                            
+                            keepKnots = np.zeros_like(knots,dtype=np.bool)
+                            nKnots = len(knots)
+                            for ind,oneKnot in enumerate(knots):
+                                if ind == 0:
+                                    if np.sum(x[goodp] < oneKnot) > 0:
+                                        keepKnots[ind] = True
+                                elif ind == nKnots - 1:
+                                    if np.sum(x[goodp] > oneKnot) > 0:
+                                        keepKnots[ind] = True
+                                else:
+                                    pointsTest = ((np.sum((x[goodp] > knots[ind-1]) & (x[goodp] < oneKnot)) > 0 ) &
+                                                  (np.sum((x[goodp] > oneKnot) & (x[goodp] < knots[ind+1])) > 0 ))
+                                    if pointsTest == True:
+                                        keepKnots[ind] = True
+                            if plotEachStep == True:
+                                plt.plot(knots[keepKnots],np.ones_like(knots[keepKnots]) * np.median(y[goodp]),'o',label='knots to keep')
+                                plt.show()
+                            
+                            knots = knots[keepKnots] 
+                            spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
+                            
+                        else:
+                            raise inst
                 ymod = spl(x)
             else:
                 coeff = np.polyfit(x[goodp],y[goodp],polyord)

@@ -1,11 +1,13 @@
 import glob
 from ccdproc import Combiner, CCDData, ccd_process, gain_correct
+import ccdproc
 import yaml
 import os
 from astropy.io import fits
 import astropy.units as u
 import numpy as np
 import pdb
+import warnings
 
 defaultParamFile = 'parameters/reduction_parameters/example_reduction_parameters.yaml'
 class prep():
@@ -22,12 +24,18 @@ class prep():
                          'sciFiles': 'k1255*.fits', ## Science files
                          'nSkip': 2, ## number of files to skip at the beginning
                          'doBias': True, ## Calculate and apply a bias correction?
-                         'doFlat': True,
+                         'doFlat': True, ## Calculate and apply a flat field correction
+                         'doBadPxMask': False, ## Appply a bad pixel mask?
+                         'doFlatBias': False, ## use a specific bias or dark for the flat field
+                         'darksForFlat': None, ## dark frames for master flat frame
                          'gainKeyword': 'GAIN1', ## Calculate and apply a flat correction?
                          'gainValue': None,## manually specify the gain, if not in header
                          'procName': 'proc', ## directory name for processed files
                          'doNonLin': False, ## apply nonlinearity correction?
-                         'nonLinFunction': None ## non-linearity function
+                         'nonLinFunction': None, ## non-linearity function
+                         'sciExtension': None, ## extension for science data
+                         'sciExcludeList': None, ## list of files to exclude for science data
+                         'fixWindow': False ## fix the window between bias, flat & science?
                      } 
         
         for oneKey in defaultParams.keys():
@@ -62,9 +70,13 @@ class prep():
         if self.pipePrefs['doFlat'] == True:
             allCals.append('flatFiles')
         
-        for oneCal in allCals:
+        if self.pipePrefs['doFlatBias'] == True:
+            allCals.append('darksForFlat')
         
-            fileL = glob.glob(os.path.join(self.rawDir,self.pipePrefs[oneCal]))
+        for oneCal in allCals:
+            fileSearchInfo = self.pipePrefs[oneCal]
+            fileL = self.get_fileL(fileSearchInfo)
+            
             if self.testMode == True:
                 fileL = fileL[0:4]
             
@@ -91,6 +103,8 @@ class prep():
             
             if oneCal == 'biasFiles':
                 outName = 'zero'
+            elif oneCal == 'darksForFlat':
+                outName = 'dark_for_flat'
             else:
                 outName = 'flat'
             HDUList.writeto(os.path.join(self.procDir,'master_'+outName+'.fits'),overwrite=True)
@@ -103,10 +117,33 @@ class prep():
         else:
             gain = 1.0
         return gain
-
+    
+    def get_fileL(self,fileSearchInfo,searchType='generic'):
+        """
+        Search for a list of files
+        Tests out if the user put in a string w/ wildcard or a list of files
+        """
+        if type(fileSearchInfo) == list:
+            fileL = []
+            for oneFile in fileSearchInfo:
+                fileL.append(os.path.join(self.rawDir,oneFile))
+        else:
+            fileL = np.sort(glob.glob(os.path.join(self.rawDir,fileSearchInfo)))
+            
+        if (self.pipePrefs['sciExcludeList'] is not None) & (searchType == 'science'):
+            outList = []
+            
+            for oneFile in fileL:
+                if os.path.basename(oneFile) not in self.pipePrefs['sciExcludeList']:
+                    outList.append(oneFile)
+        else:
+            outList = fileL
+        return outList
+    
+    
     def procSciFiles(self):
         """ Process the science images """
-        fileL = glob.glob(os.path.join(self.rawDir,self.pipePrefs['sciFiles']))
+        fileL = self.get_fileL(self.pipePrefs['sciFiles'],searchType='science')
         if self.testMode == True:
             fileL = fileL[0:4]
         
@@ -117,18 +154,49 @@ class prep():
         
         if self.pipePrefs['doFlat'] == True:
             hflat, flat = self.getData(os.path.join(self.procDir,'master_flat.fits'))
+            
+            if self.pipePrefs['doFlatBias'] == True:
+                hFlatDark, flatDark = self.getData(os.path.join(self.procDir,'master_dark_for_flat.fits'))
+                flat = ccdproc.subtract_bias(flat,flatDark)
+            
         else:
             hflat, flat = None, None
         
+        if self.pipePrefs['doBadPxMask'] == True:
+            badPx = fits.getdata(os.path.join(self.procDir,'master_badpx_mask.fits'))
+        else:
+            hbadPx, badPx = None, None
         
-        for oneFile in fileL:
+        for ind,oneFile in enumerate(fileL):
             head, dataCCD = self.getData(oneFile)
             
+            sciHead = fits.getheader(oneFile,ext=self.pipePrefs['sciExtension'])
+            if ('CCDSEC' in sciHead) & (self.pipePrefs['fixWindow'] == True):
+                yFix =  np.array(sciHead['CCDSEC'].split(',')[1].split(']')[0].split(':'),dtype=np.int) - 1
+                
+                if flat is not None:
+                    useFlat = flat[yFix[0]:yFix[1]+1]
+                    if ind == 0:
+                        flatSave = fits.PrimaryHDU(useFlat)
+                        flatSave.writeto('diagnostics/trimmed_flat/trimmed_flat.fits',overwrite=True)
+                if bias is not None:
+                    useBias = bias[yFix[0]:yFix[1]+1]#ccdproc.trim_image(bias,sciHead['CCDSEC'])
+                    
+            else:
+                useFlat = flat
+                useBias = bias
+            
+            
             nccd = ccd_process(dataCCD,gain=self.get_gain(head) * u.electron/u.adu,
-                               master_flat=flat,
-                               master_bias=bias)
+                               master_flat=useFlat,
+                               master_bias=useBias,
+                               bad_pixel_mask=badPx)
+            
+            nccd.data[nccd.mask] = np.nan
+            
             head['ZEROFILE'] = 'master_zero.fits'
             head['FLATFILE'] = 'master_flat.fits'
+            head['BADPXFIL'] = 'master_badpx_mask.fits'
             head['GAINCOR'] = ('T','Gain correction applied (units are e)')
             head['BUNIT'] = ('electron','Physical unit of array values')
             hdu = fits.PrimaryHDU(data=nccd,header=head)
@@ -157,7 +225,19 @@ class prep():
     def getData(self,fileName):
         """ Gets the data and converts to CCDData type"""
         HDUList = fits.open(fileName)
-        data = HDUList[0].data
+        if self.pipePrefs['sciExtension'] is None:
+            sciExtension = 0
+        else:
+            if ('master_flat' in fileName) | ('master_zero' in fileName):
+                sciExtension = 0
+            else:
+                sciExtension = self.pipePrefs['sciExtension']
+        
+        if sciExtension >= len(HDUList):
+            print('No extension {} for {}. Trying 0'.format(sciExtension,fileName))
+            sciExtension = 1
+        
+        data = HDUList[sciExtension].data
         head = HDUList[0].header
         HDUList.close()
         
@@ -171,7 +251,11 @@ class prep():
         
         if self.check_if_nonlin_needed(head) == True:
             if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
-                data = lbt_luci2_lincor(data,ndit=head['NDIT'],dataUnit=outUnit)
+                if 'NDIT' not in head:
+                    print("No NDIT found for {} so no non-linearity correction applied".format(fileName))
+                    data = data
+                else:
+                    data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'])
             else:
                 raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
             head['LINCOR'] = (True, "Is a non-linearity correction applied?")
@@ -179,10 +263,14 @@ class prep():
         else:
             head['LINCOR'] = (False, "Is a non-linearity correction applied?")
         
-        outData = CCDData(data,unit=outUnit)
+        try:
+            outData = CCDData(data,unit=outUnit)
+        except TypeError as err1:
+            pdb.set_trace()
+        
         return head, outData
 
-def lbt_luci2_lincor(img,ndit,dataUnit=u.adu):
+def lbt_luci2_lincor(img,dataUnit=u.adu,ndit=1.0):
     """
     LUCI2 linearity correction from 
     https://sites.google.com/a/lbto.org/luci/observing/calibrations/calibration-details
