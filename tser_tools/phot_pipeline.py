@@ -32,6 +32,13 @@ import multiprocessing
 from multiprocessing import Pool
 import time
 maxCPUs = multiprocessing.cpu_count() // 3
+try:
+    import bokeh.plotting
+    from bokeh.models import ColumnDataSource, HoverTool
+    from bokeh.models import Range1d
+    from bokeh.models import WheelZoomTool
+except ImportError as err2:
+    print("Could not import bokeh plotting. Interactive plotting may not work")
 
 def run_one_phot_method(allInput):
     """
@@ -1175,6 +1182,59 @@ class phot:
         yErrNorm = np.sqrt(normErr[:,0]**2 + (combRef / combErr)**2)
         
         return yCorrNorm, yErrNorm
+    
+    def get_refSeries(self,excludeSrc=None):
+        """
+        Get the reference-corrected time series
+        
+        Parameters
+        -----------
+        excludeSrc: list or None
+            Numbers of the reference stars to exclude
+        
+        Returns
+        --------
+        t: numpy array
+            time (JD - reference)
+        yCorr: numpy array
+            Reference-corrected time series
+        yCorr_err: numpy array
+            Reference-corrected time series error
+        """
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
+        
+        yCorr, yCorr_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        t = jdArr - np.round(np.min(jdArr))
+        
+        HDUList.close()
+        
+        return t, yCorr, yCorr_err
+        
+    def interactive_refSeries(self,excludeSrc=None):
+        t, yCorr, yCorr_err = self.get_refSeries(excludeSrc=excludeSrc)
+        outFile = "plots/photometry/interactive/refseries_{}.html".format(self.dataFileDescrip)
+        
+        fileBaseNames = []
+        fileTable = Table.read(self.photFile,hdu='FILENAMES')
+        indexArr = np.arange(len(fileTable))
+        for oneFile in fileTable['File Path']:
+            fileBaseNames.append(os.path.basename(oneFile))
+        
+        bokeh.plotting.output_file(outFile)
+        dataDict = {'t': t,'y':yCorr,'name':fileBaseNames,'ind':indexArr}
+        source = ColumnDataSource(data=dataDict)
+        p = bokeh.plotting.figure()
+        p.background_fill_color="#f5f5f5"
+        p.grid.grid_line_color="white"
+        p.circle(x='t',y='y',source=source)
+        p.add_tools(HoverTool(tooltips=[('name', '@name'),('index','@ind')]))
+        bokeh.plotting.show(p)
+        
 
     def getImg(self,path):
         """ Load an image from a given path and extensions"""
