@@ -371,7 +371,7 @@ class phot:
         fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
         plt.close(fig)
         
-    def showCustSet(self,index=None,ptype='Stamps',defaultCen=False):
+    def showCustSet(self,index=None,ptype='Stamps',defaultCen=False,vmin=None,vmax=None):
         """ Show a custom stamp or star identification plot for a given image index 
         
         Parameters
@@ -396,7 +396,7 @@ class phot:
             cen = self.cenArr[index]
         
         if ptype == 'Stamps':
-            self.showStamps(custPos=cen,img=img,head=head)
+            self.showStamps(custPos=cen,img=img,head=head,vmin=vmin,vmax=vmax)
         elif ptype == 'Map':
             self.showStarChoices(custPos=cen,img=img,head=head,showAps=True)
         else:
