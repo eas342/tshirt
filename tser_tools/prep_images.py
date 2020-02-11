@@ -171,7 +171,7 @@ class prep():
         
         if self.check_if_nonlin_needed(head) == True:
             if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
-                data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'])
+                data = lbt_luci2_lincor(data,ndit=head['NDIT'],dataUnit=outUnit)
             else:
                 raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
             head['LINCOR'] = (True, "Is a non-linearity correction applied?")
@@ -182,7 +182,7 @@ class prep():
         outData = CCDData(data,unit=outUnit)
         return head, outData
 
-def lbt_luci2_lincor(img,dataUnit=u.adu,ndit):
+def lbt_luci2_lincor(img,ndit,dataUnit=u.adu):
     """
     LUCI2 linearity correction from 
     https://sites.google.com/a/lbto.org/luci/observing/calibrations/calibration-details
