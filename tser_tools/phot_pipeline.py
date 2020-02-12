@@ -126,7 +126,8 @@ class phot:
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
-                         'dateFormat': 'Two Part','copyCentroidFile': None}
+                         'dateFormat': 'Two Part','copyCentroidFile': None,
+                         'bkgMethod': 'mean'}
         
 
         for oneKey in defaultParams.keys():
@@ -797,11 +798,27 @@ class phot:
         
         if self.param['bkgSub'] == True:
             self.bkgApertures.positions = self.cenArr[ind] + self.backgOffsetArr[ind]
-            bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
-            bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
-            bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
-        
-            ## Background subtracted fluxes
+            
+            if self.param['bkgMethod'] == 'mean':
+                bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
+                bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
+                bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+                
+                ## Background subtracted fluxes
+                srcPhot = rawPhot['aperture_sum'] - bkgVals
+            else:
+                bkgIntensity, bkgIntensityErr = [], []
+                bkg_masks = self.bkgApertures.to_mask(method='center')
+                for mask in bkg_masks:
+                    bkg_data = mask.multiply(img)
+                    bkg_data_1d = bkg_data[mask.data > 0]
+                    oneIntensity, oneErr = robust_statistics(bkg_data_1d,method=self.param['bkgMethod'])
+                    bkgIntensity.append(oneIntensity)
+                    bkgIntensityErr.append(oneErr)
+                
+                bkgVals = np.array(bkgIntensity)  * self.srcApertures.area()
+                bkgValsErr = np.array(bkgIntensityErr) * self.srcApertures.area()
+            
             srcPhot = rawPhot['aperture_sum'] - bkgVals
         else:
             ## No background subtraction
@@ -1736,6 +1753,21 @@ def seeing_summary():
     t['File'] = fileArr
     t['FWHM'] = medFWHMArr
     return t
+
+def robust_statistics(data,method='robust mean',nsig=10):
+    median_val = np.median(data)
+    mad = np.median(np.abs(data - median_val))
+    if method == 'median':
+        oneStatistic = median_val
+        err = mad / np.sqrt(np.sum(np.isfinite(data)))
+    elif method == 'robust mean':
+        goodp = np.abs(data - median_val) < (nsig * mad)
+        oneStatistic = np.mean(data[goodp])
+        err = mad / np.sqrt(np.sum(goodp))
+    else:
+        raise Exception("Unrecognized statistic {}".format(method))
+    
+    return oneStatistic, err
 
 def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None,
                 preScreen=False,plotEachStep=False):
