@@ -1079,7 +1079,9 @@ class phot:
         cenData = HDUList['CENTROIDS'].data
         fwhmData = HDUList['FWHM'].data
         
-        fig, axArr = plt.subplots(6,sharex=True)
+        backData = HDUList['BACKG PHOT'].data
+        
+        fig, axArr = plt.subplots(7,sharex=True)
         yCorr, yCorr_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
         axArr[0].plot(t,yCorr)
         axArr[0].set_ylabel('Ref Cor F')
@@ -1088,19 +1090,22 @@ class phot:
         for oneSrc in range(self.nsrc):
             yFlux = photArr[:,oneSrc]
             axArr[1].plot(t,yFlux / np.median(yFlux))
-            axArr[1].set_ylabel('Norm Flux')
+            axArr[1].set_ylabel('Flux')
             xCen = cenData[:,oneSrc,0]
-            axArr[2].plot(t,xCen - np.median(xCen))
-            axArr[2].set_ylabel('X Pos')
+            backFlux = backData[:,oneSrc]
+            axArr[2].plot(t,backFlux / np.median(backFlux))
+            axArr[2].set_ylabel('Back')
+            axArr[3].plot(t,xCen - np.median(xCen))
+            axArr[3].set_ylabel('X Pos')
             yCen = cenData[:,oneSrc,1]
-            axArr[3].plot(t,yCen - np.median(yCen))
-            axArr[3].set_ylabel('Y Pos')
+            axArr[4].plot(t,yCen - np.median(yCen))
+            axArr[4].set_ylabel('Y Pos')
             fwhm1 = fwhmData[:,oneSrc,0]
-            axArr[4].plot(t,np.abs(fwhm1))
-            axArr[4].set_ylabel('FWHM 1')
-            fwhm2 = fwhmData[:,oneSrc,1]
             axArr[5].plot(t,np.abs(fwhm1))
-            axArr[5].set_ylabel('FWHM 2')
+            axArr[5].set_ylabel('FWHM 1')
+            fwhm2 = fwhmData[:,oneSrc,1]
+            axArr[6].plot(t,np.abs(fwhm1))
+            axArr[6].set_ylabel('FWHM 2')
         
         fig.show()
     
