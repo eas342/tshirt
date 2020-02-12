@@ -32,6 +32,13 @@ import multiprocessing
 from multiprocessing import Pool
 import time
 maxCPUs = multiprocessing.cpu_count() // 3
+try:
+    import bokeh.plotting
+    from bokeh.models import ColumnDataSource, HoverTool
+    from bokeh.models import Range1d
+    from bokeh.models import WheelZoomTool
+except ImportError as err2:
+    print("Could not import bokeh plotting. Interactive plotting may not work")
 
 def run_one_phot_method(allInput):
     """
@@ -119,7 +126,8 @@ class phot:
                          'refPhotCentering': None,'isSlope': False,'readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
-                         'dateFormat': 'Two Part','copyCentroidFile': None}
+                         'dateFormat': 'Two Part','copyCentroidFile': None,
+                         'bkgMethod': 'mean'}
         
 
         for oneKey in defaultParams.keys():
@@ -364,7 +372,7 @@ class phot:
         fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
         plt.close(fig)
         
-    def showCustSet(self,index=None,ptype='Stamps',defaultCen=False):
+    def showCustSet(self,index=None,ptype='Stamps',defaultCen=False,vmin=None,vmax=None):
         """ Show a custom stamp or star identification plot for a given image index 
         
         Parameters
@@ -389,7 +397,7 @@ class phot:
             cen = self.cenArr[index]
         
         if ptype == 'Stamps':
-            self.showStamps(custPos=cen,img=img,head=head)
+            self.showStamps(custPos=cen,img=img,head=head,vmin=vmin,vmax=vmax)
         elif ptype == 'Map':
             self.showStarChoices(custPos=cen,img=img,head=head,showAps=True)
         else:
@@ -790,11 +798,27 @@ class phot:
         
         if self.param['bkgSub'] == True:
             self.bkgApertures.positions = self.cenArr[ind] + self.backgOffsetArr[ind]
-            bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
-            bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
-            bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
-        
-            ## Background subtracted fluxes
+            
+            if self.param['bkgMethod'] == 'mean':
+                bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
+                bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
+                bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+                
+                ## Background subtracted fluxes
+                srcPhot = rawPhot['aperture_sum'] - bkgVals
+            else:
+                bkgIntensity, bkgIntensityErr = [], []
+                bkg_masks = self.bkgApertures.to_mask(method='center')
+                for mask in bkg_masks:
+                    bkg_data = mask.multiply(img)
+                    bkg_data_1d = bkg_data[mask.data > 0]
+                    oneIntensity, oneErr = robust_statistics(bkg_data_1d,method=self.param['bkgMethod'])
+                    bkgIntensity.append(oneIntensity)
+                    bkgIntensityErr.append(oneErr)
+                
+                bkgVals = np.array(bkgIntensity)  * self.srcApertures.area()
+                bkgValsErr = np.array(bkgIntensityErr) * self.srcApertures.area()
+            
             srcPhot = rawPhot['aperture_sum'] - bkgVals
         else:
             ## No background subtraction
@@ -1055,7 +1079,9 @@ class phot:
         cenData = HDUList['CENTROIDS'].data
         fwhmData = HDUList['FWHM'].data
         
-        fig, axArr = plt.subplots(6,sharex=True)
+        backData = HDUList['BACKG PHOT'].data
+        
+        fig, axArr = plt.subplots(7,sharex=True)
         yCorr, yCorr_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
         axArr[0].plot(t,yCorr)
         axArr[0].set_ylabel('Ref Cor F')
@@ -1064,19 +1090,22 @@ class phot:
         for oneSrc in range(self.nsrc):
             yFlux = photArr[:,oneSrc]
             axArr[1].plot(t,yFlux / np.median(yFlux))
-            axArr[1].set_ylabel('Norm Flux')
+            axArr[1].set_ylabel('Flux')
             xCen = cenData[:,oneSrc,0]
-            axArr[2].plot(t,xCen - np.median(xCen))
-            axArr[2].set_ylabel('X Pos')
+            backFlux = backData[:,oneSrc]
+            axArr[2].plot(t,backFlux / np.median(backFlux))
+            axArr[2].set_ylabel('Back')
+            axArr[3].plot(t,xCen - np.median(xCen))
+            axArr[3].set_ylabel('X Pos')
             yCen = cenData[:,oneSrc,1]
-            axArr[3].plot(t,yCen - np.median(yCen))
-            axArr[3].set_ylabel('Y Pos')
+            axArr[4].plot(t,yCen - np.median(yCen))
+            axArr[4].set_ylabel('Y Pos')
             fwhm1 = fwhmData[:,oneSrc,0]
-            axArr[4].plot(t,np.abs(fwhm1))
-            axArr[4].set_ylabel('FWHM 1')
-            fwhm2 = fwhmData[:,oneSrc,1]
             axArr[5].plot(t,np.abs(fwhm1))
-            axArr[5].set_ylabel('FWHM 2')
+            axArr[5].set_ylabel('FWHM 1')
+            fwhm2 = fwhmData[:,oneSrc,1]
+            axArr[6].plot(t,np.abs(fwhm1))
+            axArr[6].set_ylabel('FWHM 2')
         
         fig.show()
     
@@ -1175,6 +1204,59 @@ class phot:
         yErrNorm = np.sqrt(normErr[:,0]**2 + (combRef / combErr)**2)
         
         return yCorrNorm, yErrNorm
+    
+    def get_refSeries(self,excludeSrc=None):
+        """
+        Get the reference-corrected time series
+        
+        Parameters
+        -----------
+        excludeSrc: list or None
+            Numbers of the reference stars to exclude
+        
+        Returns
+        --------
+        t: numpy array
+            time (JD - reference)
+        yCorr: numpy array
+            Reference-corrected time series
+        yCorr_err: numpy array
+            Reference-corrected time series error
+        """
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
+        
+        yCorr, yCorr_err = self.refSeries(photArr,errArr,excludeSrc=excludeSrc)
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        t = jdArr - np.round(np.min(jdArr))
+        
+        HDUList.close()
+        
+        return t, yCorr, yCorr_err
+        
+    def interactive_refSeries(self,excludeSrc=None):
+        t, yCorr, yCorr_err = self.get_refSeries(excludeSrc=excludeSrc)
+        outFile = "plots/photometry/interactive/refseries_{}.html".format(self.dataFileDescrip)
+        
+        fileBaseNames = []
+        fileTable = Table.read(self.photFile,hdu='FILENAMES')
+        indexArr = np.arange(len(fileTable))
+        for oneFile in fileTable['File Path']:
+            fileBaseNames.append(os.path.basename(oneFile))
+        
+        bokeh.plotting.output_file(outFile)
+        dataDict = {'t': t,'y':yCorr,'name':fileBaseNames,'ind':indexArr}
+        source = ColumnDataSource(data=dataDict)
+        p = bokeh.plotting.figure()
+        p.background_fill_color="#f5f5f5"
+        p.grid.grid_line_color="white"
+        p.circle(x='t',y='y',source=source)
+        p.add_tools(HoverTool(tooltips=[('name', '@name'),('index','@ind')]))
+        bokeh.plotting.show(p)
+        
 
     def getImg(self,path):
         """ Load an image from a given path and extensions"""
@@ -1676,6 +1758,21 @@ def seeing_summary():
     t['File'] = fileArr
     t['FWHM'] = medFWHMArr
     return t
+
+def robust_statistics(data,method='robust mean',nsig=10):
+    median_val = np.median(data)
+    mad = np.median(np.abs(data - median_val))
+    if method == 'median':
+        oneStatistic = median_val
+        err = mad / np.sqrt(np.sum(np.isfinite(data)))
+    elif method == 'robust mean':
+        goodp = np.abs(data - median_val) < (nsig * mad)
+        oneStatistic = np.mean(data[goodp])
+        err = mad / np.sqrt(np.sum(goodp))
+    else:
+        raise Exception("Unrecognized statistic {}".format(method))
+    
+    return oneStatistic, err
 
 def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None,
                 preScreen=False,plotEachStep=False):
