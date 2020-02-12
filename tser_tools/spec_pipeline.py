@@ -899,6 +899,20 @@ class spec(phot_pipeline.phot):
         
         HDUList.close()
     
+    def print_noise_wavebin(self,nbins=10):
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        disp = HDUList['DISP INDICES'].data
+        binGrid = HDUList['BINNED F'].data
+        binGrid_err = HDUList['BINNED ERR'].data
+        
+        t = Table()
+        t['Disp Index'] = disp['Bin Middle']
+        t['Stdev (%)'] = np.std(binGrid,axis=0) * 100.
+        t['Theo Err (%)'] = np.median(binGrid_err,axis=0) * 100.
+        print(t)
+        HDUList.close()
+        
+    
     def get_broadband_series(self,src=0):
         HDUList = fits.open(self.specFile)
         t = Table()
