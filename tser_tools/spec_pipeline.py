@@ -52,7 +52,9 @@ class spec(phot_pipeline.phot):
         self.pipeType = 'spectroscopy'
         self.get_parameters(paramFile=paramFile,directParam=directParam)
         
-        defaultParams = phot_pipeline.read_yaml('parameters/spec_params/default_params.yaml')
+        defaultParamPath = os.path.join(os.path.dirname(__file__), 'parameters','spec_params',
+                                       'default_params.yaml')
+        defaultParams = phot_pipeline.read_yaml(defaultParamPath)
         
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
@@ -949,7 +951,7 @@ class spec(phot_pipeline.phot):
         else:
             fig.show()
     
-    def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3):
+    def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3,binMin=10,binMax=250):
         """
         Examine the time series for adjacent bins
         """
@@ -969,7 +971,7 @@ class spec(phot_pipeline.phot):
         
         phot_pipeline.allan_variance(time * 24. * 60.,ratioSeries * 1e6,yerr=yerr * 1e6,
                                      xUnit='min',yUnit='ppm',
-                                     binMin=10,binMax=250)
+                                     binMin=binMin,binMax=binMax)
         
         plt.plot(time - offset_time,ratioSeries)
         
