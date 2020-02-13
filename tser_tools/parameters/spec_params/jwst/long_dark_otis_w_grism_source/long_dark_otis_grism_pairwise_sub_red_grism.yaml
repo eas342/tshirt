@@ -1,11 +1,11 @@
 procFiles: /surtrdata1/tso_analysis/otis_long_dark/pairwise_sub_red_grism/NRC*.fits # files on which to do spec extraction
 excludeList: null
-srcName: A0V J=7.34 source
+srcName: A0V J=8.54 source
 srcNameShort: pairwiseSubRed
 nightName: otisLongDarkSimGrism
 dispDirection: x ## dispersion direction 'x' or 'y'
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
-   - 514
+   - 280
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 bkgSubX: False ## Do background subtraction along the X direction?
 bkgRegionsX: ## a list of background regions in the X direction
@@ -13,8 +13,8 @@ bkgRegionsX: ## a list of background regions in the X direction
 bkgOrderX: 0 ## order of polynomial subtraction in the X direction
 bkgSubY: False ## Do background subtraction along the Y direction?
 bkgRegionsY: ## a list of background regions in the Y direction
-   - [193, 493]
-   - [535, 835]
+   - [0, 260]
+   - [300, 600]
 bkgOrderY: 2 ## order of polynomial subtraction in the Y direction
 apWidth: 26. ## Source aperture width
 dispPixels: [365, 2016] ## pixels to use in the dispersion direction
