@@ -394,9 +394,9 @@ class spec(phot_pipeline.phot):
             
             ## add the delta in again for profile normalization > 0
             if self.param['dispDirection'] == 'x':
-                profile_img[oneSpatialInd,dispStart:dispEnd] += self.floor_delta
+                profile_img[startSpatial:endSpatial+1,dispStart:dispEnd] += self.floor_delta
             else:
-                profile_img[dispStart:dispEnd,oneSpatialInd] += self.floor_delta
+                profile_img[dispStart:dispEnd,startSptial:endSpatial+1] += self.floor_delta
             
             ## Renormalize            
             norm_profile = self.profile_normalize(profile_img)
