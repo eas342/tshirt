@@ -1,7 +1,7 @@
 procFiles: /surtrdata1/tso_analysis/otis_long_dark/pairwise_sub_red_grism/NRC*.fits # files on which to do spec extraction
 excludeList: null
 srcName: A0V J=8.54 source
-srcNameShort: pairwiseSubRed03_smallerAp
+srcNameShort: pairwiseSubRed04_RNinflate
 nightName: otisLongDarkSimGrism
 dispDirection: x ## dispersion direction 'x' or 'y'
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
