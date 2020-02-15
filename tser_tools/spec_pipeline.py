@@ -525,6 +525,13 @@ class spec(phot_pipeline.phot):
             
             backSpectra[oneSrc,:] = np.nanmean(bkgModel * srcMask,spatialAx)
             
+            if saveFits == True:
+                prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
+                weight2D = profile_img * correctionFactor/ varImg
+                weightName = 'diagnostics/variance_img/{}_weights.fits'.format(prefixName)
+                primHDU = fits.PrimaryHDU(weight2D)
+                primHDU.writeto(weightName,overwrite=True)
+            
         
         extractDict = {} ## spectral extraction dictionary
         extractDict['t0'] = t0
