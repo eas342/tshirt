@@ -686,10 +686,17 @@ class spec(phot_pipeline.phot):
         return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
         
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=True,
-                          alignDiagnostics=False,extraFF=False):
+                          alignDiagnostics=False,extraFF=False,
+                          specType='Optimal'):
         HDUList = fits.open(self.specFile)
-        extSpec = HDUList['OPTIMAL SPEC'].data[src]
-        errSpec = HDUList['OPT SPEC ERR'].data[src]
+        if specType == 'Optimal':
+            extSpec = HDUList['OPTIMAL SPEC'].data[src]
+            errSpec = HDUList['OPT SPEC ERR'].data[src]
+        elif specType == 'Sum':
+            extSpec = HDUList['SUM SPEC'].data[src]
+            errSpec = HDUList['SUM SPEC ERR'].data[src]
+        else:
+            raise Exception("Unrecognized SpecType {}".format(specType))
         
         nImg = extSpec.shape[0]
         
