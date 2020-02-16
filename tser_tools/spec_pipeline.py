@@ -925,9 +925,9 @@ class spec(phot_pipeline.phot):
         t['Disp Index'] = disp['Bin Middle']
         t['Stdev (%)'] = np.std(binGrid,axis=0) * 100.
         t['Theo Err (%)'] = np.median(binGrid_err,axis=0) * 100.
-        print(t)
-        HDUList.close()
         
+        HDUList.close()
+        return t
     
     def get_broadband_series(self,src=0):
         HDUList = fits.open(self.specFile)
