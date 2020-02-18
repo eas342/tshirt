@@ -397,7 +397,7 @@ class spec(phot_pipeline.phot):
             if self.param['dispDirection'] == 'x':
                 profile_img[startSpatial:endSpatial+1,dispStart:dispEnd] += self.floor_delta
             else:
-                profile_img[dispStart:dispEnd,startSptial:endSpatial+1] += self.floor_delta
+                profile_img[dispStart:dispEnd,startSpatial:endSpatial+1] += self.floor_delta
             
             ## Renormalize            
             norm_profile = self.profile_normalize(profile_img)
@@ -925,6 +925,7 @@ class spec(phot_pipeline.phot):
         
         t = Table()
         t['Disp Index'] = disp['Bin Middle']
+        t['Wavelength'] = self.wavecal(t['Disp Index'])
         t['Stdev (%)'] = np.std(binGrid,axis=0) * 100.
         t['Theo Err (%)'] = np.median(binGrid_err,axis=0) * 100.
         
