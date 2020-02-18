@@ -22,6 +22,7 @@ import multiprocessing
 from multiprocessing import Pool
 import phot_pipeline
 import analysis
+import instrument_specific
 
 
 
@@ -665,14 +666,15 @@ class spec(phot_pipeline.phot):
         
         return align2D, offsetIndArr
     
-    def get_avg_spec(self,src=0):
+    def get_avg_spec(self,src=0,redoDynamic=True):
         """
         Get the average spectrum across all time series
         """
+        
         dyn_specFile = self.dyn_specFile(src=src)
-        if os.path.exists(dyn_specFile) == False:
+        if (os.path.exists(dyn_specFile) == False) | (redoDynamic == True):
             self.plot_dynamic_spec(src=src,saveFits=True)
-            
+        
         HDUList = fits.open(dyn_specFile)
         x = HDUList['DISP INDICES'].data
         y = HDUList['AVG SPEC'].data
@@ -686,10 +688,17 @@ class spec(phot_pipeline.phot):
         return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
         
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=True,
-                          alignDiagnostics=False,extraFF=False):
+                          alignDiagnostics=False,extraFF=False,
+                          specType='Optimal'):
         HDUList = fits.open(self.specFile)
-        extSpec = HDUList['OPTIMAL SPEC'].data[src]
-        errSpec = HDUList['OPT SPEC ERR'].data[src]
+        if specType == 'Optimal':
+            extSpec = HDUList['OPTIMAL SPEC'].data[src]
+            errSpec = HDUList['OPT SPEC ERR'].data[src]
+        elif specType == 'Sum':
+            extSpec = HDUList['SUM SPEC'].data[src]
+            errSpec = HDUList['SUM SPEC ERR'].data[src]
+        else:
+            raise Exception("Unrecognized SpecType {}".format(specType))
         
         nImg = extSpec.shape[0]
         
@@ -870,7 +879,7 @@ class spec(phot_pipeline.phot):
         return np.floor(np.min(time))
     
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
-                            recalculate=False,dispIndices=None,differential=False):
+                            recalculate=True,dispIndices=None,differential=False):
         """ Plot wavelength-binned time series """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices)
@@ -918,9 +927,9 @@ class spec(phot_pipeline.phot):
         t['Disp Index'] = disp['Bin Middle']
         t['Stdev (%)'] = np.std(binGrid,axis=0) * 100.
         t['Theo Err (%)'] = np.median(binGrid_err,axis=0) * 100.
-        print(t)
-        HDUList.close()
         
+        HDUList.close()
+        return t
     
     def get_broadband_series(self,src=0):
         HDUList = fits.open(self.specFile)
@@ -987,7 +996,22 @@ class spec(phot_pipeline.phot):
         plt.show()
         HDUList.close()
         
+    
+    def wavecal(self,dispIndices,waveCalMethod=None,head=None,**kwargs):
+        """
+        Wavelength calibration to turn the dispersion pixels into wavelengths
+        """
+        if waveCalMethod == None:
+            waveCalMethod = self.param['waveCalMethod']
         
+        if waveCalMethod == None:
+            wavelengths = dispIndices
+        elif waveCalMethod == 'NIRCamTS':
+            wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'],
+                                                                         **kwargs)
+        else:
+            raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
+        return wavelengths
 
 class batch_spec(phot_pipeline.batchPhot):
     def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):
