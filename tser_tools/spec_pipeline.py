@@ -666,14 +666,15 @@ class spec(phot_pipeline.phot):
         
         return align2D, offsetIndArr
     
-    def get_avg_spec(self,src=0):
+    def get_avg_spec(self,src=0,redoDynamic=True):
         """
         Get the average spectrum across all time series
         """
+        
         dyn_specFile = self.dyn_specFile(src=src)
-        if os.path.exists(dyn_specFile) == False:
+        if (os.path.exists(dyn_specFile) == False) | (redoDynamic == True):
             self.plot_dynamic_spec(src=src,saveFits=True)
-            
+        
         HDUList = fits.open(dyn_specFile)
         x = HDUList['DISP INDICES'].data
         y = HDUList['AVG SPEC'].data
@@ -996,7 +997,7 @@ class spec(phot_pipeline.phot):
         HDUList.close()
         
     
-    def wavecal(self,dispIndices,waveCalMethod=None,head=None):
+    def wavecal(self,dispIndices,waveCalMethod=None,head=None,**kwargs):
         """
         Wavelength calibration to turn the dispersion pixels into wavelengths
         """
@@ -1006,7 +1007,8 @@ class spec(phot_pipeline.phot):
         if waveCalMethod == None:
             wavelengths = dispIndices
         elif waveCalMethod == 'NIRCamTS':
-            wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'])
+            wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'],
+                                                                         **kwargs)
         else:
             raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
         return wavelengths
