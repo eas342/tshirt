@@ -16,8 +16,8 @@ bkgRegionsY: ## a list of background regions in the Y direction
    - [0, 260]
    - [300, 600]
 bkgOrderY: 2 ## order of polynomial subtraction in the Y direction
-apWidth: 26. ## Source aperture width
-dispPixels: [365, 2016] ## pixels to use in the dispersion direction
+apWidth: 14. ## Source aperture width
+dispPixels: [380, 2044] ## pixels to use in the dispersion direction
 jdRef: 2457551 ## JD reference offset to subtract for plotting
 timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
 isCube: False ## Is the data a cube (3D)?
@@ -29,3 +29,4 @@ isSlope: False ## Is the FITS image a slope image that should be multiplied by t
 readNoise: 14 ## Read noise in electrons
 detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+waveCalMethod: NIRCamTS ## the wavelength calibration method (None/null, NIRCamTS)
