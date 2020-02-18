@@ -1,11 +1,12 @@
 import numpy as np
+import pdb
 
 def ts_wavecal(pixels,tserSim=False,
                obsFilter='F444W',subarray='SUBGRISM64',grism='GRISM0'):
     """
     Simple analytic wavelength calibration for NIRCam grism time series
     """
-    disp = -0.001 ## microns per pixel (toward positive X in raw detector pixels)
+    disp = -0.0010035 ## microns per pixel (toward positive X in raw detector pixels, used in pynrc)
     undevWav = 4.0 ## undeviated wavelength
     
     if obsFilter == 'F444W':
@@ -18,7 +19,8 @@ def ts_wavecal(pixels,tserSim=False,
     if tserSim == True:
         ## fudge factor for wavelength calibration in time series simulation at the shorter wavelengths
         ## the simulation is slightly off from expectations. In reality we'll want to use wavecal source anyway
-        undevPx = undevPx - 3. 
+        undevPx = undevPx + 2.
+    
 
     
     if grism != 'GRISM0':

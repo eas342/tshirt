@@ -13,10 +13,12 @@ def check_wavecal():
     x,y,yerr = spec.get_avg_spec()
     head = fits.Header()
     head['FILTER'] = 'F322W2'
-    wave = spec.wavecal(x,waveCalMethod='NIRCamTS',head=head)
+    wave = spec.wavecal(x,waveCalMethod='NIRCamTS',head=head,tserSim=True)
 
     pts = (sp.wave > np.min(wave * 1e4)) & (sp.wave < np.max(wave * 1e4))
 
     modelWave = sp.wave[pts] / 1e4
 
-    plt.plot(modelWave,sp.flux[pts] * (modelWave/2.5)**3 * 0.1);  plt.plot(wave,y); plt.show()
+    plt.plot(modelWave,sp.flux[pts] * (modelWave/2.5)**3 * 0.1)
+    plt.plot(wave,y)
+    plt.show()
