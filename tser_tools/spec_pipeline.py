@@ -932,10 +932,14 @@ class spec(phot_pipeline.phot):
         binGrid_err = HDUList['BINNED ERR'].data
         
         t = Table()
-        t['Disp Index'] = disp['Bin Middle']
-        t['Wavelength'] = self.wavecal(t['Disp Index'])
-        t['Stdev (%)'] = np.std(binGrid,axis=0) * 100.
-        t['Theo Err (%)'] = np.median(binGrid_err,axis=0) * 100.
+        t['Disp St'] = disp['Bin Start']
+        t['Disp Mid'] = disp['Bin Middle']
+        t['Disp End'] = disp['Bin End']
+        t['Wave (st)'] = np.round(self.wavecal(disp['Bin Start']),3)
+        t['Wave (mid)'] = np.round(self.wavecal(t['Disp Mid']),3)
+        t['Wave (end)'] = np.round(self.wavecal(disp['Bin End']),3)
+        t['Stdev (%)'] = np.round(np.std(binGrid,axis=0) * 100.,3)
+        t['Theo Err (%)'] = np.round(np.median(binGrid_err,axis=0) * 100.,3)
         
         HDUList.close()
         return t
