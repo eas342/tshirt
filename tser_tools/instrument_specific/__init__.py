@@ -1,1 +1,1 @@
-import jwst_inst_funcs
+from . import jwst_inst_funcs
