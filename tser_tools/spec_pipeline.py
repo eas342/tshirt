@@ -21,16 +21,18 @@ from astropy.stats import LombScargle
 import multiprocessing
 from multiprocessing import Pool
 
-## this if statement allows the imports work inside the cod directory or with setup.py install
-if __name__ == "__main__":
-    import phot_pipeline
+## this if statement allows the imports work inside the code directory
+import pkgutil
+search_path = ['.'] # set to None to see all modules importable from sys.path
+all_modules = [x[1] for x in pkgutil.iter_modules(path=search_path)]
+if 'phot_pipeline' in all_modules:
+    import phot_pipeline ## assume they're all there?
     import analysis
     import instrument_specific
-else:
+else: ## or with setup.py install
     from . import phot_pipeline
     from . import analysis
     from . import instrument_specific
-
 
 class spec(phot_pipeline.phot):
     def __init__(self,paramFile='parameters/spec_params/example_spec_parameters.yaml',
