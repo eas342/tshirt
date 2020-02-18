@@ -1007,6 +1007,8 @@ class spec(phot_pipeline.phot):
         if waveCalMethod == None:
             wavelengths = dispIndices
         elif waveCalMethod == 'NIRCamTS':
+            if head == None:
+                head = fits.getheader(self.specFile,extname='ORIG HEADER')
             wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'],
                                                                          **kwargs)
         else:
