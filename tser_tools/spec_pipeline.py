@@ -20,10 +20,16 @@ from astropy.table import Table
 from astropy.stats import LombScargle
 import multiprocessing
 from multiprocessing import Pool
-import phot_pipeline
-import analysis
-import instrument_specific
 
+## this if statement allows the imports work inside the cod directory or with setup.py install
+if __name__ == "__main__":
+    import phot_pipeline
+    import analysis
+    import instrument_specific
+else:
+    from . import phot_pipeline
+    from . import analysis
+    from . import instrument_specific
 
 
 class spec(phot_pipeline.phot):

@@ -6,9 +6,13 @@ from astropy.table import Table
 from scipy import signal
 from scipy.interpolate import interp1d
 from scipy import ndimage
-from phot_pipeline import robust_poly
 import matplotlib.pyplot as plt
 import pdb
+## this if statement allows the imports work inside the cod directory or with setup.py install
+if __name__ == "__main__":
+    from phot_pipeline import robust_poly
+else:
+    from .phot_pipeline import robust_poly
 
 def bin_examine():
     t = Table.read('tser_data/refcor_phot/refcor_phot_S02illum1miAll_GLrun104.fits')
