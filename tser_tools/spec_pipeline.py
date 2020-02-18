@@ -22,6 +22,7 @@ import multiprocessing
 from multiprocessing import Pool
 import phot_pipeline
 import analysis
+import instrument_specific
 
 
 
@@ -994,7 +995,21 @@ class spec(phot_pipeline.phot):
         plt.show()
         HDUList.close()
         
+    
+    def wavecal(self,dispIndices,waveCalMethod=None,head=None):
+        """
+        Wavelength calibration to turn the dispersion pixels into wavelengths
+        """
+        if waveCalMethod == None:
+            waveCalMethod = self.param['waveCalMethod']
         
+        if waveCalMethod == None:
+            wavelengths = dispIndices
+        elif waveCalMethod == 'NIRCamTS':
+            wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'])
+        else:
+            raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
+        return wavelengths
 
 class batch_spec(phot_pipeline.batchPhot):
     def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):
