@@ -938,8 +938,8 @@ class spec(phot_pipeline.phot):
         t['Wave (st)'] = np.round(self.wavecal(disp['Bin Start']),3)
         t['Wave (mid)'] = np.round(self.wavecal(t['Disp Mid']),3)
         t['Wave (end)'] = np.round(self.wavecal(disp['Bin End']),3)
-        t['Stdev (%)'] = np.round(np.std(binGrid,axis=0) * 100.,3)
-        t['Theo Err (%)'] = np.round(np.median(binGrid_err,axis=0) * 100.,3)
+        t['Stdev (%)'] = np.round(np.std(binGrid,axis=0) * 100.,4)
+        t['Theo Err (%)'] = np.round(np.median(binGrid_err,axis=0) * 100.,4)
         
         HDUList.close()
         return t
