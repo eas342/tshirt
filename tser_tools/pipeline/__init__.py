@@ -1,1 +1,1 @@
-import phot_pipeline
+from . import phot_pipeline
