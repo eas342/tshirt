@@ -1464,7 +1464,7 @@ class prevPhot(phot):
         self.photHead = photHead
         self.param = {}
         
-        keywordPath = os.path.join(os.path.dirname(__file__), 'parameters','phot_params',
+        keywordPath = os.path.join(os.path.dirname(__file__), '..', 'parameters','phot_params',
                                    'keywords_for_phot_pipeline.csv')
         photKeywords = ascii.read(keywordPath)
         for ind,oneKeyword in enumerate(photKeywords['FITS Keyword']):

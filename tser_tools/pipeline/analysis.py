@@ -8,14 +8,7 @@ from scipy.interpolate import interp1d
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import pdb
-## this if statement allows the imports work inside the code directory or with setup.py install
-import pkgutil
-search_path = ['.'] # set to None to see all modules importable from sys.path
-all_modules = [x[1] for x in pkgutil.iter_modules(path=search_path)]
-if 'phot_pipeline' in all_modules:
-    from phot_pipeline import robust_poly
-else:
-    from .phot_pipeline import robust_poly
+from .phot_pipeline import robust_poly
 
 def bin_examine():
     t = Table.read('tser_data/refcor_phot/refcor_phot_S02illum1miAll_GLrun104.fits')
