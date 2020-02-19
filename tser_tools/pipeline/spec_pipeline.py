@@ -359,6 +359,7 @@ class spec(phot_pipeline.phot):
                     try:
                         dep_var = img[oneSpatialInd,dispStart:dispEnd]
                     except IndexError:
+                        print("indexing problem. Entering pdb to help diagnose it")
                         pdb.set_trace()
                 else:
                     dep_var = img[dispStart:dispEnd,oneSpatialInd]
