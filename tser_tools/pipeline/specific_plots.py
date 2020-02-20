@@ -1,5 +1,5 @@
-import phot_pipeline
-import spec_pipeline
+from . import phot_pipeline
+from . import spec_pipeline
 import matplotlib.pyplot as plt
 from astropy.io import fits, ascii
 from astropy.time import Time
@@ -17,6 +17,9 @@ def k2_22(date='jan25',showTiming=False):
     elif date == 'jan28':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_lbc.yaml')
         t0 = Time('2020-01-28T10:40:45.81')
+    elif date == 'feb20':
+        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_02_20_phot_lbc.yaml')
+        t0 = Time('2020-02-20T07:25:38.77')
     else:
         raise Exception("Unrecognized date {}".format(date))
     
