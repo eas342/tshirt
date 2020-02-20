@@ -194,7 +194,7 @@ class prep():
                                master_flat=useFlat,
                                master_bias=useBias,
                                bad_pixel_mask=badPx)
-            if nccd.mask != None:
+            if nccd.mask is not None:
                 nccd.data[nccd.mask] = np.nan
             
             head['ZEROFILE'] = 'master_zero.fits'
