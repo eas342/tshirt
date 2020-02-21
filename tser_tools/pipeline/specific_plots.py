@@ -20,8 +20,16 @@ def k2_22(date='jan25',showTiming=False):
     elif date == 'feb20':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_02_20_phot_lbc.yaml')
         t0 = Time('2020-02-20T07:25:38.77')
+    elif date == 'feb20-luci2':
+        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_02_20_phot_luci2.yaml')
+        t0 = Time('2020-02-20T07:25:38.77')
     else:
         raise Exception("Unrecognized date {}".format(date))
+    
+    if 'luci' in date:
+        band = 'LUCI2 Ks-band'
+    else:
+        band = 'LBC g-band'
     
     HDUList = fits.open(phot.photFile)
     photHDU = HDUList['PHOTOMETRY']
@@ -40,7 +48,7 @@ def k2_22(date='jan25',showTiming=False):
     
     yCorrected, yCorrected_err = phot.refSeries(photArr,errArr,excludeSrc=None)
     x = jdArr - jdRef
-    ax.plot(x,yCorrected,label='LBC g-band')
+    ax.plot(x,yCorrected,label=band)
     
     #phot.plot_phot(refCorrect=True,yLim=[0.97,1.02],fig=fig,ax=ax)
     
