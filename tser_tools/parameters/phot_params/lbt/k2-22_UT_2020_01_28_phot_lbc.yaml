@@ -23,7 +23,7 @@ apRadius: 18. ## Source aperture radius
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
 #nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
 backStart: 18. ## Background annulus start radius
-backEnd: 50. ## Background annulus end radius
+backEnd: 70. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
 #backWidth: 1502 ## background aperture width (only for rectangular aperture)
 backOffset: [0.,0.] ## Background offset (from source centroid)
