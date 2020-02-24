@@ -84,11 +84,17 @@ class spec(phot_pipeline.phot):
         ## a little delta to add to add to profile so that you don't get log(negative)
         self.floor_delta = self.param['readNoise'] * 2. 
         
+        ## minimum number of pixels to do 
+        self.minPixForCovarianceWeights = 3
+        
         self.check_parameters()
         
     def check_parameters(self):
         dispCheck = (self.param['dispDirection'] == 'x') | (self.param['dispDirection'] == 'y')
         assert dispCheck, 'Dispersion direction parameter not valid'
+        if self.param['readNoiseCorrelation'] == True:
+            assertText = 'Ap width not big enough to use read noise covariance estimates'
+            assert (self.param['apWidth'] > self.minPixForCovarianceWeights),assertText 
     
     
     def get_summation_direction(self):
@@ -532,7 +538,8 @@ class spec(phot_pipeline.phot):
                         correction = correctionFactor[oneInd]
                         data = imgSub[oneInd,startSpatial:endSpatial]
                     
-                    if (np.sum(np.isfinite(data)) > 3) & (np.nansum(prof > 0) > 3) & (np.sum(np.isfinite(varPhotons)) > 3):
+                    minP = self.minPixForCovarianceWeights
+                    if (np.sum(np.isfinite(data)) > minP) & (np.nansum(prof > 0) > minP) & (np.sum(np.isfinite(varPhotons)) > minP):
                         ## only try to do the matrix math if points are finite
                         
                         ## assuming the read noise is correlated but photon noise is not
