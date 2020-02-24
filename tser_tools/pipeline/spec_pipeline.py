@@ -435,7 +435,7 @@ class spec(phot_pipeline.phot):
         
         return profile_img_list, smooth_img_list
     
-    def spec_for_one_file(self,ind,saveFits=False):
+    def spec_for_one_file(self,ind,saveFits=False,diagnoseCovariance=False):
         """ Get spectroscopy for one file """
         if np.mod(ind,15) == 0:
             print("On {} of {}".format(ind,len(self.fileL)))
@@ -543,7 +543,7 @@ class spec(phot_pipeline.phot):
                         ## only try to do the matrix math if points are finite
                         
                         ## assuming the read noise is correlated but photon noise is not
-                        rho = 0.05
+                        rho = self.param['readNoiseCorrVal']
                         cov_off_diag = np.ones([nSpatial,nSpatial]) - np.diag(np.ones(nSpatial))
                         cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
                         cov_matrix = np.diag(varPhotons) + cov_read
@@ -554,8 +554,15 @@ class spec(phot_pipeline.phot):
                         optflux[oneInd] = np.nansum(weights_num * data * correction) / np.sum(weights_denom)
                         varFlux[oneInd] = np.nansum(prof * correction) / np.sum(weights_denom)
                         
-                        # if oneInd > 900:
-                        #     pdb.set_trace()
+                        if (diagnoseCovariance == True) & (oneInd > 900):
+                            var = varImg[startSpatial:endSpatial+1,oneInd]
+                            weights_var = (prof / var) / np.sum(prof**2/var)
+                            weights_cov = weights_num / np.sum(weights_denom)
+                            print('Weights var:')
+                            print(weights_var)
+                            print('Weights covar:')
+                            print(weights_cov)
+                            pdb.set_trace()
                         
                         if self.param['dispDirection'] == 'x':
                             weight2D[startSpatial:endSpatial+1,oneInd] = weights_num / np.sum(weights_denom)
