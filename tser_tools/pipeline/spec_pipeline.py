@@ -446,7 +446,7 @@ class spec(phot_pipeline.phot):
         
         profile_img_list, smooth_img_list = self.find_profile(imgSub,subHead,ind,saveFits=saveFits)
         for oneSrc in np.arange(self.nsrc): ## use the smoothed flux for the variance estimate
-            varImg = varImg + np.abs(smooth_img_list[oneSrc]) ## negative flux should be approximated as photon noise
+            varImg = varImg + np.abs(smooth_img_list[oneSrc]) ## negative flux is approximated as photon noise
         
         if saveFits == True:
             prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
@@ -506,15 +506,67 @@ class spec(phot_pipeline.phot):
             #            np.nansum(profile_img**2/varImg,spatialAx))
             # varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) /
             #            np.nansum(profile_img**2/varImg,spatialAx))
-            optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
-            denom =  np.nansum(profile_img**2/varImg,spatialAx)
-            nonz = (denom != 0.) & np.isfinite(denom)
-            optflux = np.zeros_like(optNumerator) * np.nan
-            optflux[nonz] = optNumerator[nonz] / denom[nonz]
+            if self.param['readNoiseCorrelation'] == True:
+                oneSourcePos = self.param['starPositions'][oneSrc]
+                startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
+                endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+                nSpatial = (endSpatial - startSpatial) + 1
+                ## Here is a special treatment of optimal summation w/ correlated read noise
+                ## CHANGE THIS HERE
+                ## This will be slow at first because I'm starting with a for loop.
+                ## Eventually do fancy 3D matrices to make it fast
+                optflux = np.zeros(nDisp) * np.nan
+                varFlux = np.zeros_like(optflux) * np.nan
+                varPure = varImg - readNoise**2 ## remove the read noise because we'll put it in covariance matrix
+                weight2D = np.zeros_like(profile_img)
+                
+                for oneInd in np.arange(nDisp):
+                    if self.param['dispDirection'] == 'x':
+                        prof = profile_img[startSpatial:endSpatial+1,oneInd]
+                        varPhotons = varPure[startSpatial:endSpatial+1,oneInd]
+                        correction = correctionFactor[oneInd]
+                        data = imgSub[startSpatial:endSpatial+1,oneInd]
+                    else:
+                        prof = profile_img[oneInd,startSpatial:endSpatial+1]
+                        varPhotons = varPure[oneInd,startSpatial:endSpatial+1]
+                        correction = correctionFactor[oneInd]
+                        data = imgSub[oneInd,startSpatial:endSpatial]
+                    
+                    if (np.sum(np.isfinite(data)) > 3) & (np.nansum(prof > 0) > 3) & (np.sum(np.isfinite(varPhotons)) > 3):
+                        ## only try to do the matrix math if points are finite
+                        
+                        ## assuming the read noise is correlated but photon noise is not
+                        rho = 0.05
+                        cov_off_diag = np.ones([nSpatial,nSpatial]) - np.diag(np.ones(nSpatial))
+                        cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
+                        cov_matrix = np.diag(varPhotons) + cov_read
+                        inv_cov = np.linalg.inv(cov_matrix)
+                        weights_num = np.dot(prof,inv_cov)
+                        weights_denom = np.dot(prof**2,inv_cov)
+                        
+                        optflux[oneInd] = np.nansum(weights_num * data * correction) / np.sum(weights_denom)
+                        varFlux[oneInd] = np.nansum(prof * correction) / np.sum(weights_denom)
+                        
+                        # if oneInd > 900:
+                        #     pdb.set_trace()
+                        
+                        if self.param['dispDirection'] == 'x':
+                            weight2D[startSpatial:endSpatial+1,oneInd] = weights_num / np.sum(weights_denom)
+                        else:
+                            weight2D[oneInd,startSpatial:endSpatial+1] = weights_num / np.sum(weights_denom)
+                    
             
-            varNumerator = np.nansum(profile_img * correctionFactor,spatialAx)
-            varFlux = np.zeros_like(varNumerator) * np.nan
-            varFlux[nonz] = varNumerator[nonz] / denom[nonz]
+            
+            else:
+                optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
+                denom =  np.nansum(profile_img**2/varImg,spatialAx)
+                nonz = (denom != 0.) & np.isfinite(denom)
+                optflux = np.zeros_like(optNumerator) * np.nan
+                optflux[nonz] = optNumerator[nonz] / denom[nonz]
+            
+                varNumerator = np.nansum(profile_img * correctionFactor,spatialAx)
+                varFlux = np.zeros_like(varNumerator) * np.nan
+                varFlux[nonz] = varNumerator[nonz] / denom[nonz]
             
             sumFlux = np.nansum(imgSub * srcMask,spatialAx)
             sumErr = np.sqrt(np.nansum(varImg * srcMask,spatialAx))
@@ -529,7 +581,12 @@ class spec(phot_pipeline.phot):
             
             if saveFits == True:
                 prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
-                weight2D = profile_img * correctionFactor/ varImg
+                if self.param['readNoiseCorrelation'] == True:
+                    pass ## already using the weight2D
+                else:
+                    ## calculate weight 2D
+                    weight2D = profile_img * correctionFactor/ varImg
+                
                 weightName = 'diagnostics/variance_img/{}_weights.fits'.format(prefixName)
                 primHDU = fits.PrimaryHDU(weight2D)
                 primHDU.writeto(weightName,overwrite=True)
