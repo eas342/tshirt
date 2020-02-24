@@ -1148,12 +1148,17 @@ def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
 
 comparisonFileNames = glob.glob('tser_data/spec/spec_o9*.fits')
 
-def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=False):
+def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=False,
+                    normalize=False):
     fig, ax = plt.subplots()
     for oneFile in fileNames:
         x, y, yerr = get_spectrum(oneFile,specType=specType)
         head = fits.getheader(oneFile)
-        ax.plot(x,y,label=head['SRCNAME'])
+        if normalize == True:
+            yShow = y / np.nanmedian(y)
+        else:
+            yShow = y
+        ax.plot(x,yShow,label=head['SRCNAME'])
     ax.legend()
     if showPlot == True:
         plt.show()
