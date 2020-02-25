@@ -41,3 +41,4 @@ specShiftMultiplier: 1.0 ## this is a multiplier to shift the spectra an extra f
 waveCalMethod: null ## the wavelength calibration method (None/null, NIRCamTS)
 readNoiseCorrelation: False ## Treat the read noise as correlated across pixels?
 readNoiseCorrVal: 0.01 ## The value of reaad noise correlation (if handling read Noise correlation)
+superWeights: False ## Use (S/N)^2 to weight instead of optimal extraction

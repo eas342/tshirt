@@ -572,8 +572,12 @@ class spec(phot_pipeline.phot):
             
             
             else:
-                optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
-                denom =  np.nansum(profile_img**2/varImg,spatialAx)
+                if self.param['superWeights'] == True:
+                    optNumerator = np.nansum(imgSub * profile_img**2 * correctionFactor/ varImg,spatialAx)
+                    denom =  np.nansum(profile_img**3/varImg,spatialAx)
+                else:
+                    optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
+                    denom =  np.nansum(profile_img**2/varImg,spatialAx)
                 nonz = (denom != 0.) & np.isfinite(denom)
                 optflux = np.zeros_like(optNumerator) * np.nan
                 optflux[nonz] = optNumerator[nonz] / denom[nonz]
