@@ -573,8 +573,8 @@ class spec(phot_pipeline.phot):
             
             else:
                 if self.param['superWeights'] == True:
-                    optNumerator = np.nansum(imgSub * profile_img**3 * correctionFactor/ varImg,spatialAx)
-                    denom =  np.nansum(profile_img**4/varImg,spatialAx)
+                    optNumerator = np.nansum(imgSub * profile_img * (np.exp(profile_img) - 1.) * correctionFactor/ varImg,spatialAx)
+                    denom =  np.nansum(profile_img**2 * (np.exp(profile_img) - 1.)/varImg,spatialAx)
                     denom_v = np.nansum(profile_img**2/varImg,spatialAx)
                 else:
                     optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
@@ -605,6 +605,8 @@ class spec(phot_pipeline.phot):
                 prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
                 if self.param['readNoiseCorrelation'] == True:
                     pass ## already using the weight2D
+                elif self.param['superWeights'] == True:
+                    weight2D = profile_img * (np.exp(profile_img) - 1.)* correctionFactor/ varImg
                 else:
                     ## calculate weight 2D
                     weight2D = profile_img * correctionFactor/ varImg
