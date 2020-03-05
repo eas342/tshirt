@@ -573,7 +573,7 @@ class spec(phot_pipeline.phot):
             
             else:
                 if self.param['superWeights'] == True:
-                    expConst = 10.
+                    expConst = 20.
                     weight2D = profile_img * np.exp(profile_img * expConst)/ varImg
                     optNumerator = np.nansum(imgSub * correctionFactor * weight2D,spatialAx)
                     denom =  np.nansum(profile_img * weight2D,spatialAx)
