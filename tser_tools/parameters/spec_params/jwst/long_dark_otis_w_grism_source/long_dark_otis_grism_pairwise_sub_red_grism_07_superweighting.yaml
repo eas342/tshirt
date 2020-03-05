@@ -1,4 +1,4 @@
-procFiles: /surtrdata1/tso_analysis/otis_long_dark/pairwise_sub_red_grism/NRC*.fits # files on which to do spec extraction
+procFiles: /fenrirdata1/es_tso/otis_dark_sim_grism/pairwise_sub_red_grism/*.fits # files on which to do spec extraction
 excludeList: null
 srcName: A0V J=8.54 source w/ super weights
 srcNameShort: pairwiseSubRed06_superWeights
