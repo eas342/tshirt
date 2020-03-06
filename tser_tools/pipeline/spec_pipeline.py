@@ -77,6 +77,8 @@ class spec(phot_pipeline.phot):
         self.dyn_specFile_prefix = 'tser_data/dynamic_spec/dyn_spec_{}'.format(self.dataFileDescrip)
         
         self.wavebin_file_prefix = 'tser_data/wavebin_spec/wavebin_spec_{}'.format(self.dataFileDescrip)
+        
+        self.master_profile_prefix = 'master_{}'.format(self.dataFileDescrip)
         #self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         #self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
         self.get_summation_direction()
@@ -426,7 +428,7 @@ class spec(phot_pipeline.phot):
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
             if masterProfile == True:
-                prefixName = 'master'
+                prefixName = self.master_profile_prefix
             elif ind == None:
                 prefixName = 'unnamed'
             else:
@@ -450,7 +452,7 @@ class spec(phot_pipeline.phot):
     def read_profiles(self):
         """ Read in the master profile for each source if using a single profile for all images """
         profile_img_list, smooth_img_list = [], []
-        prefixName = 'master'
+        prefixName = self.master_profile_prefix
         for ind in np.arange(self.nsrc):
             ## Get the profile
             profModelName = 'diagnostics/profile_fit/{}_profile_model_src_{}.fits'.format(prefixName,ind)
