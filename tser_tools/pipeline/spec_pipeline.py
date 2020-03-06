@@ -318,7 +318,7 @@ class spec(phot_pipeline.phot):
                 bkgModelTotal = bkgModelTotal + bkgModel
         return subImg, bkgModelTotal, subHead
     
-    def profile_normalize(self,img):
+    def profile_normalize(self,img,method='sum'):
         """
         Renormalize a profile along the spatial direction
         
@@ -328,7 +328,12 @@ class spec(phot_pipeline.phot):
             The input profile image to be normalized
         
         """
-        normArr = np.sum(img,self.spatialAx)
+        if method == 'sum':
+            normArr = np.nansum(img,self.spatialAx)
+        elif method == 'peak':
+            normArr = np.nanmax(img,self.spatialAx)
+        else:
+            raise Exception("Unrecognized normalization method")
         
         if self.param['dispDirection'] == 'x':
             norm2D = np.tile(normArr,[img.shape[0],1])
@@ -574,9 +579,11 @@ class spec(phot_pipeline.phot):
             else:
                 if self.param['superWeights'] == True:
                     expConst = 20.
-                    weight2D = profile_img * np.exp(profile_img * expConst)/ varImg
-                    optNumerator = np.nansum(imgSub * correctionFactor * weight2D,spatialAx)
-                    denom =  np.nansum(profile_img * weight2D,spatialAx)
+                    weight2D = np.exp(profile_img * expConst)/ varImg
+                    weight2D = self.profile_normalize(weight2D,method='peak')
+                    normprof2 = self.profile_normalize(profile_img,method='peak') * np.median(np.nanmax(profile_img,spatialAx))
+                    optNumerator = np.nansum(imgSub * weight2D,spatialAx)
+                    denom =  np.nansum(normprof2 * weight2D,spatialAx)
                     denom_v = np.nansum(profile_img**2/varImg,spatialAx)
                 else:
                     optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
