@@ -155,6 +155,11 @@ class spec(phot_pipeline.phot):
         """
         fileCountArray = np.arange(self.nImg)
         
+        if self.param['fixedProfile'] == True:
+            img, head = self.get_default_im()
+            imgSub, bkgModel, subHead = self.do_backsub(img,head,saveFits=False)
+            profileList, smooth_img_list = self.find_profile(imgSub,subHead,saveFits=True,masterProfile=True)
+        
         if useMultiprocessing == True:
             outputSpec = phot_pipeline.run_multiprocessing_phot(self,fileCountArray,method='spec_for_one_file')
         else:
@@ -345,7 +350,7 @@ class spec(phot_pipeline.phot):
         norm_profile[nonZero] = img[nonZero]/norm2D[nonZero]
         return norm_profile
     
-    def find_profile(self,img,head,ind=None,saveFits=False,showEach=False):
+    def find_profile(self,img,head,ind=None,saveFits=False,showEach=False,masterProfile=False):
         """
         Find the spectroscopic profile using splines along the spectrum
         This assumes an inherently smooth continuum (like a stellar source)
@@ -420,7 +425,9 @@ class spec(phot_pipeline.phot):
                 
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
-            if ind == None:
+            if masterProfile == True:
+                prefixName = 'master'
+            elif ind == None:
                 prefixName = 'unnamed'
             else:
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
@@ -440,6 +447,21 @@ class spec(phot_pipeline.phot):
         
         return profile_img_list, smooth_img_list
     
+    def read_profiles(self):
+        """ Read in the master profile for each source if using a single profile for all images """
+        profile_img_list, smooth_img_list = [], []
+        prefixName = 'master'
+        for ind in np.arange(self.nsrc):
+            ## Get the profile
+            profModelName = 'diagnostics/profile_fit/{}_profile_model_src_{}.fits'.format(prefixName,ind)
+            profile_img_list.append(fits.getdata(profModelName))
+            
+            ## Get the smoothed model
+            smoothModelName = 'diagnostics/profile_fit/{}_smoothed_src_{}.fits'.format(prefixName,ind)
+            smooth_img_list.append(fits.getdata(smoothModelName))
+        
+        return profile_img_list, smooth_img_list
+    
     def spec_for_one_file(self,ind,saveFits=False,diagnoseCovariance=False):
         """ Get spectroscopy for one file """
         if np.mod(ind,15) == 0:
@@ -455,7 +477,11 @@ class spec(phot_pipeline.phot):
         ## Smoothed source flux added below
         varImg = readNoise**2 + bkgModel ## in electrons because it should be gain-corrected
         
-        profile_img_list, smooth_img_list = self.find_profile(imgSub,subHead,ind,saveFits=saveFits)
+        if self.param['fixedProfile'] == True:
+            profile_img_list, smooth_img_list = self.read_profiles()
+        else:
+            profile_img_list, smooth_img_list = self.find_profile(imgSub,subHead,ind,saveFits=saveFits)
+        
         for oneSrc in np.arange(self.nsrc): ## use the smoothed flux for the variance estimate
             varImg = varImg + np.abs(smooth_img_list[oneSrc]) ## negative flux is approximated as photon noise
         
@@ -578,12 +604,12 @@ class spec(phot_pipeline.phot):
             
             else:
                 if self.param['superWeights'] == True:
-                    expConst = 15.
+                    expConst = 10.
                     weight2D = profile_img * np.exp(profile_img * expConst)/ varImg
-                    weight2D = self.profile_normalize(weight2D,method='peak')
-                    normprof2 = self.profile_normalize(profile_img,method='peak') * np.median(np.nanmax(profile_img,spatialAx))
+                    #weight2D = self.profile_normalize(weight2D,method='peak')
+                    #normprof2 = self.profile_normalize(profile_img,method='peak') * np.median(np.nanmax(profile_img,spatialAx))
                     optNumerator = np.nansum(imgSub * weight2D,spatialAx)
-                    denom =  np.nansum(normprof2 * weight2D,spatialAx)
+                    denom =  np.nansum(profile_img * weight2D,spatialAx)
                     denom_v = np.nansum(profile_img**2/varImg,spatialAx)
                 else:
                     optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
