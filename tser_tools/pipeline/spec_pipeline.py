@@ -578,8 +578,8 @@ class spec(phot_pipeline.phot):
             
             else:
                 if self.param['superWeights'] == True:
-                    expConst = 20.
-                    weight2D = np.exp(profile_img * expConst)/ varImg
+                    expConst = 15.
+                    weight2D = profile_img * np.exp(profile_img * expConst)/ varImg
                     weight2D = self.profile_normalize(weight2D,method='peak')
                     normprof2 = self.profile_normalize(profile_img,method='peak') * np.median(np.nanmax(profile_img,spatialAx))
                     optNumerator = np.nansum(imgSub * weight2D,spatialAx)
