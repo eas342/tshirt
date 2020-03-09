@@ -258,6 +258,8 @@ class phot:
             if self.param['bkgSub'] == True:
                 backApsShow = deepcopy(self.bkgApertures)
                 backApsShow.positions = showApPos
+                backApsShow[:,0] = backApsShow[:,0] + self.param['backOffset'][0]
+                backApsShow[:,1] = backApsShow[:,1] + self.param['backOffset'][1]
                 backApsShow.plot(ax=ax)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
@@ -335,8 +337,7 @@ class phot:
             ax.add_patch(circ)
             if self.param['bkgSub'] == True:
                 for oneRad in [self.param['backStart'],self.param['backEnd']]:
-                    
-                    circ = plt.Circle((srcX,srcY),
+                    circ = plt.Circle((srcX + self.param['backOffset'][0],srcY + self.param['backOffset'][1]),
                                       oneRad,edgecolor='blue',facecolor='none')
                     ax.add_patch(circ)
             
