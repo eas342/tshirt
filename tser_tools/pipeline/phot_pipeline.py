@@ -258,8 +258,8 @@ class phot:
             if self.param['bkgSub'] == True:
                 backApsShow = deepcopy(self.bkgApertures)
                 backApsShow.positions = showApPos
-                backApsShow[:,0] = backApsShow[:,0] + self.param['backOffset'][0]
-                backApsShow[:,1] = backApsShow[:,1] + self.param['backOffset'][1]
+                backApsShow.positions[:,0] = backApsShow.positions[:,0] + self.param['backOffset'][0]
+                backApsShow.positions[:,1] = backApsShow.positions[:,1] + self.param['backOffset'][1]
                 backApsShow.plot(ax=ax)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
