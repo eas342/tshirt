@@ -1391,6 +1391,8 @@ class batchPhot:
                 if type(self.batchParam[oneKey]) == list:
                     self.paramLists.append(oneKey)
                     self.counts.append(len(self.batchParam[oneKey]))
+        if len(self.counts) == 0:
+            raise Exception("No lists found to iterate over")
         self.NDictionaries = self.counts[0]
         ## Make sure there are a consistent number of parameters in each list
         if np.all(np.array(self.counts) == self.NDictionaries) == False:
