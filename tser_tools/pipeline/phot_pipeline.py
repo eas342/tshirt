@@ -953,6 +953,8 @@ class phot:
             Normalize the individual time series?
         yLim: List
             List of Y limit to show
+        errBar: string or None
+            Describes how error bars will be displayed. None=none, 'all'=every point,'one'=representative
         excludeSrc: List or None
             Custom sources to exclude in the averaging (to exclude specific sources in the reference time series)
               For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
@@ -1059,6 +1061,33 @@ class phot:
         
         HDUList.close()
         plt.close(fig)
+    
+    def print_phot_statistics(self,refCorrect=True):
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        head = photHDU.header
+        errArr = HDUList['PHOT ERR'].data
+        
+        t = Table()
+        if refCorrect == True:
+            yCorrected, yCorrected_err = self.refSeries(photArr,errArr)
+            t['Stdev (%)'] = np.round([np.nanstd(yCorrected) * 100.],4)
+            t['Theo Err (%)'] = np.round(np.nanmedian(yCorrected_err) * 100.,4)
+            mad = np.nanmedian(np.abs(yCorrected - np.nanmedian(yCorrected)))
+            t['MAD (%)'] = np.round(mad * 100.,4)
+        else:
+            t['Source #'] = np.arange(self.nsrc)
+            medFlux = np.nanmedian(photArr,axis=0)
+            t['Stdev (%)'] = np.round(np.nanstd(photArr,axis=0) / medFlux * 100.,4)
+            t['Theo Err (%)'] = np.round(np.nanmedian(errArr,axis=0) / medFlux * 100.,4)
+            tiledFlux = np.tile(medFlux,[self.nImg,1])
+            mad = np.nanmedian(np.abs(photArr - tiledFlux),axis=0) / medFlux
+            t['Mad (%)'] = np.round(mad * 100.,4)
+
+        
+        HDUList.close()
+        return t
     
     def plot_state_params(self,excludeSrc=None):
         HDUList = fits.open(self.photFile)
