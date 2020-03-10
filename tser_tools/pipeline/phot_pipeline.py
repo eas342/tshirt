@@ -1062,7 +1062,7 @@ class phot:
         HDUList.close()
         plt.close(fig)
     
-    def print_phot_statistics(self,refCorrect=True):
+    def print_phot_statistics(self,refCorrect=True,excludeSrc=None):
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
@@ -1071,7 +1071,8 @@ class phot:
         
         t = Table()
         if refCorrect == True:
-            yCorrected, yCorrected_err = self.refSeries(photArr,errArr)
+            yCorrected, yCorrected_err = self.refSeries(photArr,errArr,
+                                                        excludeSrc=excludeSrc)
             t['Stdev (%)'] = np.round([np.nanstd(yCorrected) * 100.],4)
             t['Theo Err (%)'] = np.round(np.nanmedian(yCorrected_err) * 100.,4)
             mad = np.nanmedian(np.abs(yCorrected - np.nanmedian(yCorrected)))
@@ -1085,7 +1086,7 @@ class phot:
             mad = np.nanmedian(np.abs(photArr - tiledFlux),axis=0) / medFlux
             t['Mad (%)'] = np.round(mad * 100.,4)
 
-        
+        print(t)
         HDUList.close()
         return t
     
