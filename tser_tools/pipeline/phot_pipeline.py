@@ -1188,11 +1188,11 @@ class phot:
         refPhot = np.ma.array(photArr,mask=refMask2D)
         
         ## Normalize all time series
-        norm1D = np.nanmedian(photArr,axis=0)
-        norm2D = np.tile(norm1D,(self.nImg,1))
+        norm1D_divisor = np.nanmedian(photArr,axis=0)
+        norm2D_divisor = np.tile(norm1D_divisor,(self.nImg,1))
         
-        normPhot = refPhot / norm2D
-        normErr = errPhot / norm2D
+        normPhot = refPhot / norm2D_divisor
+        normErr = errPhot / norm2D_divisor
         
         ## Find outliers
         # Median time series
@@ -1216,18 +1216,19 @@ class phot:
             
         else:
             ## Weight by the flux, but only for the valid points left
-            weights = np.ma.array(norm2D,mask=normPhot.mask)
+            weights = np.ma.array(norm2D_divisor,mask=normPhot.mask)
             ## Make sure weights sum to 1.0 for each time point (since some sources are missing)
             weightSums1D = np.nansum(weights,axis=1)
             weightSums2D = np.tile(weightSums1D,(self.nsrc,1)).transpose()
             weights = weights / weightSums2D
             combRef = np.nansum(normPhot * weights,axis=1)
-            combErr = np.sqrt(np.nansum((errPhot * weights)**2,axis=1)) / (self.nsrc - np.sum(maskOut))
+            combErr = np.sqrt(np.nansum((normErr * weights)**2,axis=1)) / np.nansum(weights,axis=1)
+            
         
         yCorrected = photArr[:,0] / combRef
         yCorrNorm = yCorrected / np.nanmedian(yCorrected)
         
-        yErrNorm = np.sqrt(normErr[:,0]**2 + (combRef / combErr)**2)
+        yErrNorm = np.sqrt(normErr[:,0]**2 + (combErr/ combRef)**2)
         
         return yCorrNorm, yErrNorm
     
