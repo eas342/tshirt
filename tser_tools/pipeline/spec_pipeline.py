@@ -869,7 +869,8 @@ class spec(phot_pipeline.phot):
             dispHDU = HDUList['DISP INDICES']
             timeHDU = HDUList['TIME']
             
-            offsetHDU = fits.ImageHDU(specOffsets)
+            ## the shift direction is opposite the measured shift, so save this
+            offsetHDU = fits.ImageHDU(-specOffsets) 
             offsetHDU.name = 'SPEC OFFSETS'
             offsetHDU.header['BUNIT'] = ('pixels','units of Spectral offsets')
             
