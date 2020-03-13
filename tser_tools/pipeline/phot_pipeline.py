@@ -819,6 +819,7 @@ class phot:
         else:
             ## No background subtraction
             srcPhot = rawPhot['aperture_sum']
+            bkgVals = np.nan
             bkgValsErr = 0.
         
         srcPhotErr = np.sqrt(rawPhot['aperture_sum_err']**2 + bkgValsErr**2)
