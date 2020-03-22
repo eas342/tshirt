@@ -34,6 +34,7 @@ try:
     from bokeh.models import WheelZoomTool
 except ImportError as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
+from . import spec_pipeline
 
 def run_one_phot_method(allInput):
     """
@@ -122,7 +123,7 @@ class phot:
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
                          'dateFormat': 'Two Part','copyCentroidFile': None,
-                         'bkgMethod': 'mean'}
+                         'bkgMethod': 'mean','diagnosticMode': False}
         
 
         for oneKey in defaultParams.keys():
@@ -802,7 +803,7 @@ class phot:
                 
                 ## Background subtracted fluxes
                 srcPhot = rawPhot['aperture_sum'] - bkgVals
-            else:
+            elif self.param['bkgMethod'] in ['median', 'robust mean']:
                 bkgIntensity, bkgIntensityErr = [], []
                 bkg_masks = self.bkgApertures.to_mask(method='center')
                 for mask in bkg_masks:
@@ -816,7 +817,10 @@ class phot:
                 bkgValsErr = np.array(bkgIntensityErr) * self.srcApertures.area()
             
                 srcPhot = rawPhot['aperture_sum'] - bkgVals
-        
+            elif self.param['bkgMethod'] == 'colrow':
+                srcPhot, bkgVals, bkgValsErr = self.poly_sub_phot(img,head,err,ind)
+            else:
+                raise Exception("Unrecognized background method {}".format(self.param['bkgMethod']))
         else:
             ## No background subtraction
             srcPhot = rawPhot['aperture_sum']
@@ -827,6 +831,81 @@ class phot:
         
         
         return [t0.jd,srcPhot,srcPhotErr, bkgVals]
+    
+    def show_cutout(self,img,aps=None,name='',percentScaling=False):
+        """ Plot the cutout around the source for diagnostic purposes"""
+        fig, ax = plt.subplots()
+        if percentScaling == True:
+            vmin,vmax = np.nanpercentile(img,[3,97])
+        else:
+            vmin,vmax = None, None
+        
+        ax.imshow(img,vmin=vmin,vmax=vmax)
+        if aps is not None:
+            aps.plot(ax=ax)
+        ax.set_title(name)
+        fig.show()
+        print('Press c and enter to continue')
+        print('or press q and enter to quit')
+        pdb.set_trace()
+        plt.close(fig)
+    
+    def poly_sub_phot(self,img,head,err,ind,showEach=False,saveFits=False):
+        """
+        Do a polynomial background subtraction use robust polynomials
+        
+        This is instead of using the mean or another statistic of the background aperture
+        """
+        bkg_masks = self.bkgApertures.to_mask(method='center')
+        
+        spec = spec_pipeline.spec()
+        spec.param['bkgOrderX'] = 1
+        spec.param['bkgOrderY'] = 1
+        spec.fileL = self.fileL
+        
+        srcPhot, bkgPhot = [], []
+        for ind,mask in enumerate(bkg_masks):
+            backImg = mask.multiply(img,fill_value=np.nan)
+            ## fill value doesn't appear to work so I manually will make them NaN
+            nonBackPts = mask.data == 0
+            backImg[nonBackPts] = np.nan
+            
+            img_cutout = mask.cutout(img,fill_value=0.0)
+            err_cutout = mask.cutout(err,fill_value=0.0)
+            
+            srcApSub = deepcopy(self.srcApertures)
+            srcApSub.positions[:,0] = srcApSub.positions[:,0] - mask.bbox.ixmin
+            srcApSub.positions[:,1] = srcApSub.positions[:,1] - mask.bbox.iymin
+            
+            spec.param['bkgRegionsX'] = [[0,backImg.shape[1]]]
+            spec.param['bkgRegionsY'] = [[0,backImg.shape[0]]]
+            
+            if self.param['diagnosticMode'] == True:
+                self.show_cutout(img_cutout,aps=srcApSub,name='Img Cutout')
+                self.show_cutout(backImg,aps=srcApSub,name='Background Cutout',
+                                 percentScaling=True)
+            
+            backImg_sub, bkgModelTotal, subHead = spec.do_backsub(backImg,head,ind=ind)
+            subImg = img_cutout - bkgModelTotal
+            
+            srcPhot1 = aperture_photometry(subImg,srcApSub,error=err_cutout,
+                                          method=self.param['subpixelMethod'])
+            srcPhot.append(srcPhot1['aperture_sum'][ind])
+            bkgPhot1 = aperture_photometry(bkgModelTotal,srcApSub,error=err_cutout,
+                                          method=self.param['subpixelMethod'])
+            bkgPhot.append(bkgPhot1['aperture_sum'][ind])
+            
+            if self.param['diagnosticMode'] == True:
+                self.show_cutout(subImg,aps=srcApSub,name='Backsub Img Cutout',
+                                 percentScaling=True)
+        
+        
+        ## use the error in the mean background as an estimate for error
+        bkgPhotMean = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
+        bkgValsErr = bkgPhotMean['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+        
+        
+        return np.array(srcPhot),np.array(bkgPhot),bkgValsErr
     
     def return_self(self):
         return self

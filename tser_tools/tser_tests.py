@@ -1,5 +1,5 @@
-import phot_pipeline
-import spec_pipeline
+from pipeline import phot_pipeline
+from pipeline import spec_pipeline
 from astropy.io import fits, ascii
 import os
 import matplotlib.pyplot as plt
@@ -39,4 +39,7 @@ def test_allan_variance(doYerr=True):
     
     phot_pipeline.allan_variance(x,y,yerr)
     
-    
+def test_poly_sub():
+    phot = phot_pipeline.phot(paramFile='parameters/phot_params/test_parameters/phot_param_k2_22_colrow.yaml')
+    phot.param['diagnosticMode'] = True
+    phot.do_phot()
