@@ -43,3 +43,16 @@ def test_poly_sub():
     phot = phot_pipeline.phot(paramFile='parameters/phot_params/test_parameters/phot_param_k2_22_colrow.yaml')
     phot.param['diagnosticMode'] = True
     phot.do_phot()
+
+def compare_colrow_and_annulus_backsub():
+    descriptions = ['Background Annulus','Col-Row Sub']
+    for ind,oneName in enumerate(['phot_param_k2_22_annulus.yaml','phot_param_k2_22_colrow.yaml']):
+        path = os.path.join('parameters','phot_params','test_parameters',oneName)
+        phot = phot_pipeline.phot(paramFile=path)
+        phot.do_phot(useMultiprocessing=True)
+        print("***************************")
+        print(descriptions[ind])
+        print("***************************")
+        stats = phot.print_phot_statistics(refCorrect=False)
+    
+    
