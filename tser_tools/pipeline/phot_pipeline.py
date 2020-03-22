@@ -815,7 +815,8 @@ class phot:
                 bkgVals = np.array(bkgIntensity)  * self.srcApertures.area()
                 bkgValsErr = np.array(bkgIntensityErr) * self.srcApertures.area()
             
-            srcPhot = rawPhot['aperture_sum'] - bkgVals
+                srcPhot = rawPhot['aperture_sum'] - bkgVals
+        
         else:
             ## No background subtraction
             srcPhot = rawPhot['aperture_sum']
