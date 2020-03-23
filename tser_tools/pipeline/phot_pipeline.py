@@ -1833,7 +1833,7 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     ax.plot(binSizes,theoNoise,label='Read + Photon Noise')
     ax.plot(binSizes,wNoise,label='White noise scaling')
     ax.set_xlabel('Bin Size ({})'.format(xUnit))
-    ax.set_ylabel('$\sigma$ ({})'.format(yUnit))
+    ax.set_ylabel(r'$\sigma$ ({})'.format(yUnit))
     ax.set_ylim(yLim)
     ax.legend()
     ax.set_title("Allan Variance (Linear De-trend = {})".format(removeLinear))
