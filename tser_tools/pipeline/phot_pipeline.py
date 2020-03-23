@@ -1448,8 +1448,7 @@ class batchPhot:
     
     def general_init(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
         self.batchFile = batchFile
-        with open(batchFile) as bFile:
-            self.batchParam = read_yaml(bFile)
+        self.batchParam = read_yaml(batchFile)
         
         ## Find keys that are lists. These are ones that are being run in batches
         ## However, a few keywords are already lists (like [x,y] coordinates))
