@@ -34,7 +34,7 @@ try:
     from bokeh.models import WheelZoomTool
 except ImportError as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
-from . import spec_pipeline
+
 
 def run_one_phot_method(allInput):
     """
@@ -856,6 +856,8 @@ class phot:
         
         This is instead of using the mean or another statistic of the background aperture
         """
+        from . import spec_pipeline
+        
         bkg_masks = self.bkgApertures.to_mask(method='center')
         
         spec = spec_pipeline.spec()
