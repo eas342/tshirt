@@ -46,13 +46,34 @@ def test_poly_sub():
 
 def compare_colrow_and_annulus_backsub():
     descriptions = ['Background Annulus','Col-Row Sub']
+    
+    fig, ax = plt.subplots()
     for ind,oneName in enumerate(['phot_param_k2_22_annulus.yaml','phot_param_k2_22_colrow.yaml']):
         path = os.path.join('parameters','phot_params','test_parameters',oneName)
         phot = phot_pipeline.phot(paramFile=path)
-        phot.do_phot(useMultiprocessing=True)
+        if os.path.exists(phot.photFile) == False:
+            phot.do_phot(useMultiprocessing=True)
+        
         print("***************************")
         print(descriptions[ind])
         print("***************************")
         stats = phot.print_phot_statistics(refCorrect=False)
-    
-    
+        
+        HDUList = fits.open(phot.photFile)
+        
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        t = jdArr - np.round(np.min(jdArr))
+        jdHDU = HDUList['TIME']
+        
+        backData = HDUList['BACKG PHOT'].data
+        
+        linestyles=['-','-.']
+        for oneSrc in np.arange(phot.nsrc):
+            thisLabel = "{} src {}".format(descriptions[ind],oneSrc)
+            ax.plot(t,backData[:,oneSrc],label=thisLabel,linestyle=linestyles[oneSrc])
+        
+        HDUList.close()
+    ax.legend()
+    ax.set_ylabel("Backg Flux")
+    fig.show()

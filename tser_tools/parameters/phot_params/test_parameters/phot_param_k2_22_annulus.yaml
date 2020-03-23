@@ -1,7 +1,7 @@
 procFiles: ../example_data/photometry/*.fits ## files on which to do Phot
 excludeList: null
 srcName: K2-22 b
-srcNameShort: k2_22b_example
+srcNameShort: k2_22b_annular_bkg
 nightName: UT2020_02_20
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [82, 90]
