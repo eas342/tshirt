@@ -111,7 +111,8 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [[166.515 , 160.586 ]] ## NRCN821WLP8SUB-6012134600_1_481_SE_2
    - [[159.676 , 157.098 ]] ## NRCN821WLP8SUB-6012134957_1_489_SE_2
    - [[326.546 , 320.268 ]] ## NRCN821WLP8SUB640-6012195832_1_481_S
-   - [[319.659 , 316.874 ]] ## NRCN821WLP8SUB640-6012200140_1_489_SrefPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
+   - [[319.659 , 316.874 ]] ## NRCN821WLP8SUB640-6012200140_1_489_S
+refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
