@@ -129,7 +129,13 @@ class phot:
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
                 self.param[oneKey] = defaultParams[oneKey]
-
+        
+        ## Set up file names for output
+        self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
+        self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
+        self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
+        self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
+        
         # Get the file list
         self.fileL = self.get_fileList()
         self.nImg = len(self.fileL)
@@ -139,11 +145,6 @@ class phot:
         
         self.set_up_apertures(positions)
         
-        ## Set up file names for output
-        self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
-        self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
-        self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
-        self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
         self.check_parameters()
         
     
@@ -165,6 +166,11 @@ class phot:
                     fileList.append(oneFile)
         else:
             fileList = origList
+        
+        if (len(fileList) == 0) & os.path.exists(self.photFile):
+            warnings.warn("File Search comes up empty. Reading from previous phot file instead.")
+            t1 = Table.read(self.photFile,hdu='FILENAMES')
+            fileList = np.array(t1['File Path'])
         
         return fileList
 
