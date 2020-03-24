@@ -1224,12 +1224,17 @@ class phot:
         
         fig.show()
     
-    def plot_flux_vs_pos(self):
+    def plot_flux_vs_pos(self,refCorrect=True):
         """
         Plot flux versus centroid to look for flat fielding effects
         """
         HDUList = fits.open(self.photFile)
-        yNorm, yErrNorm = self.refSeries(HDUList['PHOTOMETRY'].data,HDUList['PHOT ERR'].data)
+        if refCorrect == True:
+            yNorm, yErrNorm = self.refSeries(HDUList['PHOTOMETRY'].data,HDUList['PHOT ERR'].data)
+        else:
+            yFlux = HDUList['PHOTOMETRY'].data[:,0]
+            yNorm = yFlux / np.median(yFlux)
+        
         cenX = HDUList['CENTROIDS'].data[:,0,0]
         cenY = HDUList['CENTROIDS'].data[:,0,1]
         
@@ -1243,6 +1248,7 @@ class phot:
         #yPoly = 
         
         fig.show()
+        HDUList.close()
     
     def refSeries(self,photArr,errPhot,reNorm=False,excludeSrc=None,sigRej=5.):
         """ Average together the reference stars
