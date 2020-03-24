@@ -295,7 +295,7 @@ class spec(phot_pipeline.phot):
         if oneDirection == 'X':
             outHead['ROWSUB'] = (True, "Is row-by-row subtraction performed?")
         else:
-            outHead['COLSUB'] = (True, "Is row-by-row subtraction performed?")
+            outHead['COLSUB'] = (True, "Is col-by-col subtraction performed?")
         
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
