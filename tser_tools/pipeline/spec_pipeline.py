@@ -62,6 +62,7 @@ class spec(phot_pipeline.phot):
                 self.param[oneKey] = defaultParams[oneKey]
         
         # Get the file list
+        self.photFile = 'none'
         self.fileL = self.get_fileList()
         self.nImg = len(self.fileL)
         
