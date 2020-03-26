@@ -1955,14 +1955,14 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
         else:
             pointsThreshold = polyord
         
-        if np.sum(goodp) < pointsThreshold:
+        if np.sum(goodp) <= pointsThreshold:
             warntext = "Less than "+str(polyord)+"points accepted, returning flat line"
             warnings.warn(warntext)
             
             if useSpline == True:
                 spl = UnivariateSpline([0,1,2],[0,0,0],k=1)
             else:
-                coeff = np.zeros(polyord)
+                coeff = np.zeros(polyord + 1)
                 coeff[0] = 1.0
         else:
             if useSpline == True:
