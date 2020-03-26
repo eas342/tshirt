@@ -44,14 +44,14 @@ def test_poly_sub():
     phot.param['diagnosticMode'] = True
     phot.do_phot()
 
-def compare_colrow_and_annulus_backsub():
+def compare_colrow_and_annulus_backsub(recalculate=False):
     descriptions = ['Background Annulus','Col-Row Sub']
     
     fig, ax = plt.subplots()
     for ind,oneName in enumerate(['phot_param_k2_22_annulus.yaml','phot_param_k2_22_colrow.yaml']):
         path = os.path.join('parameters','phot_params','test_parameters',oneName)
         phot = phot_pipeline.phot(paramFile=path)
-        if os.path.exists(phot.photFile) == False:
+        if (os.path.exists(phot.photFile) == False) | (recalculate == True):
             phot.do_phot(useMultiprocessing=True)
         
         print("***************************")
