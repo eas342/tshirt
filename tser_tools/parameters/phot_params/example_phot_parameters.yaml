@@ -43,3 +43,5 @@ readNoise: null ## Read noise in electrons
 detectorGain: null ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 diagnosticMode: False ## diagnostic mode where you will show intermediate steps like row-by-row fits?
+bkgOrderX: 1 ## polynomial order for row-by-row background subtraction (if bkgMethod is 'colrow')
+bkgOrderY: 1 ## polynomial order for col-by-col background subtraction (if bkgMethod is 'colrow')

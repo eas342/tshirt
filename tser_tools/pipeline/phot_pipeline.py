@@ -123,7 +123,8 @@ class phot:
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
                          'dateFormat': 'Two Part','copyCentroidFile': None,
-                         'bkgMethod': 'mean','diagnosticMode': False}
+                         'bkgMethod': 'mean','diagnosticMode': False,
+                         'bkgOrderX': 1, 'bkgOrderY': 1}
         
 
         for oneKey in defaultParams.keys():
@@ -867,8 +868,8 @@ class phot:
         bkg_masks = self.bkgApertures.to_mask(method='center')
         
         spec = spec_pipeline.spec()
-        spec.param['bkgOrderX'] = 1
-        spec.param['bkgOrderY'] = 1
+        spec.param['bkgOrderX'] = self.param['bkgOrderX']
+        spec.param['bkgOrderY'] = self.param['bkgOrderY']
         spec.fileL = self.fileL
         
         srcPhot, bkgPhot = [], []
