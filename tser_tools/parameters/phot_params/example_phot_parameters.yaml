@@ -45,3 +45,4 @@ dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TI
 diagnosticMode: False ## diagnostic mode where you will show intermediate steps like row-by-row fits?
 bkgOrderX: 1 ## polynomial order for row-by-row background subtraction (if bkgMethod is 'colrow')
 bkgOrderY: 1 ## polynomial order for col-by-col background subtraction (if bkgMethod is 'colrow')
+backsub_directions: ['Y', 'X'] ## directions and order in which to do polynomial colrow subtraction

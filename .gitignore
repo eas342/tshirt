@@ -38,6 +38,7 @@ tser_tools/diagnostics/profile_fit/*.fits
 tser_tools/diagnostics/variance_img/*.fits
 tser_tools/diagnostics/trimmed_flat/*.fits
 tser_tools/parameters/backup_param/
+tser_tools/diagnostics/phot_poly_backsub/*.fits
 tser_tools/diagnostics/profile_fit/ev_local_*
 build/
 dist/

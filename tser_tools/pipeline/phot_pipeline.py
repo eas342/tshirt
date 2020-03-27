@@ -124,7 +124,7 @@ class phot:
                          'subpixelMethod': 'exact','excludeList': None,
                          'dateFormat': 'Two Part','copyCentroidFile': None,
                          'bkgMethod': 'mean','diagnosticMode': False,
-                         'bkgOrderX': 1, 'bkgOrderY': 1}
+                         'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X']}
         
 
         for oneKey in defaultParams.keys():
@@ -839,7 +839,7 @@ class phot:
         
         return [t0.jd,srcPhot,srcPhotErr, bkgVals]
     
-    def show_cutout(self,img,aps=None,name='',percentScaling=False):
+    def show_cutout(self,img,aps=None,name='',percentScaling=False,src=None,ind=None):
         """ Plot the cutout around the source for diagnostic purposes"""
         fig, ax = plt.subplots()
         if percentScaling == True:
@@ -856,6 +856,14 @@ class phot:
         print('or press q and enter to quit')
         pdb.set_trace()
         plt.close(fig)
+        
+        primHDU = fits.PrimaryHDU(img)
+        primHDU.header['Name'] = name
+        name_for_file = name.replace(" ","_")
+        outName = "{}_{}_src_{}_ind_{}.fits".format(self.dataFileDescrip,name_for_file,src,ind)
+        outPath = os.path.join("diagnostics","phot_poly_backsub",outName)
+        primHDU.writeto(outPath,overwrite=True)
+        
     
     def poly_sub_phot(self,img,head,err,ind,showEach=False,saveFits=False):
         """
@@ -890,11 +898,12 @@ class phot:
             spec.param['bkgRegionsY'] = [[0,backImg.shape[0]]]
             
             if self.param['diagnosticMode'] == True:
-                self.show_cutout(img_cutout,aps=srcApSub,name='Img Cutout')
+                self.show_cutout(img_cutout,aps=srcApSub,name='Img Cutout',src=ind,ind=ind)
                 self.show_cutout(backImg,aps=srcApSub,name='Background Cutout',
-                                 percentScaling=True)
+                                 percentScaling=True,src=ind,ind=ind)
             
-            backImg_sub, bkgModelTotal, subHead = spec.do_backsub(backImg,head,ind=ind)
+            backImg_sub, bkgModelTotal, subHead = spec.do_backsub(backImg,head,ind=ind,
+                                                                  directions=self.param['backsub_directions'])
             subImg = img_cutout - bkgModelTotal
             
             srcPhot1 = aperture_photometry(subImg,srcApSub,error=err_cutout,
@@ -906,7 +915,7 @@ class phot:
             
             if self.param['diagnosticMode'] == True:
                 self.show_cutout(subImg,aps=srcApSub,name='Backsub Img Cutout',
-                                 percentScaling=True)
+                                 percentScaling=True,src=ind,ind=ind)
         
         
         ## use the error in the mean background as an estimate for error

@@ -315,11 +315,11 @@ class spec(phot_pipeline.phot):
         
         return img - bkgModel, bkgModel, outHead
     
-    def do_backsub(self,img,head,ind=None,saveFits=False):
+    def do_backsub(self,img,head,ind=None,saveFits=False,directions=['Y','X']):
         subImg = img
         subHead = head
         bkgModelTotal = np.zeros_like(subImg)
-        for oneDirection in ['Y','X']:
+        for oneDirection in directions:
             if self.param['bkgSub{}'.format(oneDirection)] == True:
                 subImg, bkgModel, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,
                                                                 ind=ind,saveFits=saveFits)
