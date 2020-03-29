@@ -47,7 +47,7 @@ def test_poly_sub():
 def compare_colrow_and_annulus_backsub(recalculate=False):
     descriptions = ['Background Annulus','Col-Row Sub']
     
-    fig, ax = plt.subplots()
+    fig, axArr = plt.subplots(3,sharex=True)
     for ind,oneName in enumerate(['phot_param_k2_22_annulus.yaml','phot_param_k2_22_colrow.yaml']):
         path = os.path.join('parameters','phot_params','test_parameters',oneName)
         phot = phot_pipeline.phot(paramFile=path)
@@ -67,13 +67,19 @@ def compare_colrow_and_annulus_backsub(recalculate=False):
         jdHDU = HDUList['TIME']
         
         backData = HDUList['BACKG PHOT'].data
+        srcData = HDUList['PHOTOMETRY'].data
+        raw_src = srcData + backData
         
         linestyles=['-','-.']
         for oneSrc in np.arange(phot.nsrc):
             thisLabel = "{} src {}".format(descriptions[ind],oneSrc)
-            ax.plot(t,backData[:,oneSrc],label=thisLabel,linestyle=linestyles[oneSrc])
+            for plot_ind,oneData in enumerate([raw_src,srcData,backData]):
+                ax = axArr[plot_ind]
+                ax.plot(t,oneData[:,oneSrc],label=thisLabel,linestyle=linestyles[oneSrc])
         
         HDUList.close()
-    ax.legend()
-    ax.set_ylabel("Backg Flux")
+    axArr[2].legend()
+    axArr[0].set_ylabel("Raw Src")
+    axArr[1].set_ylabel("Raw - Back")
+    axArr[2].set_ylabel("Backg Flux")
     fig.show()
