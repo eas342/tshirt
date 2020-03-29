@@ -919,8 +919,8 @@ class phot:
         
         
         ## use the error in the mean background as an estimate for error
-        bkgPhotMean = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
-        bkgValsErr = bkgPhotMean['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+        bkgPhotTotal = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
+        bkgValsErr = bkgPhotTotal['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
         
         
         return np.array(srcPhot),np.array(bkgPhot),bkgValsErr
