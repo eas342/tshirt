@@ -963,6 +963,7 @@ class phot:
         hdu.header['AXIS2'] = ('image','image axis')
         basicHeader = deepcopy(hdu.header)
         
+#        hdu.header[''] = '        Source parameters '
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
         hdu.header['SRCGEOM'] = (self.param['srcGeometry'], 'Source Aperture Geometry')
@@ -975,7 +976,10 @@ class phot:
             hdu.header['APWIDTH'] = (self.param['apWidth'], 'Aperture radius (px)')
         else:
             print("No apHeight or apRadius found in parameters")
+        hdu.header['SCALEDAP'] = (self.param['scaleAperture'], 'Is the aperture scaled by the FWHM?')
+        hdu.header['APSCALE'] = (self.param['apScale'], 'If scaling apertures, which scale factor?')
         
+#        hdu.header[''] = '       Background Subtraction parameters '
         hdu.header['BKGSUB'] = (self.param['bkgSub'], 'Do a background subtraction?')
         hdu.header['BKGSTART'] = (self.param['backStart'], 'Background Annulus start (px), if used')
         hdu.header['BKGEND'] = (self.param['backEnd'], 'Background Annulus end (px), if used')
@@ -984,15 +988,29 @@ class phot:
             hdu.header['BKWIDTH'] = (self.param['backWidth'], 'Background Box Width (px)')
         hdu.header['BKOFFSTX'] = (self.param['backOffset'][0], 'X Offset between background and source (px)')
         hdu.header['BKOFFSTY'] = (self.param['backOffset'][1], 'Y Offset between background and source (px)')
+        hdu.header['BKGMETH'] = (self.param['bkgMethod'], 'Background subtraction method')
+        if self.param['bkgMethod'] == 'colrow':
+            hdu.header['BKGDIREC'] = (self.param['backsub_directions'], 'The directions, in order, for polynomial background sub')
+            hdu.header['BKGORDRX'] = (self.param['bkgOrderX'], 'X Background subtraction polynomial order')
+            hdu.header['BKGORDRY'] = (self.param['bkgOrderY'], 'Y Background subtraction polynomial order')
         
+#        hdu.header[''] = '       Centroiding Parameters '
         hdu.header['BOXSZ'] = (self.param['boxFindSize'], 'half-width of the box used for centroiding')
+        hdu.header['COPYCENT'] = (self.param['copyCentroidFile'], 'Name of the file where centroids are copied (if used)')
+                
+#        hdu.header[''] = '       Timing Parameters '
         hdu.header['JDREF'] = (self.param['jdRef'], ' JD reference offset to subtract for plots')
         
-        hdu.header['SCALEDAP'] = (self.param['scaleAperture'], 'Is the aperture scaled by the FWHM?')
-        hdu.header['APSCALE'] = (self.param['apScale'], 'If scaling apertures, which scale factor?')
+#        hdu.header[''] = '       Image Parameters '
         hdu.header['ISCUBE'] = (self.param['isCube'], 'Is the image data 3D?')
         hdu.header['CUBPLANE'] = (self.param['cubePlane'], 'Which plane of the cube is used?')
         hdu.header['DOCEN'] = (self.param['doCentering'], 'Is each aperture centered individually?')
+        hdu.header['EXTNAMEU'] = (self.param['FITSextension'], 'FITS extension used of data')
+        hdu.header['NANTREAT'] = (self.param['nanTreatment'], 'How are NaN pixels treated?')
+        hdu.header['SLOPEIMG'] = (self.param['isSlope'], 'Are original images slopes, then multiplied by int time?')
+        hdu.header['SUBPIXEL'] = (self.param['subpixelMethod'], 'Treatment of apertures at the subpixel level')
+        
+
         
         hduFileNames = self.make_filename_hdu()
         
