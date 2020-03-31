@@ -990,7 +990,7 @@ class phot:
         hdu.header['BKOFFSTY'] = (self.param['backOffset'][1], 'Y Offset between background and source (px)')
         hdu.header['BKGMETH'] = (self.param['bkgMethod'], 'Background subtraction method')
         if self.param['bkgMethod'] == 'colrow':
-            hdu.header['BKGDIREC'] = (self.param['backsub_directions'], 'The directions, in order, for polynomial background sub')
+            hdu.header['BKGDIREC'] = (" ".join(self.param['backsub_directions']), 'The directions, in order, for polynomial background sub')
             hdu.header['BKGORDRX'] = (self.param['bkgOrderX'], 'X Background subtraction polynomial order')
             hdu.header['BKGORDRY'] = (self.param['bkgOrderY'], 'Y Background subtraction polynomial order')
         
