@@ -474,7 +474,8 @@ class spec(phot_pipeline.phot):
         img, head = self.getImg(oneImgName)
         t0 = self.get_date(head)
         
-        imgSub, bkgModel, subHead = self.do_backsub(img,head,ind,saveFits=saveFits)
+        imgSub, bkgModel, subHead = self.do_backsub(img,head,ind,saveFits=saveFits,
+                                                    directions=self.param['bkgSubDirections'])
         readNoise = self.get_read_noise(head)
         ## Background and read noise only.
         ## Smoothed source flux added below

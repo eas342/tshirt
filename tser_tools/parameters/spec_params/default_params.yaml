@@ -7,11 +7,10 @@ dispDirection: x ## dispersion direction 'x' or 'y'
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
    - 104
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
-bkgSubX: True ## Do background subtraction along the X direction?
+bkgSubDirections: ['Y','X'] ## The direction and sequence of background subtractions to do
 bkgRegionsX: ## a list of background regions in the X direction
    - [0, 258]
 bkgOrderX: 0 ## order of polynomial subtraction in the X direction
-bkgSubY: True ## Do background subtraction along the Y direction?
 bkgRegionsY: ## a list of background regions in the Y direction
    - [0, 60]
    - [158, 255]
