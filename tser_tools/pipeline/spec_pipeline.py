@@ -93,6 +93,23 @@ class spec(phot_pipeline.phot):
         self.check_parameters()
         
     def check_parameters(self):
+        if ('bkgSubY' in self.param) | ('bkgSubY' in self.param):
+            bkgSubDirections = []
+            if ('bkgSubY' in self.param):
+                if self.param['bkgSubY'] == True:
+                    bkgSubDirections.append('Y')
+            else:
+                bkgSubDirections.append('Y')
+            if ('bkgSubX' in self.param):
+                if self.param['bkgSubX'] == True:
+                    bkgSubDirections.append('X')
+            else:
+                bkgSubDirections.append('X')
+                    
+            warnings.warn('Deprecated parameter bkgSubY used in parameter file. Setting bkgSubDirections to [{}]'.format(' '.join(bkgSubDirections)))
+            self.param['bkgSubDirections'] = bkgSubDirections
+            
+        
         dispCheck = (self.param['dispDirection'] == 'x') | (self.param['dispDirection'] == 'y')
         assert dispCheck, 'Dispersion direction parameter not valid'
         if self.param['readNoiseCorrelation'] == True:
