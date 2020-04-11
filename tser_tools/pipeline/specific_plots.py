@@ -1,12 +1,20 @@
 from . import phot_pipeline
 from . import spec_pipeline
+from .phot_pipeline import robust_poly
 import matplotlib.pyplot as plt
 from astropy.io import fits, ascii
 from astropy.time import Time
+import astropy.coordinates
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 import numpy as np
 import pdb
 
-def k2_22(date='jan25',showTiming=False):
+from astropy.utils.iers import conf
+conf.auto_max_age = None
+
+
+def k2_22(date='jan25',showTiming=False,detrend=True):
     dat = ascii.read('tser_data/reference_dat/k2-22_phased_transit.txt',
                      names=['phase','flux','flux err','junk'],
                      format='fixed_width',delimiter=' ')
@@ -16,6 +24,9 @@ def k2_22(date='jan25',showTiming=False):
         t0 = Time('2020-01-25T09:30:27.06')
     elif date == 'jan28':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_lbc.yaml')
+        t0 = Time('2020-01-28T10:40:45.81')
+    elif date == 'jan28-luci2':
+        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_luci2.yaml')
         t0 = Time('2020-01-28T10:40:45.81')
     elif date == 'feb20':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_02_20_phot_lbc.yaml')
@@ -38,17 +49,41 @@ def k2_22(date='jan25',showTiming=False):
     head = photHDU.header
     
     jdHDU = HDUList['TIME']
-    jdArr = jdHDU.data
+    jdArr_ut = jdHDU.data
+    
+    
+    coord = SkyCoord("11:17:55.88", "+02:37:08.6",
+                            unit=(u.hourangle, u.deg), frame='icrs')
+    loc = astropy.coordinates.EarthLocation.of_site('lbt') 
+    times = Time(jdArr_ut, format='jd',
+                 scale='utc', location=loc)  
+    ltt_bary = times.light_travel_time(coord)  
+    bjd = times.utc + ltt_bary
+    jdArr = bjd.jd
+    
     timeHead = jdHDU.header
     
     jdRef = phot.param['jdRef']
     
     
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(4,3.5))
     
     yCorrected, yCorrected_err = phot.refSeries(photArr,errArr,excludeSrc=None)
     x = jdArr - jdRef
-    ax.plot(x,yCorrected,label=band)
+    
+    if detrend == True:
+        T0 = 2456811.1208
+        P = 0.381078
+        phase = np.mod((jdArr - T0)/P,1.0)
+        fitp = (phase < -0.1) | (phase > 0.1)
+        polyBase = robust_poly(x[fitp],yCorrected[fitp],2,sigreject=2)
+        yBase = np.polyval(polyBase,x)
+        
+        yShow = yCorrected / yBase
+    else:
+        yShow = yCorrected
+    
+    ax.plot(x,yShow,'o',label=band)
     
     #phot.plot_phot(refCorrect=True,yLim=[0.97,1.02],fig=fig,ax=ax)
     
@@ -75,7 +110,8 @@ def k2_22(date='jan25',showTiming=False):
         extraInfo = ''
     ax.legend()
     
-    fig.savefig('plots/photometry/custom_plots/k2_22_ut{}{}_lbc.pdf'.format(date,extraInfo))
+    fig.savefig('plots/photometry/custom_plots/k2_22_ut{}{}_lbc.pdf'.format(date,extraInfo),
+                bbox_inches='tight')
     plt.close(fig)
 
 #def fringing_function(x,amp=0.1,period=0.09,periodSlope=.04,offset=0.1):
