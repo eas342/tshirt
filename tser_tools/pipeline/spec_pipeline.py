@@ -320,10 +320,9 @@ class spec(phot_pipeline.phot):
         subHead = head
         bkgModelTotal = np.zeros_like(subImg)
         for oneDirection in directions:
-            if self.param['bkgSub{}'.format(oneDirection)] == True:
-                subImg, bkgModel, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,
-                                                                ind=ind,saveFits=saveFits)
-                bkgModelTotal = bkgModelTotal + bkgModel
+            subImg, bkgModel, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,
+                                                            ind=ind,saveFits=saveFits)
+            bkgModelTotal = bkgModelTotal + bkgModel
         return subImg, bkgModelTotal, subHead
     
     def profile_normalize(self,img,method='sum'):
