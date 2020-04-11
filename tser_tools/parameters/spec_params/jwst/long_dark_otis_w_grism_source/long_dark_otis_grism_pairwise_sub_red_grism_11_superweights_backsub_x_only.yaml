@@ -10,7 +10,6 @@ refPhotCentering: null ## photometry fits file where to obtain centroid shifts t
 bkgSubDirections: ['X'] ## The direction and sequence of background subtractions to do
 bkgRegionsX: ## a list of background regions in the X direction
    - [0, 300]
-bkgSubY: True ## Do background subtraction along the Y direction?
 bkgRegionsY: ## a list of background regions in the Y direction
    - [0, 260]
    - [300, 600]
