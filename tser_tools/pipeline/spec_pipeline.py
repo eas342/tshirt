@@ -1164,7 +1164,7 @@ class spec(phot_pipeline.phot):
 class batch_spec(phot_pipeline.batchPhot):
     def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):
         self.alreadyLists = {'starPositions': 1,'bkgRegionsX': 2, 'bkgRegionsY': 2,
-                             'dispPixels': 1, 'excludeList': 1}
+                             'dispPixels': 1, 'excludeList': 1, 'bkgSubDirections': 1}
         self.general_init(batchFile=batchFile)
     
     def make_pipe_obj(self,directParam):
