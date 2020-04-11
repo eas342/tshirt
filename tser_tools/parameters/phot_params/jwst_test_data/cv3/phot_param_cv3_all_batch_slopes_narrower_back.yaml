@@ -38,42 +38,42 @@ procFiles:
 excludeList: null
 srcName: CV3 WLP8 Source
 srcNameShort:
-   - rate_colrow_NRCN821WLP8FULL0__481
-   - rate_colrow_NRCN821WLP8FULL0__489
-   - rate_colrow_NRCN821WLP8FULL10_481
-   - rate_colrow_NRCN821WLP8FULL10_489
-   - rate_colrow_NRCN821WLP8FULL11_481
-   - rate_colrow_NRCN821WLP8FULL11_489
-   - rate_colrow_NRCN821WLP8FULL12_481
-   - rate_colrow_NRCN821WLP8FULL12_489
-   - rate_colrow_NRCN821WLP8FULL13_481
-   - rate_colrow_NRCN821WLP8FULL13_489
-   - rate_colrow_NRCN821WLP8FULL14_481
-   - rate_colrow_NRCN821WLP8FULL14_489
-   - rate_colrow_NRCN821WLP8FULL1__481
-   - rate_colrow_NRCN821WLP8FULL1__489
-   - rate_colrow_NRCN821WLP8FULL2__481
-   - rate_colrow_NRCN821WLP8FULL2__489
-   - rate_colrow_NRCN821WLP8FULL3__481
-   - rate_colrow_NRCN821WLP8FULL3__489
-   - rate_colrow_NRCN821WLP8FULL4__481
-   - rate_colrow_NRCN821WLP8FULL4__489
-   - rate_colrow_NRCN821WLP8FULL5__481
-   - rate_colrow_NRCN821WLP8FULL5__489
-   - rate_colrow_NRCN821WLP8FULL6__481
-   - rate_colrow_NRCN821WLP8FULL6__489
-   - rate_colrow_NRCN821WLP8FULL7__481
-   - rate_colrow_NRCN821WLP8FULL7__489
-   - rate_colrow_NRCN821WLP8FULL8__481
-   - rate_colrow_NRCN821WLP8FULL8__489
-   - rate_colrow_NRCN821WLP8FULL9__481
-   - rate_colrow_NRCN821WLP8FULL9__489
-   - rate_colrow_NRCN821WLP8FULLQ__481
-   - rate_colrow_NRCN821WLP8FULLQ__489
-   - rate_colrow_NRCN821WLP8SUB____481
-   - rate_colrow_NRCN821WLP8SUB____489
-   - rate_colrow_NRCN821WLP8SUB640_481
-   - rate_colrow_NRCN821WLP8SUB640_489
+   - rate_narrowback_NRCN821WLP8FULL0__481
+   - rate_narrowback_NRCN821WLP8FULL0__489
+   - rate_narrowback_NRCN821WLP8FULL10_481
+   - rate_narrowback_NRCN821WLP8FULL10_489
+   - rate_narrowback_NRCN821WLP8FULL11_481
+   - rate_narrowback_NRCN821WLP8FULL11_489
+   - rate_narrowback_NRCN821WLP8FULL12_481
+   - rate_narrowback_NRCN821WLP8FULL12_489
+   - rate_narrowback_NRCN821WLP8FULL13_481
+   - rate_narrowback_NRCN821WLP8FULL13_489
+   - rate_narrowback_NRCN821WLP8FULL14_481
+   - rate_narrowback_NRCN821WLP8FULL14_489
+   - rate_narrowback_NRCN821WLP8FULL1__481
+   - rate_narrowback_NRCN821WLP8FULL1__489
+   - rate_narrowback_NRCN821WLP8FULL2__481
+   - rate_narrowback_NRCN821WLP8FULL2__489
+   - rate_narrowback_NRCN821WLP8FULL3__481
+   - rate_narrowback_NRCN821WLP8FULL3__489
+   - rate_narrowback_NRCN821WLP8FULL4__481
+   - rate_narrowback_NRCN821WLP8FULL4__489
+   - rate_narrowback_NRCN821WLP8FULL5__481
+   - rate_narrowback_NRCN821WLP8FULL5__489
+   - rate_narrowback_NRCN821WLP8FULL6__481
+   - rate_narrowback_NRCN821WLP8FULL6__489
+   - rate_narrowback_NRCN821WLP8FULL7__481
+   - rate_narrowback_NRCN821WLP8FULL7__489
+   - rate_narrowback_NRCN821WLP8FULL8__481
+   - rate_narrowback_NRCN821WLP8FULL8__489
+   - rate_narrowback_NRCN821WLP8FULL9__481
+   - rate_narrowback_NRCN821WLP8FULL9__489
+   - rate_narrowback_NRCN821WLP8FULLQ__481
+   - rate_narrowback_NRCN821WLP8FULLQ__489
+   - rate_narrowback_NRCN821WLP8SUB____481
+   - rate_narrowback_NRCN821WLP8SUB____489
+   - rate_narrowback_NRCN821WLP8SUB640_481
+   - rate_narrowback_NRCN821WLP8SUB640_489
 nightName: CV3_WLP8_stability
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [[1405.49 , 1038.09 ]] ## NRCN821WLP8FULL0-6012044411_1_481_SE
@@ -116,13 +116,12 @@ refPhotCentering: null ## photometry fits file where to obtain centroid shifts t
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
-bkgMethod: colrow ## Method for background estimate (mean, median, robust mean, colrow)
 apRadius: 70. ## Source aperture radius
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
 nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
-backStart: 95. ## Background annulus start radius
-backEnd: 190. ## Background annulus end radius
+backStart: 72. ## Background annulus start radius
+backEnd: 80. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
 #backWidth: 1502 ## background aperture width (only for rectangular aperture)
 backOffset: [0.,0.] ## Background offset (from source centroid)
@@ -142,6 +141,3 @@ subpixelMethod: exact ## Method for subpixel positions in aperture photometry. "
 readNoise: 14 ## Read noise in electrons
 detectorGain: 2.0 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
-bkgOrderX: 1 ## polynomial order for row-by-row background subtraction (if bkgMethod is 'colrow')
-bkgOrderY: 0 ## polynomial order for col-by-col background subtraction (if bkgMethod is 'colrow')
-backsub_directions: ['X'] ## directions for background subtraction

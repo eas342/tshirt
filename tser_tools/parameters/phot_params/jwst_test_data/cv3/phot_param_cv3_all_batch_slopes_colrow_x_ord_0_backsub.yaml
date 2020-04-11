@@ -142,6 +142,6 @@ subpixelMethod: exact ## Method for subpixel positions in aperture photometry. "
 readNoise: 14 ## Read noise in electrons
 detectorGain: 2.0 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
-bkgOrderX: 1 ## polynomial order for row-by-row background subtraction (if bkgMethod is 'colrow')
+bkgOrderX: 0 ## polynomial order for row-by-row background subtraction (if bkgMethod is 'colrow')
 bkgOrderY: 0 ## polynomial order for col-by-col background subtraction (if bkgMethod is 'colrow')
 backsub_directions: ['X'] ## directions for background subtraction
