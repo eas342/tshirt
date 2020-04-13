@@ -7,11 +7,9 @@ dispDirection: x ## dispersion direction 'x' or 'y'
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
    - 280
 bkgSubDirections: ['X'] ## The direction and sequence of background subtractions to do
-bkgSubX: False ## Do background subtraction along the X direction?
 bkgRegionsX: ## a list of background regions in the X direction
    - [0, 300]
 bkgOrderX: 0 ## order of polynomial subtraction in the X direction
-bkgSubY: True ## Do background subtraction along the Y direction?
 bkgRegionsY: ## a list of background regions in the Y direction
    - [0, 260]
    - [300, 600]
