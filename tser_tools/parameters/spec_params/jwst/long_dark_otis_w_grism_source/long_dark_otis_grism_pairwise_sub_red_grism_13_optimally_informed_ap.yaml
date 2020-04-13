@@ -13,8 +13,8 @@ bkgRegionsX: ## a list of background regions in the X direction
 bkgOrderX: 0 ## order of polynomial subtraction in the X direction
 bkgSubY: True ## Do background subtraction along the Y direction?
 bkgRegionsY: ## a list of background regions in the Y direction
-   - [250, 277]
-   - [283, 310]
+   - [271, 277]
+   - [283, 289]
 bkgOrderY: 1 ## order of polynomial subtraction in the Y direction
 apWidth: 2. ## Source aperture width
 dispPixels: [380, 2044] ## pixels to use in the dispersion direction
