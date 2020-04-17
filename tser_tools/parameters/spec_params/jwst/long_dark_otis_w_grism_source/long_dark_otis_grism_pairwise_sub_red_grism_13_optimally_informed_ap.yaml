@@ -30,3 +30,4 @@ readNoise: 14 ## Read noise in electrons
 detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 waveCalMethod: NIRCamTS ## the wavelength calibration method (None/null, NIRCamTS)
+fixedProfile: True ## Use a fixed profile for all images?

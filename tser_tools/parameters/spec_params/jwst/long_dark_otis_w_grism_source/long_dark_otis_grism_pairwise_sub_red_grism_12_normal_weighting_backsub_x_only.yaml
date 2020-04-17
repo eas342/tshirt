@@ -27,3 +27,4 @@ isSlope: False ## Is the FITS image a slope image that should be multiplied by t
 readNoise: 14 ## Read noise in electrons
 detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+fixedProfile: True ## Use a fixed profile for all images?
