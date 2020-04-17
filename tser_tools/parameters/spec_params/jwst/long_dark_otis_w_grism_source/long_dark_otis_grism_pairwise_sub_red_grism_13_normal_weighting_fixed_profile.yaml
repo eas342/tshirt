@@ -1,0 +1,30 @@
+procFiles: /surtrdata1/tso_analysis/otis_long_dark/pairwise_sub_red_grism/NRC*.fits # files on which to do spec extraction
+excludeList: null
+srcName: A0V J=8.54 source
+srcNameShort: pairwiseSubRed_normal_weighting_backsub_x_only
+nightName: otisLongDarkSimGrism
+dispDirection: x ## dispersion direction 'x' or 'y'
+starPositions: ## positions of the stars in the spatial direction. The first one is the target
+   - 280
+bkgSubDirections: ['X'] ## The direction and sequence of background subtractions to do
+bkgRegionsX: ## a list of background regions in the X direction
+   - [0, 300]
+bkgOrderX: 0 ## order of polynomial subtraction in the X direction
+bkgRegionsY: ## a list of background regions in the Y direction
+   - [0, 260]
+   - [300, 600]
+bkgOrderY: 2 ## order of polynomial subtraction in the Y direction
+apWidth: 14. ## Source aperture width
+dispPixels: [365, 2016] ## pixels to use in the dispersion direction
+jdRef: 2457551 ## JD reference offset to subtract for plotting
+timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
+isCube: False ## Is the data a cube (3D)?
+cubePlane: 0 ## The plane to choose if data is in cubes
+doCentering: False ## Center the aperturess with Gaussian?
+FITSextension: 0 ## FITS extension of science frames
+HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
+isSlope: False ## Is the FITS image a slope image that should be multiplied by the int time?
+readNoise: 14 ## Read noise in electrons
+detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
+dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+fixedProfile: True ## Use a fixed profile for all images?
