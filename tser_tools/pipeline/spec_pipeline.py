@@ -597,10 +597,12 @@ class spec(phot_pipeline.phot):
                         rho = self.param['readNoiseCorrVal']
                         cov_off_diag = np.ones([nSpatial,nSpatial]) - np.diag(np.ones(nSpatial))
                         cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
-                        cov_matrix = np.diag(varPhotons) + cov_read
-                        inv_cov = np.linalg.inv(cov_matrix)
-                        weights_num = np.dot(prof,inv_cov)
-                        weights_denom = np.dot(prof**2,inv_cov)
+                        #cov_matrix = np.diag(varPhotons) + cov_read
+                        cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
+                        cov_matrix_norm = np.outer(prof,prof) * cov_matrix
+                        inv_cov = np.linalg.inv(cov_matrix_norm)
+                        weights_num = np.dot(np.ones_like(prof),inv_cov) / prof
+                        weights_denom = weights_num * prof
                         
                         optflux[oneInd] = np.nansum(weights_num * data * correction) / np.sum(weights_denom)
                         varFlux[oneInd] = np.nansum(prof * correction) / np.sum(weights_denom)
