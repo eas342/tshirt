@@ -599,7 +599,7 @@ class spec(phot_pipeline.phot):
                         cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
                         #cov_matrix = np.diag(varPhotons) + cov_read
                         cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
-                        cov_matrix_norm = np.outer(prof,prof) * cov_matrix
+                        cov_matrix_norm = np.outer(1./prof,1./prof) * cov_matrix
                         inv_cov = np.linalg.inv(cov_matrix_norm)
                         weights_num = np.dot(np.ones_like(prof),inv_cov) / prof
                         weights_denom = weights_num * prof
