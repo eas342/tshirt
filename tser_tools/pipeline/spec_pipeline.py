@@ -481,6 +481,65 @@ class spec(phot_pipeline.phot):
         
         return profile_img_list, smooth_img_list
     
+    def find_cov_weights(self,nDisp,varImg,profile_img,readNoise,
+                         src=0,saveWeights=False,diagnoseCovariance=False):
+        oneSourcePos = self.param['starPositions'][src]
+        startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
+        endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+        nSpatial = (endSpatial - startSpatial) + 1
+        
+        ## This will be slow at first because I'm starting with a for loop.
+        ## Eventually do fancy 3D matrices to make it fast
+        #optflux = np.zeros(nDisp) * np.nan
+        #varFlux = np.zeros_like(optflux) * np.nan
+        varPure = varImg - readNoise**2 ## remove the read noise because we'll put it in covariance matrix
+        weight2D = np.zeros_like(profile_img)
+        
+        for oneInd in np.arange(nDisp):
+            if self.param['dispDirection'] == 'x':
+                prof = profile_img[startSpatial:endSpatial+1,oneInd]
+                varPhotons = varPure[startSpatial:endSpatial+1,oneInd]
+                #correction = correctionFactor[oneInd]
+                #data = imgSub[startSpatial:endSpatial+1,oneInd]
+            else:
+                prof = profile_img[oneInd,startSpatial:endSpatial+1]
+                varPhotons = varPure[oneInd,startSpatial:endSpatial+1]
+                #correction = correctionFactor[oneInd]
+                #data = imgSub[oneInd,startSpatial:endSpatial]
+            
+            minP = self.minPixForCovarianceWeights
+            if (np.nansum(prof > 0) > minP) & (np.sum(np.isfinite(varPhotons)) > minP):
+                ## only try to do the matrix math if points are finite
+                
+                ## assuming the read noise is correlated but photon noise is not
+                rho = self.param['readNoiseCorrVal']
+                cov_off_diag = np.ones([nSpatial,nSpatial]) - np.diag(np.ones(nSpatial))
+                cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
+                #cov_matrix = np.diag(varPhotons) + cov_read
+                cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
+                cov_matrix_norm = np.outer(1./prof,1./prof) * cov_matrix
+                inv_cov = np.linalg.inv(cov_matrix_norm)
+                weights = np.dot(np.ones_like(prof),inv_cov)
+                #optflux[oneInd] = np.nansum(weights * data * correction / prof) / np.sum(weights)
+                #varFlux[oneInd] = np.nansum(correction) / np.sum(weights)
+                
+                if (diagnoseCovariance == True) & (oneInd > 900):
+                    var = varImg[startSpatial:endSpatial+1,oneInd]
+                    weights_var = (prof / var) / np.sum(prof**2/var)
+                    weights_cov = (weights / prof) / np.sum(weights)
+                    print('Weights var:')
+                    print(weights_var)
+                    print('Weights covar:')
+                    print(weights_cov)
+                    pdb.set_trace()
+                
+                if self.param['dispDirection'] == 'x':
+                    weight2D[startSpatial:endSpatial+1,oneInd] = weights
+                else:
+                    weight2D[oneInd,startSpatial:endSpatial+1] = weights
+                    
+        return weight2D
+    
     def spec_for_one_file(self,ind,saveFits=False,diagnoseCovariance=False):
         """ Get spectroscopy for one file """
         if np.mod(ind,15) == 0:
@@ -559,93 +618,51 @@ class spec(phot_pipeline.phot):
             srcMask = profile_img > 0.
             
             ## Replaced the old lines to avoid runtime warnings
-            # optflux = (np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) /
-            #            np.nansum(profile_img**2/varImg,spatialAx))
-            # varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) /
-            #            np.nansum(profile_img**2/varImg,spatialAx))
+            
             if self.param['readNoiseCorrelation'] == True:
-                oneSourcePos = self.param['starPositions'][oneSrc]
-                startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
-                endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
-                nSpatial = (endSpatial - startSpatial) + 1
-                ## Here is a special treatment of optimal summation w/ correlated read noise
-                ## CHANGE THIS HERE
-                ## This will be slow at first because I'm starting with a for loop.
-                ## Eventually do fancy 3D matrices to make it fast
-                optflux = np.zeros(nDisp) * np.nan
-                varFlux = np.zeros_like(optflux) * np.nan
-                varPure = varImg - readNoise**2 ## remove the read noise because we'll put it in covariance matrix
-                weight2D = np.zeros_like(profile_img)
-                
-                for oneInd in np.arange(nDisp):
-                    if self.param['dispDirection'] == 'x':
-                        prof = profile_img[startSpatial:endSpatial+1,oneInd]
-                        varPhotons = varPure[startSpatial:endSpatial+1,oneInd]
-                        correction = correctionFactor[oneInd]
-                        data = imgSub[startSpatial:endSpatial+1,oneInd]
-                    else:
-                        prof = profile_img[oneInd,startSpatial:endSpatial+1]
-                        varPhotons = varPure[oneInd,startSpatial:endSpatial+1]
-                        correction = correctionFactor[oneInd]
-                        data = imgSub[oneInd,startSpatial:endSpatial]
-                    
-                    minP = self.minPixForCovarianceWeights
-                    if (np.sum(np.isfinite(data)) > minP) & (np.nansum(prof > 0) > minP) & (np.sum(np.isfinite(varPhotons)) > minP):
-                        ## only try to do the matrix math if points are finite
-                        
-                        ## assuming the read noise is correlated but photon noise is not
-                        rho = self.param['readNoiseCorrVal']
-                        cov_off_diag = np.ones([nSpatial,nSpatial]) - np.diag(np.ones(nSpatial))
-                        cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
-                        #cov_matrix = np.diag(varPhotons) + cov_read
-                        cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
-                        cov_matrix_norm = np.outer(1./prof,1./prof) * cov_matrix
-                        inv_cov = np.linalg.inv(cov_matrix_norm)
-                        weights_num = np.dot(np.ones_like(prof),inv_cov) / prof
-                        weights_denom = weights_num * prof
-                        
-                        optflux[oneInd] = np.nansum(weights_num * data * correction) / np.sum(weights_denom)
-                        varFlux[oneInd] = np.nansum(prof * correction) / np.sum(weights_denom)
-                        
-                        if (diagnoseCovariance == True) & (oneInd > 900):
-                            var = varImg[startSpatial:endSpatial+1,oneInd]
-                            weights_var = (prof / var) / np.sum(prof**2/var)
-                            weights_cov = weights_num / np.sum(weights_denom)
-                            print('Weights var:')
-                            print(weights_var)
-                            print('Weights covar:')
-                            print(weights_cov)
-                            pdb.set_trace()
-                        
-                        if self.param['dispDirection'] == 'x':
-                            weight2D[startSpatial:endSpatial+1,oneInd] = weights_num / np.sum(weights_denom)
-                        else:
-                            weight2D[oneInd,startSpatial:endSpatial+1] = weights_num / np.sum(weights_denom)
-                    
-            
-            
-            else:
-                if self.param['superWeights'] == True:
-                    expConst = 10.
-                    weight2D = profile_img * np.exp(profile_img * expConst)/ varImg
-                    #weight2D = self.profile_normalize(weight2D,method='peak')
-                    #normprof2 = self.profile_normalize(profile_img,method='peak') * np.median(np.nanmax(profile_img,spatialAx))
-                    optNumerator = np.nansum(imgSub * weight2D,spatialAx)
-                    denom =  np.nansum(profile_img * weight2D,spatialAx)
-                    denom_v = np.nansum(profile_img**2/varImg,spatialAx)
+                #if self.param['fixedProfile'] == True:
+                fixedProfImplemented  = False
+                if (self.param['fixedProfile'] == True) & (fixedProfImplemented == True):
+                    weight2D = self.read_cov_weights(src=oneSrc)
                 else:
-                    optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
-                    denom =  np.nansum(profile_img**2/varImg,spatialAx)
-                    denom_v = denom
-                    
+                    weight2D = self.find_cov_weights(nDisp,varImg,profile_img,readNoise,
+                                                     src=oneSrc,saveWeights=False,
+                                                     diagnoseCovariance=diagnoseCovariance)
                 
-                nonz = (denom != 0.) & np.isfinite(denom)
-                optflux = np.zeros_like(optNumerator) * np.nan
-                optflux[nonz] = optNumerator[nonz] / denom[nonz]
+                inverse_prof = np.zeros_like(profile_img) * np.nan
+                nonz = (profile_img != 0.) & (np.isfinite(profile_img))
+                inverse_prof[nonz] = 1./profile_img[nonz]
+                # avoid div by 0 issues
+                optNumerator = np.nansum(imgSub * weight2D * correctionFactor * inverse_prof,spatialAx)
+                denom = np.nansum(weight2D,spatialAx)
+                varNumerator = correctionFactor
+                denom_v = denom
             
+            elif self.param['superWeights'] == True:
+                expConst = 10.
+                weight2D = profile_img * np.exp(profile_img * expConst)/ varImg
+                #weight2D = self.profile_normalize(weight2D,method='peak')
+                #normprof2 = self.profile_normalize(profile_img,method='peak') * np.median(np.nanmax(profile_img,spatialAx))
+                optNumerator = np.nansum(imgSub * weight2D,spatialAx)
+                denom =  np.nansum(profile_img * weight2D,spatialAx)
                 varNumerator = np.nansum(profile_img * correctionFactor,spatialAx)
-                varFlux = np.zeros_like(varNumerator) * np.nan
-                varFlux[nonz] = varNumerator[nonz] / denom_v[nonz]
+                denom_v = np.nansum(profile_img**2/varImg,spatialAx)
+            else:
+                # optflux = (np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) /
+                #            np.nansum(profile_img**2/varImg,spatialAx))
+                # varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) /
+                #            np.nansum(profile_img**2/varImg,spatialAx))
+                optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
+                denom =  np.nansum(profile_img**2/varImg,spatialAx)
+                varNumerator = np.nansum(profile_img * correctionFactor,spatialAx)
+                denom_v = denom
+            
+            nonz = (denom != 0.) & np.isfinite(denom)
+            optflux = np.zeros_like(optNumerator) * np.nan
+            optflux[nonz] = optNumerator[nonz] / denom[nonz]
+            
+            varFlux = np.zeros_like(varNumerator) * np.nan
+            varFlux[nonz] = varNumerator[nonz] / denom_v[nonz]
             
             sumFlux = np.nansum(imgSub * srcMask,spatialAx)
             sumErr = np.sqrt(np.nansum(varImg * srcMask,spatialAx))
