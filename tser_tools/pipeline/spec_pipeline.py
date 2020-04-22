@@ -518,7 +518,7 @@ class spec(phot_pipeline.phot):
                 rho = self.param['readNoiseCorrVal']
                 cov_off_diag = np.ones([nSpatial,nSpatial]) - np.diag(np.ones(nSpatial))
                 cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
-                if ignorePhotNoiseInCovariance == True:
+                if self.param['ignorePhotNoiseInCovariance'] == True:
                     ## A diagnostic mode to experiment with simulated data w/ no photon noise
                     cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
                 else:
