@@ -79,6 +79,9 @@ class spec(phot_pipeline.phot):
         
         self.wavebin_file_prefix = 'tser_data/wavebin_spec/wavebin_spec_{}'.format(self.dataFileDescrip)
         
+        self.profile_dir = 'tser_data/saved_profiles'
+        self.weight_dir = 'tser_data/saved_weights'
+        
         self.master_profile_prefix = 'master_{}'.format(self.dataFileDescrip)
         #self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         #self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
@@ -455,12 +458,12 @@ class spec(phot_pipeline.phot):
             for ind,profile_img in enumerate(profile_img_list):
                 ## Saved the smoothed model
                 primHDU_smooth = fits.PrimaryHDU(smooth_img_list[ind])
-                smoothModelName = 'diagnostics/profile_fit/{}_smoothed_src_{}.fits'.format(prefixName,ind)
+                smoothModelName = '{}/{}_smoothed_src_{}.fits'.format(self.profile_dir,prefixName,ind)
                 primHDU_smooth.writeto(smoothModelName,overwrite=True)
                 
                 ## Save the profile
                 primHDU_mod = fits.PrimaryHDU(profile_img)
-                profModelName = 'diagnostics/profile_fit/{}_profile_model_src_{}.fits'.format(prefixName,ind)
+                profModelName = '{}/{}_profile_model_src_{}.fits'.format(self.profile_dir,prefixName,ind)
                 primHDU_mod.writeto(profModelName,overwrite=True)
         
         
@@ -472,11 +475,11 @@ class spec(phot_pipeline.phot):
         prefixName = self.master_profile_prefix
         for ind in np.arange(self.nsrc):
             ## Get the profile
-            profModelName = 'diagnostics/profile_fit/{}_profile_model_src_{}.fits'.format(prefixName,ind)
+            profModelName = '{}/{}_profile_model_src_{}.fits'.format(self.profile_dir,prefixName,ind)
             profile_img_list.append(fits.getdata(profModelName))
             
             ## Get the smoothed model
-            smoothModelName = 'diagnostics/profile_fit/{}_smoothed_src_{}.fits'.format(prefixName,ind)
+            smoothModelName = '{}/{}_smoothed_src_{}.fits'.format(self.profile_dir,prefixName,ind)
             smooth_img_list.append(fits.getdata(smoothModelName))
         
         return profile_img_list, smooth_img_list
@@ -537,7 +540,14 @@ class spec(phot_pipeline.phot):
                     weight2D[startSpatial:endSpatial+1,oneInd] = weights
                 else:
                     weight2D[oneInd,startSpatial:endSpatial+1] = weights
-                    
+                
+        if saveWeights == True:
+            primHDU = fits.PrimaryHDU(weight2D)
+            outName = '{}_weight2D_src_{}.fits'.format(self.dataFileDescrip,)
+            outPath = os.path.join(self.weight_dir,outName)
+            primHDU.writeto(overwrite=True)
+            
+        
         return weight2D
     
     def spec_for_one_file(self,ind,saveFits=False,diagnoseCovariance=False):

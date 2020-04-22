@@ -33,6 +33,8 @@ tser_tools/tser_data/phot/phot_w_variable_aperture/
 tser_tools/tser_data/spec/*.fits
 tser_tools/tser_data/dynamic_spec/*.fits
 tser_tools/tser_data/wavebin_spec/*.fits
+tser_tools/tser_data/saved_profiles/*.fits
+tser_tools/tser_data/saved_weights/*.fits
 tser_tools/diagnostics/spec_backsub/*.fits
 tser_tools/diagnostics/profile_fit/*.fits
 tser_tools/diagnostics/variance_img/*.fits

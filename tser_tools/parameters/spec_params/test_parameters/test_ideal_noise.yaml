@@ -41,4 +41,4 @@ waveCalMethod: NIRCamTS ## the wavelength calibration method (None/null, NIRCamT
 readNoiseCorrelation: False ## Treat the read noise as correlated across pixels?
 readNoiseCorrVal: 0.01 ## The value of reaad noise correlation (if handling read Noise correlation)
 superWeights: False ## Use (S/N)^2 to weight instead of optimal extraction
-fixedProfile: False ## Use a fixed profile for all images?
+fixedProfile: True ## Use a fixed profile for all images?
