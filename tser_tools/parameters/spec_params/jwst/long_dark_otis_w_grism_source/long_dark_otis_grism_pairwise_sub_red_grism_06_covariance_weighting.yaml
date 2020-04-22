@@ -32,4 +32,5 @@ dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TI
 waveCalMethod: NIRCamTS ## the wavelength calibration method (None/null, NIRCamTS)
 readNoiseCorrelation: True ## Treat the read noise as correlated across pixels?
 readNoiseCorrVal: 0.08 ## The value of reaad noise correlation (if handling read Noise correlation)
+ignorePhotNoiseInCovariance: True ## a diagnostic parameter to see covariance weights w/ out photon noise
 fixedProfile: True ## fixed profile throughout

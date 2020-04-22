@@ -518,8 +518,11 @@ class spec(phot_pipeline.phot):
                 rho = self.param['readNoiseCorrVal']
                 cov_off_diag = np.ones([nSpatial,nSpatial]) - np.diag(np.ones(nSpatial))
                 cov_read = (np.diag(np.ones(nSpatial)) + rho * cov_off_diag) * readNoise**2
-                #cov_matrix = np.diag(varPhotons) + cov_read
-                cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
+                if ignorePhotNoiseInCovariance == True:
+                    ## A diagnostic mode to experiment with simulated data w/ no photon noise
+                    cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
+                else:
+                    cov_matrix = np.diag(varPhotons) + cov_read
                 cov_matrix_norm = np.outer(1./prof,1./prof) * cov_matrix
                 inv_cov = np.linalg.inv(cov_matrix_norm)
                 weights = np.dot(np.ones_like(prof),inv_cov)
