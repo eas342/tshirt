@@ -546,11 +546,20 @@ class spec(phot_pipeline.phot):
                 
         if saveWeights == True:
             primHDU = fits.PrimaryHDU(weight2D)
-            outName = '{}_weight2D_src_{}.fits'.format(self.dataFileDescrip,)
+            outName = '{}_weight2D_src_{}.fits'.format(self.dataFileDescrip,src)
             outPath = os.path.join(self.weight_dir,outName)
-            primHDU.writeto(overwrite=True)
+            primHDU.writeto(outPath,overwrite=True)
             
         
+        return weight2D
+    
+    def read_cov_weights(self,src=0):
+        """
+        Read the covariance-weights for a fixed profile through the time series 
+        """
+        weightName = '{}_weight2D_src_{}.fits'.format(self.dataFileDescrip,src)
+        weightPath = os.path.join(self.weight_dir,weightName)
+        weight2D = fits.getdata(weightPath)
         return weight2D
     
     def spec_for_one_file(self,ind,saveFits=False,diagnoseCovariance=False):
@@ -596,6 +605,13 @@ class spec(phot_pipeline.phot):
         sumSpectra_err = np.zeros_like(optSpectra)
         backSpectra = np.zeros_like(optSpectra)
         
+        if (self.param['fixedProfile'] == True) & (self.param['readNoiseCorrelation'] == True):
+            for oneSrc in np.arange(self.nsrc):
+                profile_img = profile_img_list[oneSrc]
+                self.find_cov_weights(nDisp,varImg,profile_img,readNoise,
+                                      src=oneSrc,saveWeights=True,diagnoseCovariance=False)
+        
+        
         for oneSrc in np.arange(self.nsrc):
             profile_img = profile_img_list[oneSrc]
             smooth_img = smooth_img_list[oneSrc]
@@ -634,7 +650,7 @@ class spec(phot_pipeline.phot):
             
             if self.param['readNoiseCorrelation'] == True:
                 #if self.param['fixedProfile'] == True:
-                fixedProfImplemented  = False
+                fixedProfImplemented  = True
                 if (self.param['fixedProfile'] == True) & (fixedProfImplemented == True):
                     weight2D = self.read_cov_weights(src=oneSrc)
                 else:
