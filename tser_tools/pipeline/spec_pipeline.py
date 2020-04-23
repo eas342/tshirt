@@ -180,8 +180,30 @@ class spec(phot_pipeline.phot):
         
         if self.param['fixedProfile'] == True:
             img, head = self.get_default_im()
-            imgSub, bkgModel, subHead = self.do_backsub(img,head,saveFits=False)
+            imgSub, bkgModel, subHead = self.do_backsub(img,head,saveFits=False,
+                                                        directions=self.param['bkgSubDirections'])
             profileList, smooth_img_list = self.find_profile(imgSub,subHead,saveFits=True,masterProfile=True)
+            
+            
+            
+            if (self.param['readNoiseCorrelation'] == True):
+                ## Only run the read noise inverse covariance matrix scheme once for fixed profile
+                
+                readNoise = self.get_read_noise(head)
+                ## Background and read noise only.
+                ## Smoothed source flux added below
+                varImg = readNoise**2 + bkgModel ## in electrons because it should be gain-corrected
+                
+                dispAx = self.dispAx
+                ## dispersion indices in pixels (before wavelength calibration)
+                nDisp = img.shape[dispAx]
+                
+                for oneSrc in np.arange(self.nsrc):
+                    profile_img = profileList[oneSrc]
+                    
+                    
+                    self.find_cov_weights(nDisp,varImg,profile_img,readNoise,
+                                          src=oneSrc,saveWeights=True,diagnoseCovariance=False)
         
         if useMultiprocessing == True:
             outputSpec = phot_pipeline.run_multiprocessing_phot(self,fileCountArray,method='spec_for_one_file')
@@ -604,12 +626,6 @@ class spec(phot_pipeline.phot):
         sumSpectra = np.zeros_like(optSpectra)
         sumSpectra_err = np.zeros_like(optSpectra)
         backSpectra = np.zeros_like(optSpectra)
-        
-        if (self.param['fixedProfile'] == True) & (self.param['readNoiseCorrelation'] == True):
-            for oneSrc in np.arange(self.nsrc):
-                profile_img = profile_img_list[oneSrc]
-                self.find_cov_weights(nDisp,varImg,profile_img,readNoise,
-                                      src=oneSrc,saveWeights=True,diagnoseCovariance=False)
         
         
         for oneSrc in np.arange(self.nsrc):
