@@ -184,8 +184,6 @@ class spec(phot_pipeline.phot):
                                                         directions=self.param['bkgSubDirections'])
             profileList, smooth_img_list = self.find_profile(imgSub,subHead,saveFits=True,masterProfile=True)
             
-            
-            
             if (self.param['readNoiseCorrelation'] == True):
                 ## Only run the read noise inverse covariance matrix scheme once for fixed profile
                 
@@ -194,6 +192,9 @@ class spec(phot_pipeline.phot):
                 ## Smoothed source flux added below
                 varImg = readNoise**2 + bkgModel ## in electrons because it should be gain-corrected
                 
+                for oneSrc in np.arange(self.nsrc): ## use the smoothed flux for the variance estimate
+                    varImg = varImg + np.abs(smooth_img_list[oneSrc]) ## negative flux is approximated as photon noise
+            
                 dispAx = self.dispAx
                 ## dispersion indices in pixels (before wavelength calibration)
                 nDisp = img.shape[dispAx]
@@ -545,6 +546,7 @@ class spec(phot_pipeline.phot):
                     cov_matrix = cov_read ## temporarily ignoring phot noise as in simulation
                 else:
                     cov_matrix = np.diag(varPhotons) + cov_read
+                
                 cov_matrix_norm = np.outer(1./prof,1./prof) * cov_matrix
                 inv_cov = np.linalg.inv(cov_matrix_norm)
                 weights = np.dot(np.ones_like(prof),inv_cov)
