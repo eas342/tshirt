@@ -1,33 +1,33 @@
-procFiles: ../example_data/spec_time_series/*.fits ## files on which to do spec extraction
+procFiles: ../example_data/ideal_spec/sim_data/*.fits ## files on which to do spec extraction
 excludeList: null
-srcName: Lab LED
-srcNameShort: labLED
-nightName: UT2017_09_08
+srcName: Sim A0V
+srcNameShort: simA0V_cov_weighted_specspatial
+nightName: UT2020_04_14
 dispDirection: x ## dispersion direction 'x' or 'y'
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
-   - 104
+   - 34
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 bkgSubDirections: ['Y','X'] ## The direction and sequence of background subtractions to do
 bkgRegionsX: ## a list of background regions in the X direction
    - [0, 258]
 bkgOrderX: 0 ## order of polynomial subtraction in the X direction
 bkgRegionsY: ## a list of background regions in the Y direction
-   - [0, 60]
-   - [158, 255]
-bkgOrderY: 2 ## order of polynomial subtraction in the Y direction
-apWidth: 30. ## Source aperture width
-dispPixels: [320, 2020] ## pixels to use in the dispersion direction
+   - [0, 15]
+   - [54, 63]
+bkgOrderY: 0 ## order of polynomial subtraction in the Y direction
+apWidth: 14. ## Source aperture width
+dispPixels: [420, 2020] ## pixels to use in the dispersion direction
 jdRef: 2457551 ## JD reference offset to subtract for plotting
-timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
-isCube: True ## Is the data a cube (3D)?
+timingMethod: None ## how to assign integration times? None, 'JWSTint' will add int time to exposure start
+isCube: False ## Is the data a cube (3D)?
 cubePlane: 0 ## The plane to choose if data is in cubes
 doCentering: False ## Center the aperturess with Gaussian?
 FITSextension: 0 ## FITS extension of science frames
 HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
-isSlope: True ## Is the FITS image a slope image that should be multiplied by the int time?
-readNoise: 14 ## Read noise in electrons
-detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
-dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+isSlope: False ## Is the FITS image a slope image that should be multiplied by the int time?
+readNoise: 13. ## Read noise in electrons
+detectorGain: 1.0 ## Optionally specify the detector gain e-/DN
+dateFormat: One Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 splineSpecFitOrder: 3 ## order of the Spline to fit along the dispersion direction (for profile & badpix)
 splineSigRej: 2 ## number of sigma to reject when fitting the Splines along dispersion direction
 splinePreScreen: False ## pre-screen the points going into spline fitting?
@@ -37,11 +37,10 @@ nanTreatment: 'leave' ## How to treat NaNs in image? 'zero' will set to 0, 'leav
 lowPassFreqCC: 0.99 ## Below this frequency, all information is included for cross-corr alignment analysis
 hiPassFreqCC: 0.015 ## Above this frequency, all information is included for cross-corr alignment analysis
 specShiftMultiplier: 1.0 ## this is a multiplier to shift the spectra an extra fraction
-waveCalMethod: null ## the wavelength calibration method (None/null, NIRCamTS)
-readNoiseCorrelation: False ## Treat the read noise as correlated across spatial pixels?
-readNoiseCorrVal: 0.01 ## The value of reaad noise correlation (if handling read Noise correlation)
-dispNoiseCorrelation: False ## Treat the read noise as correlated across spectral pixels?
-readNoiseCorrDispVal: 0.01 ## The value of read noise correlation in disp direction (if used)
-ignorePhotNoiseInCovariance: False ## a diagnostic parameter to see covariance weights w/ out photon noise
+waveCalMethod: NIRCamTS ## the wavelength calibration method (None/null, NIRCamTS)
+readNoiseCorrelation: True ## Treat the read noise as correlated across pixels?
+readNoiseCorrVal: 0.06 ## The value of reaad noise correlation (if handling read Noise correlation)
+dispNoiseCorrelation: True ## Treat the read noise as correlated across spectral pixels?
+readNoiseCorrDispVal: 0.12 ## The value of read noise correlation in disp direction (if used)
 superWeights: False ## Use (S/N)^2 to weight instead of optimal extraction
-fixedProfile: False ## Use a fixed profile for all images?
+fixedProfile: True ## Use a fixed profile for all images?

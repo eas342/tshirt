@@ -541,8 +541,25 @@ class spec(phot_pipeline.phot):
                 rho = self.param['readNoiseCorrVal']
                 ## fill everything w/ off-diagonal
                 cov_read = np.ones([nSpatial,nSpatial]) * rho * readNoise**2
-                ## fill diagonal w/ read noise
-                np.fill_diagonal(cov_read,readNoise**2)
+                
+                if self.param['dispNoiseCorrelation'] == True:
+                    dispPixels = 100
+                    ## fill diagonal w/ spatial correlation
+                    np.fill_diagonal(cov_read,self.param['readNoiseCorrDispVal'] * readNoise**2)
+                    cov_read = np.repeat(cov_read,dispPixels,axis=0)
+                    cov_read = np.repeat(cov_read,dispPixels,axis=1)
+                    
+                    ## fill diagonal of spatial-spectral w/ read noise
+                    np.fill_diagonal(cov_read,readNoise**2)
+                    
+                    prof = np.repeat(prof,dispPixels)
+                    ## renormalize
+                    prof = prof / np.sum(prof)
+                    
+                    varPhotons = np.repeat(varPhotons,dispPixels)
+                else:
+                    ## fill diagonal w/ read noise
+                    np.fill_diagonal(cov_read,readNoise**2)
                 
                 if self.param['ignorePhotNoiseInCovariance'] == True:
                     ## A diagnostic mode to experiment with simulated data w/ no photon noise
@@ -555,10 +572,33 @@ class spec(phot_pipeline.phot):
                 weights = np.dot(np.ones_like(prof),inv_cov)
                 #optflux[oneInd] = np.nansum(weights * data * correction / prof) / np.sum(weights)
                 #varFlux[oneInd] = np.nansum(correction) / np.sum(weights)
+                if self.param['dispNoiseCorrelation'] == True:
+                    x = np.arange(len(weights))
+                    sumSpatial, edges, binnum = binned_statistic(x,weights,statistic='sum',bins=nSpatial)
+                    weights = sumSpatial * nSpatial
+                    
+                    ## diagnostic stuff
+                    # prof = profile_img[startSpatial:endSpatial+1,oneInd]
+#                     var = varImg[startSpatial:endSpatial+1,oneInd]
+#                     weights_var = (prof**2 / var)
+#                     print('Weights var: ')
+#                     print(weights_var)
+#                     print("Weights cov:")
+#                     print(weights)
+#                     photons = np.sum(varPhotons)
+#                     err_var = np.sqrt(1./np.sum(prof**2/var))
+#                     print("Err var (e-, %):")
+#                     print(err_var,err_var/photons * 100.)
+#                     print("Err cov:")
+#                     err_cov = np.sqrt(1./np.sum(weights))
+#                     print(err_cov, err_cov/photons * 100.)
+#                     pdb.set_trace()
                 
                 if (diagnoseCovariance == True) & (oneInd > 900):
                     var = varImg[startSpatial:endSpatial+1,oneInd]
                     weights_var = (prof / var) / np.sum(prof**2/var)
+                    if self.param['dispNoiseCorrelation'] == True:
+                        prof = profile_img[startSpatial:endSpatial+1,oneInd]
                     weights_cov = (weights / prof) / np.sum(weights)
                     print('Weights var:')
                     print(weights_var)
