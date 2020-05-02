@@ -1223,23 +1223,23 @@ class spec(phot_pipeline.phot):
             fig.show()
     
     
-    def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
-                        srcLabel=None,figSize=None):
-        """ Show the star choices for photometry
+    def showStarChoices(self,img=None,head=None,
+                        srcLabel=None,figSize=None,vmin=None,vmax=None):
+        """ Show the star choices for spectrscopy
         Parameters
         ------------------
         img: numpy 2D array
             (optional) An image to plot
         head: astropy FITS header
-            (optional) hader for image
-        custPos: numpy 2D array or list of tuple coordinates
-            (optional) Custom positions
-        showAps: bool
-            (optional) Show apertures rather than circle stars
+            (optional) header for image
         srcLabel: str or None
             (optional) What should the source label be?
                         The default is "src"
-        srcLabel: list or None
+        vmin: float
+            (optional) Minimum value for imshow
+        vmax: float
+            (optional) Maximum value for imshow
+        figSize: 2 element list
             (optional) Specify the size of the plot
             This is useful for looking at high/lower resolution
         """
@@ -1247,10 +1247,13 @@ class spec(phot_pipeline.phot):
         
         img, head = self.get_default_im(img=img,head=None)
         
-        lowVmin = np.nanpercentile(img,1)
-        highVmin = np.nanpercentile(img,99)
+        if vmin == None:
+            vmin = np.nanpercentile(img,1)
         
-        imData = ax.imshow(img,cmap='viridis',vmin=lowVmin,vmax=highVmin,interpolation='nearest')
+        if vmax == None:
+            vmax = np.nanpercentile(img,99)
+        
+        imData = ax.imshow(img,cmap='viridis',vmin=vmin,vmax=vmax,interpolation='nearest')
         ax.invert_yaxis()
         rad, txtOffset = 50, 20
         
