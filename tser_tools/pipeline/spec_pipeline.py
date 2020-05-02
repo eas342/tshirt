@@ -1286,14 +1286,28 @@ class spec(phot_pipeline.phot):
                 name=str(ind)
             ax.text(xPos+txtOffset,yPos+txtOffset,name,color='white')
         
-        # for oneDirection in self.param['bkgSubDirections']:
-        #     if oneDirection == 'X':
-        #         bkPixels = self.param['bkgRegionsX']
-        #     elif oneDirection == 'Y':
-        #         bkPixels = self.param['bkgRegionsY']
-        #
-        #     for oneReg in bkPixels:
-        #         if one
+        for oneDirection in self.param['bkgSubDirections']:
+            if oneDirection == 'X':
+                bkPixels = self.param['bkgRegionsX']
+            elif oneDirection == 'Y':
+                bkPixels = self.param['bkgRegionsY']
+            else:
+                raise Exception("No Background subtraction direction {}".format(oneDirection))
+            
+            for oneReg in bkPixels:
+                if oneDirection == 'X':
+                    height = img.shape[0]
+                    width = oneReg[1] - oneReg[0]
+                    xPos = oneReg[0]
+                    yPos = 0
+                else:
+                    height = oneReg[1] - oneReg[0]
+                    width = img.shape[1]
+                    xPos = 0
+                    yPos = oneReg[0]
+                rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,color='orange',
+                                            alpha=0.3)
+                ax.add_patch(rec)
         
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
