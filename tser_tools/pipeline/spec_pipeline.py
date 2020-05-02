@@ -1222,6 +1222,89 @@ class spec(phot_pipeline.phot):
         else:
             fig.show()
     
+    
+    def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
+                        srcLabel=None,figSize=None):
+        """ Show the star choices for photometry
+        Parameters
+        ------------------
+        img: numpy 2D array
+            (optional) An image to plot
+        head: astropy FITS header
+            (optional) hader for image
+        custPos: numpy 2D array or list of tuple coordinates
+            (optional) Custom positions
+        showAps: bool
+            (optional) Show apertures rather than circle stars
+        srcLabel: str or None
+            (optional) What should the source label be?
+                        The default is "src"
+        srcLabel: list or None
+            (optional) Specify the size of the plot
+            This is useful for looking at high/lower resolution
+        """
+        fig, ax = plt.subplots(figsize=figSize)
+        
+        img, head = self.get_default_im(img=img,head=None)
+        
+        lowVmin = np.nanpercentile(img,1)
+        highVmin = np.nanpercentile(img,99)
+        
+        imData = ax.imshow(img,cmap='viridis',vmin=lowVmin,vmax=highVmin,interpolation='nearest')
+        ax.invert_yaxis()
+        rad, txtOffset = 50, 20
+        
+        showApPos = self.param['starPositions']
+        dispPos = self.param['dispPixels']
+        dispLength = dispPos[1] - dispPos[0]
+        apWidth = self.param['apWidth']
+        
+        outName = 'spec_aps_{}.pdf'.format(self.dataFileDescrip)
+        
+        for ind, onePos in enumerate(showApPos):
+            
+            if self.param['dispDirection'] == 'x':
+                xPos = dispPos[0]
+                yPos = onePos - apWidth / 2.
+                width = dispLength
+                height = apWidth
+            else:
+                xPos = onePos - apWidth / 2.
+                yPos = dispPos[0]
+                width = apWidth
+                height = dispLength
+            
+            rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,fill=False,edgecolor='r')
+            ax.add_patch(rec)
+            
+            if ind == 0:
+                if srcLabel is None:
+                    name='src'
+                else:
+                    name=srcLabel
+            else:
+                name=str(ind)
+            ax.text(xPos+txtOffset,yPos+txtOffset,name,color='white')
+        
+        # for oneDirection in self.param['bkgSubDirections']:
+        #     if oneDirection == 'X':
+        #         bkPixels = self.param['bkgRegionsX']
+        #     elif oneDirection == 'Y':
+        #         bkPixels = self.param['bkgRegionsY']
+        #
+        #     for oneReg in bkPixels:
+        #         if one
+        
+        ax.set_xlabel('X (px)')
+        ax.set_ylabel('Y (px)')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(imData,label='Counts',cax=cax)
+        fig.show()
+        fig.savefig('plots/spectra/star_labels/{}'.format(outName),
+                    bbox_inches='tight')
+        plt.close(fig)
+    
     def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3,binMin=10,binMax=250):
         """
         Examine the time series for adjacent bins
