@@ -1223,8 +1223,9 @@ class spec(phot_pipeline.phot):
             fig.show()
     
     
-    def showStarChoices(self,img=None,head=None,
-                        srcLabel=None,figSize=None,vmin=None,vmax=None):
+    def showStarChoices(self,img=None,head=None,showBack=True,
+                        srcLabel=None,figSize=None,vmin=None,vmax=None,
+                        xlim=None,ylim=None):
         """ Show the star choices for spectrscopy
         Parameters
         ------------------
@@ -1232,6 +1233,8 @@ class spec(phot_pipeline.phot):
             (optional) An image to plot
         head: astropy FITS header
             (optional) header for image
+        showBack: bool
+            (optional) Show the background subtraction regions?
         srcLabel: str or None
             (optional) What should the source label be?
                         The default is "src"
@@ -1242,6 +1245,10 @@ class spec(phot_pipeline.phot):
         figSize: 2 element list
             (optional) Specify the size of the plot
             This is useful for looking at high/lower resolution
+        xlim: list or None
+            (optional) Set the x limit of plot
+        ylim: list or None
+            (optional) Set the y limit of plot
         """
         fig, ax = plt.subplots(figsize=figSize)
         
@@ -1289,31 +1296,38 @@ class spec(phot_pipeline.phot):
                 name=str(ind)
             ax.text(xPos+txtOffset,yPos+txtOffset,name,color='white')
         
-        for oneDirection in self.param['bkgSubDirections']:
-            if oneDirection == 'X':
-                bkPixels = self.param['bkgRegionsX']
-            elif oneDirection == 'Y':
-                bkPixels = self.param['bkgRegionsY']
-            else:
-                raise Exception("No Background subtraction direction {}".format(oneDirection))
-            
-            for oneReg in bkPixels:
+        if showBack == True:
+            for oneDirection in self.param['bkgSubDirections']:
                 if oneDirection == 'X':
-                    height = img.shape[0]
-                    width = oneReg[1] - oneReg[0]
-                    xPos = oneReg[0]
-                    yPos = 0
+                    bkPixels = self.param['bkgRegionsX']
+                elif oneDirection == 'Y':
+                    bkPixels = self.param['bkgRegionsY']
                 else:
-                    height = oneReg[1] - oneReg[0]
-                    width = img.shape[1]
-                    xPos = 0
-                    yPos = oneReg[0]
-                rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,color='orange',
-                                            alpha=0.3)
-                ax.add_patch(rec)
+                    raise Exception("No Background subtraction direction {}".format(oneDirection))
+            
+                for oneReg in bkPixels:
+                    if oneDirection == 'X':
+                        height = img.shape[0]
+                        width = oneReg[1] - oneReg[0]
+                        xPos = oneReg[0]
+                        yPos = 0
+                    else:
+                        height = oneReg[1] - oneReg[0]
+                        width = img.shape[1]
+                        xPos = 0
+                        yPos = oneReg[0]
+                    rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,color='orange',
+                                                alpha=0.3)
+                    ax.add_patch(rec)
         
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
+        
+        if xlim is not None:
+            ax.set_xlim(xlim[0],xlim[1])
+        if ylim is not None:
+            ax.set_ylim(ylim[0],ylim[1])
+        
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
