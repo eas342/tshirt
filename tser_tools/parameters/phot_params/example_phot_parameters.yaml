@@ -46,3 +46,5 @@ diagnosticMode: False ## diagnostic mode where you will show intermediate steps 
 bkgOrderX: 1 ## polynomial order for row-by-row background subtraction (if bkgMethod is 'colrow')
 bkgOrderY: 1 ## polynomial order for col-by-col background subtraction (if bkgMethod is 'colrow')
 backsub_directions: ['Y', 'X'] ## directions and order in which to do polynomial colrow subtraction
+saturationVal: null ## put in a value so that if the source aperture has more than satNPix points, it's counted as NaN. If None, ignored.
+satNPix: 5 ## number of pixels above saturation to declare as Nan

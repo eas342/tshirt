@@ -124,7 +124,8 @@ class phot:
                          'subpixelMethod': 'exact','excludeList': None,
                          'dateFormat': 'Two Part','copyCentroidFile': None,
                          'bkgMethod': 'mean','diagnosticMode': False,
-                         'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X']}
+                         'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X'],
+                         'saturationVal': None, 'satNPix': 5}
         
 
         for oneKey in defaultParams.keys():
@@ -800,6 +801,17 @@ class phot:
         
         rawPhot = aperture_photometry(img,self.srcApertures,error=err,method=self.param['subpixelMethod'])
         
+        if self.param['saturationVal'] != None:
+            src_masks = self.srcApertures.to_mask(method='center')
+            for srcInd,mask in enumerate(src_masks):
+                src_data = mask.multiply(img)
+                src_data_1d = src_data[mask.data > 0]
+                satPoints = (src_data_1d > self.param['saturationVal'])
+                if np.sum(satPoints) >= self.param['satNPix']:
+                    ## set this source as NaN b/c it's saturated
+                    rawPhot['aperture_sum'][srcInd] = np.nan
+        
+        
         if self.param['bkgSub'] == True:
             self.bkgApertures.positions = self.cenArr[ind] + self.backgOffsetArr[ind]
             
@@ -1308,6 +1320,9 @@ class phot:
                     maskOut[oneSrc] = True
         
         refMask2D = np.tile(maskOut,(self.nImg,1))
+        ## also mask points that are NaN
+        nanPt = (np.isfinite(photArr) == False)
+        refMask2D = refMask2D | nanPt
         refPhot = np.ma.array(photArr,mask=refMask2D)
         
         ## Normalize all time series

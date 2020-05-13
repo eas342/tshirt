@@ -44,3 +44,5 @@ readNoise: null ## Read noise in electrons
 detectorGain: null ## Optionally specify the detector gain e-/DN
 dateFormat: One Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 excludeList: null
+saturationVal: 98000 ## saturation value
+satNPix: 3 ## number of pixels above saturation to declare as NaN
