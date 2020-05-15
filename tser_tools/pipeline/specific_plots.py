@@ -7,14 +7,17 @@ from astropy.time import Time
 import astropy.coordinates
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from astropy.table import Table
 import numpy as np
+from scipy.stats import binned_statistic
 import pdb
+
 
 from astropy.utils.iers import conf
 conf.auto_max_age = None
 
 
-def k2_22(date='jan25',showTiming=False,detrend=True):
+def k2_22(date='jan25',showTiming=False,detrend=True,doBin=False):
     dat = ascii.read('tser_data/reference_dat/k2-22_phased_transit.txt',
                      names=['phase','flux','flux err','junk'],
                      format='fixed_width',delimiter=' ')
@@ -26,7 +29,8 @@ def k2_22(date='jan25',showTiming=False,detrend=True):
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_lbc.yaml')
         t0 = Time('2020-01-28T10:40:45.81')
     elif date == 'jan28-luci2':
-        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_luci2.yaml')
+        #phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_luci2.yaml')
+        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_luci2_nanreplace.yaml') 
         t0 = Time('2020-01-28T10:40:45.81')
     elif date == 'feb20':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_02_20_phot_lbc.yaml')
@@ -39,8 +43,10 @@ def k2_22(date='jan25',showTiming=False,detrend=True):
     
     if 'luci' in date:
         band = 'LUCI2 Ks-band'
+        suffix = ''
     else:
         band = 'LBC g-band'
+        suffix = '_lbc'
     
     HDUList = fits.open(phot.photFile)
     photHDU = HDUList['PHOTOMETRY']
@@ -85,6 +91,25 @@ def k2_22(date='jan25',showTiming=False,detrend=True):
     
     ax.plot(x,yShow,'o',label=band)
     
+    if doBin == True:
+        goodP = np.isfinite(yShow)
+        nBin = 30
+        yBins = Table()
+        for oneStatistic in ['mean','std','count']:
+            if oneStatistic == 'std':
+                statUse = np.std
+            else: statUse = oneStatistic
+            
+            yBin, xEdges, binNum = binned_statistic(x[goodP],yShow[goodP],
+                                                    statistic=statUse,bins=nBin)
+            yBins[oneStatistic] = yBin
+    
+        ## Standard error in the mean
+        stdErrM = yBins['std'] / np.sqrt(yBins['count'])
+    
+        xbin = (xEdges[:-1] + xEdges[1:])/2.
+        ax.errorbar(xbin,yBins['mean'],yerr=stdErrM,marker='s',markersize=3.,
+                label='binned')
     #phot.plot_phot(refCorrect=True,yLim=[0.97,1.02],fig=fig,ax=ax)
     
     
@@ -110,7 +135,7 @@ def k2_22(date='jan25',showTiming=False,detrend=True):
         extraInfo = ''
     ax.legend()
     
-    fig.savefig('plots/photometry/custom_plots/k2_22_ut{}{}_lbc.pdf'.format(date,extraInfo),
+    fig.savefig('plots/photometry/custom_plots/k2_22_ut{}{}{}.pdf'.format(date,extraInfo,suffix),
                 bbox_inches='tight')
     plt.close(fig)
 
