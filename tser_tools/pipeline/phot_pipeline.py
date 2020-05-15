@@ -1128,7 +1128,7 @@ class phot:
             #pdb.set_trace()
             
             if doBin is not None:
-                minValue, maxValue = 0.98, 1.02 ## clip for cosmic rays
+                minValue, maxValue = 0.95, 1.05 ## clip for cosmic rays
                 goodP = (yShow > minValue) & (yShow < maxValue)
                 nBin = int(np.round((np.max(x[goodP]) - np.min(x[goodP]))/doBin))
                 
