@@ -16,7 +16,7 @@ bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectang
 apRadius: 40. ## Source aperture radius
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
-#nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+nanTreatment: 'value' ## How to treat NaNs in image? 'zero' will set to 0
 backStart: 41. ## Background annulus start radius
 backEnd: 60. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
@@ -39,4 +39,4 @@ readNoise: null ## Read noise in electrons
 detectorGain: null ## Optionally specify the detector gain e-/DN
 dateFormat: One Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 excludeList: null
-nanReplace: 22e3 ## replacement value for NaNs
+nanReplaceValue: 22e3 ## replacement value for NaNs

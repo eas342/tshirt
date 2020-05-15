@@ -20,7 +20,7 @@ bkgMethod: mean ## Method for background estimate (mean, median, robust mean)
 apRadius: 9. ## Source aperture radius
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
-#nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
+#nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0. 'value' will set to nanReplaceValue
 backStart: 9. ## Background annulus start radius
 backEnd: 12. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
@@ -48,3 +48,4 @@ bkgOrderY: 1 ## polynomial order for col-by-col background subtraction (if bkgMe
 backsub_directions: ['Y', 'X'] ## directions and order in which to do polynomial colrow subtraction
 saturationVal: null ## put in a value so that if the source aperture has more than satNPix points, it's counted as NaN. If None, ignored.
 satNPix: 5 ## number of pixels above saturation to declare as Nan
+nanReplaceValue: 22e3 ## replacement value for NaNs if nanTreatment is set at "value"
