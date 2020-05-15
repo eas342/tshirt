@@ -9,7 +9,7 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [ 1069.3, 1575.9] #- [ 1082.3, 1583.9]
    - [ 1232.8, 1424.7]
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
-copyCentroidFile: tser_data/phot/phot_k2-22luci2_ap_17_41_60_UT2020_01_28.fits ## photometry or centroid fits file where to obtain centroids
+copyCentroidFile: null ## photometry or centroid fits file where to obtain centroids
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
