@@ -12,12 +12,12 @@ refPhotCentering: null ## photometry fits file where to obtain centroid shifts t
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
-apRadius: 40. ## Source aperture radius
+apRadius: 20. ## Source aperture radius
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
 #nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
-backStart: 41. ## Background annulus start radius
-backEnd: 60. ## Background annulus end radius
+backStart: 21. ## Background annulus start radius
+backEnd: 40. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
 #backWidth: 1502 ## background aperture width (only for rectangular aperture)
 backOffset: [0.,0.] ## Background offset (from source centroid)
