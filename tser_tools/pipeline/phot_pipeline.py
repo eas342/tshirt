@@ -125,7 +125,7 @@ class phot:
                          'dateFormat': 'Two Part','copyCentroidFile': None,
                          'bkgMethod': 'mean','diagnosticMode': False,
                          'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X'],
-                         'saturationVal': None, 'satNPix': 5}
+                         'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0}
         
 
         for oneKey in defaultParams.keys():
@@ -1439,6 +1439,9 @@ class phot:
             img[nanPt] = 0.0
         elif self.param['nanTreatment'] == 'leave':
             pass
+        elif self.param['nanTreatment'] == 'value':
+            nanPt = (np.isfinite(img) == False)
+            img[nanPt] = self.param['nanReplaceValue']
         else:
             raise NotImplementedError
         
