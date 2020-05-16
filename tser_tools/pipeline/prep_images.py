@@ -11,6 +11,7 @@ import astropy.units as u
 import numpy as np
 import pdb
 import warnings
+from scipy.interpolate import interp1d
 
 defaultParamFile = 'parameters/reduction_parameters/example_reduction_parameters.yaml'
 class prep():
@@ -38,7 +39,8 @@ class prep():
                          'nonLinFunction': None, ## non-linearity function
                          'sciExtension': None, ## extension for science data
                          'sciExcludeList': None, ## list of files to exclude for science data
-                         'fixWindow': False ## fix the window between bias, flat & science?
+                         'fixWindow': False, ## fix the window between bias, flat & science?
+                         'fixPix': False ## fix the bad pixels with interpolation?
                      } 
         
         for oneKey in defaultParams.keys():
@@ -194,19 +196,47 @@ class prep():
                                master_flat=useFlat,
                                master_bias=useBias,
                                bad_pixel_mask=badPx)
+            
             if nccd.mask is not None:
                 nccd.data[nccd.mask] = np.nan
+            
+            if self.pipePrefs['fixPix'] == True:
+                nccd.data = self.fix_pix_line(nccd.data)
             
             head['ZEROFILE'] = 'master_zero.fits'
             head['FLATFILE'] = 'master_flat.fits'
             head['BADPXFIL'] = 'master_badpx_mask.fits'
             head['GAINCOR'] = ('T','Gain correction applied (units are e)')
             head['BUNIT'] = ('electron','Physical unit of array values')
+            
             hdu = fits.PrimaryHDU(data=nccd,header=head)
             HDUList = fits.HDUList([hdu])
             newFile = os.path.basename(oneFile)
             HDUList.writeto(os.path.join(self.procDir,newFile),overwrite=True)
         
+    def fix_pix(self,x,y):
+        goodP = np.isfinite(y)
+        if np.sum(goodP) > 5:
+            y_model = interp1d(x[goodP],y[goodP],fill_value="extrapolate")
+            y_out = y_model(x)
+        else:
+            y_out = y
+        
+        return y_out
+    
+    def fix_pix_line(self,img,direction='row'):
+        """ 
+        Fix pixels
+        """
+        if direction == 'row':
+            nY = img.shape[0]
+            x = np.arange(img.shape[1])
+            for row in np.arange(nY):
+                img[row,:] = self.fix_pix(x,img[row,:])
+        else:
+            raise NotImplementedError
+        return img
+    
     def check_if_nonlin_needed(self,head):
         """
         Check if non-linearity correction should be applied
