@@ -9,15 +9,14 @@ refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [ 1069.3, 1575.9] #- [ 1082.3, 1583.9]
    - [ 1232.8, 1424.7]
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
-copyCentroidFile: tser_data/phot/phot_k2-22luci2_UT2020_01_28.fits
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
-apRadius: 20. ## Source aperture radius
+apRadius: 24. ## Source aperture radius
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
 #nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0
-backStart: 21. ## Background annulus start radius
+backStart: 24. ## Background annulus start radius
 backEnd: 40. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
 #backWidth: 1502 ## background aperture width (only for rectangular aperture)
