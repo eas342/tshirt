@@ -1,0 +1,167 @@
+rawDir:
+   - /Users/everettschlawin/Documents/single_systems/k2-22/UT2020_01_28
+biasFiles:
+   - ../UT2020_01_25/raw/luci2.20200125.0001.fits ## Bias files
+   - ../UT2020_01_25/raw/luci2.20200125.0002.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0003.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0004.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0005.fits
+flatFiles: ## Flat field files
+   - ../UT2020_01_25/raw/luci2.20200125.0011.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0012.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0013.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0014.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0015.fits
+darksForFlat: ## Flat field files
+   - ../UT2020_01_25/raw/luci2.20200125.0006.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0007.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0008.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0009.fits
+   - ../UT2020_01_25/raw/luci2.20200125.0010.fits
+sciFiles: raw/luci2.20200128.????.fits ## Science files
+nSkip: 1 ## number of files to skip at the beginning
+doBias: True ## Calculate and apply a bias correction?
+doFlat: True ## Calculate and apply a flat correction?
+doBadPxMask: True ## apply a bad pixel mask?
+doFlatBias: True ## Subtract the flat field by a bias specific for the flat field
+gainKeyword: GAIN ## header keyword for gain correction
+procName: proc_luci2_modflat ## proc directory name
+doNonLin: True
+nonLinFunction: LBT LUCI2
+fixPix: True ## fix the pixels
+sciExtension: null
+sciExcludeList:
+   luci2.20200128.0065.fits
+   luci2.20200128.0066.fits
+   luci2.20200128.0067.fits
+   luci2.20200128.0068.fits
+   luci2.20200128.0069.fits
+   luci2.20200128.0070.fits
+   luci2.20200128.0071.fits
+   luci2.20200128.0072.fits
+   luci2.20200128.0073.fits
+   luci2.20200128.0074.fits
+   luci2.20200128.0075.fits
+   luci2.20200128.0076.fits
+   luci2.20200128.0077.fits
+   luci2.20200128.0078.fits
+   luci2.20200128.0079.fits
+   luci2.20200128.0080.fits
+   luci2.20200128.0081.fits
+   luci2.20200128.0082.fits
+   luci2.20200128.0083.fits
+   luci2.20200128.0084.fits
+   luci2.20200128.0085.fits
+   luci2.20200128.0086.fits
+   luci2.20200128.0087.fits
+   luci2.20200128.0088.fits
+   luci2.20200128.0089.fits
+   luci2.20200128.0090.fits
+   luci2.20200128.0091.fits
+   luci2.20200128.0092.fits
+   luci2.20200128.0093.fits
+   luci2.20200128.0094.fits
+   luci2.20200128.0095.fits
+   luci2.20200128.0096.fits
+   luci2.20200128.0097.fits
+   luci2.20200128.0098.fits
+   luci2.20200128.0099.fits
+   luci2.20200128.0100.fits
+   luci2.20200128.0101.fits
+   luci2.20200128.0102.fits
+   luci2.20200128.0103.fits
+   luci2.20200128.0104.fits
+   luci2.20200128.0105.fits
+   luci2.20200128.0106.fits
+   luci2.20200128.0107.fits
+   luci2.20200128.0108.fits
+   luci2.20200128.0109.fits
+   luci2.20200128.0110.fits
+   luci2.20200128.0111.fits
+   luci2.20200128.0112.fits
+   luci2.20200128.0113.fits
+   luci2.20200128.0114.fits
+   luci2.20200128.0115.fits
+   luci2.20200128.0116.fits
+   luci2.20200128.0117.fits
+   luci2.20200128.0118.fits
+   luci2.20200128.0119.fits
+   luci2.20200128.0120.fits
+   luci2.20200128.0121.fits
+   luci2.20200128.0122.fits
+   luci2.20200128.0123.fits
+   luci2.20200128.0124.fits
+   luci2.20200128.0125.fits
+   luci2.20200128.0126.fits
+   luci2.20200128.0127.fits
+   luci2.20200128.0128.fits
+   luci2.20200128.0129.fits
+   luci2.20200128.0130.fits
+   luci2.20200128.0131.fits
+   luci2.20200128.0132.fits
+   luci2.20200128.0133.fits
+   luci2.20200128.0134.fits
+   luci2.20200128.0135.fits
+   luci2.20200128.0136.fits
+   luci2.20200128.0137.fits
+   luci2.20200128.0138.fits
+   luci2.20200128.0139.fits
+   luci2.20200128.0140.fits
+   luci2.20200128.0141.fits
+   luci2.20200128.0142.fits
+   luci2.20200128.0143.fits
+   luci2.20200128.0144.fits
+   luci2.20200128.0145.fits
+   luci2.20200128.0146.fits
+   luci2.20200128.0147.fits
+   luci2.20200128.0148.fits
+   luci2.20200128.0149.fits
+   luci2.20200128.0150.fits
+   luci2.20200128.0151.fits
+   luci2.20200128.0152.fits
+   luci2.20200128.0153.fits
+   luci2.20200128.0154.fits
+   luci2.20200128.0155.fits
+   luci2.20200128.0156.fits
+   luci2.20200128.0157.fits
+   luci2.20200128.0158.fits
+   luci2.20200128.0159.fits
+   luci2.20200128.0160.fits
+   luci2.20200128.0161.fits
+   luci2.20200128.0162.fits
+   luci2.20200128.0163.fits
+   luci2.20200128.0164.fits
+   luci2.20200128.0165.fits
+   luci2.20200128.0166.fits
+   luci2.20200128.0167.fits
+   luci2.20200128.0168.fits
+   luci2.20200128.0169.fits
+   luci2.20200128.0170.fits
+   luci2.20200128.0171.fits
+   luci2.20200128.0172.fits
+   luci2.20200128.0173.fits
+   luci2.20200128.0174.fits
+   luci2.20200128.0175.fits
+   luci2.20200128.0176.fits
+   luci2.20200128.0177.fits
+   luci2.20200128.0178.fits
+   luci2.20200128.0179.fits
+   luci2.20200128.0180.fits
+   luci2.20200128.0181.fits
+   luci2.20200128.0182.fits
+   luci2.20200128.0183.fits
+   luci2.20200128.0184.fits
+   luci2.20200128.0185.fits
+   luci2.20200128.0186.fits
+   luci2.20200128.0187.fits
+   luci2.20200128.0188.fits
+   luci2.20200128.0189.fits
+   luci2.20200128.0190.fits
+   luci2.20200128.0191.fits
+   luci2.20200128.0192.fits
+   luci2.20200128.0193.fits
+   luci2.20200128.0194.fits
+   luci2.20200128.0195.fits
+   luci2.20200128.0196.fits
+   luci2.20200128.0197.fits
+   luci2.20200128.0198.fits
