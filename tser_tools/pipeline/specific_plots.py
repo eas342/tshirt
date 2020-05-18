@@ -25,6 +25,9 @@ def k2_22(date='jan25',showTiming=False,detrend=True,doBin=False):
     if date == 'jan25':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_25_phot_lbc_proc.yaml')
         t0 = Time('2020-01-25T09:30:27.06')
+    if date == 'jan25-luci2':
+        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_25_phot_lbc_proc.yaml')
+        t0 = Time('2020-01-25T09:30:27.06')
     elif date == 'jan28':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_lbc.yaml')
         t0 = Time('2020-01-28T10:40:45.81')
