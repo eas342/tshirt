@@ -283,12 +283,17 @@ class prep():
             outUnit = u.adu
         
         if self.check_if_nonlin_needed(head) == True:
-            if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
+            if 'LBT LUCI' in self.pipePrefs['nonLinFunction']:
                 if 'NDIT' not in head:
                     print("No NDIT found for {} so no non-linearity correction applied".format(fileName))
                     data = data
                 else:
-                    data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'])
+                    if self.pipePrefs['nonLinFunction'] == 'LBT LUCI2':
+                        data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'])
+                    elif self.pipePrefs['nonLinFunction'] == 'LBT LUCI2 OLD':
+                        data = lbt_luci2_lincor(data,dataUnit=outUnit,ndit=head['NDIT'],k2=4.155e-6)
+                    else:
+                        raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
             else:
                 raise Exception("Unrecognized non-linearity function {}".format(self.pipePrefs['nonLinFunction']))
             head['LINCOR'] = (True, "Is a non-linearity correction applied?")
@@ -303,7 +308,7 @@ class prep():
         
         return head, outData
 
-def lbt_luci2_lincor(img,dataUnit=u.adu,ndit=1.0):
+def lbt_luci2_lincor(img,dataUnit=u.adu,ndit=1.0,k2=2.767e-6):
     """
     LUCI2 linearity correction from 
     https://sites.google.com/a/lbto.org/luci/observing/calibrations/calibration-details
@@ -318,7 +323,7 @@ def lbt_luci2_lincor(img,dataUnit=u.adu,ndit=1.0):
     else:
         raise Exception("Unit {} not the right unit for this nonlin correction".format(datUnit))
     imgUse = imgUse / ndit
-    ADUlin=imgUse + 4.155e-6 * (imgUse)**2
+    ADUlin=imgUse + k2 * (imgUse)**2
     return ADUlin * ndit
 
 def reduce_all(testMode=False):
