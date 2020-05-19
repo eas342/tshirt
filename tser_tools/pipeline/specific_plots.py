@@ -25,8 +25,8 @@ def k2_22(date='jan25',showTiming=False,detrend=True,doBin=False):
     if date == 'jan25':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_25_phot_lbc_proc.yaml')
         t0 = Time('2020-01-25T09:30:27.06')
-    if date == 'jan25-luci2':
-        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_25_phot_lbc_proc.yaml')
+    elif date == 'jan25-luci2':
+        phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_25_phot_luci2.yaml')
         t0 = Time('2020-01-25T09:30:27.06')
     elif date == 'jan28':
         phot = phot_pipeline.phot('parameters/phot_params/lbt/k2-22_UT_2020_01_28_phot_lbc.yaml')
@@ -97,7 +97,8 @@ def k2_22(date='jan25',showTiming=False,detrend=True,doBin=False):
     
     if doBin == True:
         goodP = np.isfinite(yShow)
-        nBin = 30
+        span = np.max(x) - np.min(x)
+        nBin = np.int(span * 24. * 60./10.)
         yBins = Table()
         for oneStatistic in ['mean','std','count']:
             if oneStatistic == 'std':
