@@ -1,14 +1,14 @@
-procFiles: //Users/everettschlawin/Documents/single_systems/k2-22/UT2020_01_25/proc_w_lincor/luci2.20200125.????.fits ## files on which to do Phot
+procFiles: //Users/everettschlawin/Documents/single_systems/k2-22/UT2020_01_25/proc_luci2/luci2.20200125.????.fits ## files on which to do Phot
 srcName: K2-22 LUCI2
 srcNameShort: k2-22luci2
 nightName: UT2020_01_25
 refStarPos: ## positions of the stars in [x,y]. The first one is the target
    - [ 1377.8,  908.9]
    - [  987.8,  741.2]
-#   - [  549.6,  546.3]
-#   - [ 1281.2, 1409.7]
+   - [  549.6,  546.3]
    - [ 1121.7, 1558.5]
-#   - [ 725.71, 1346.3]
+   - [ 1281.2, 1409.7]
+   - [ 725.71, 1346.3]
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
@@ -22,7 +22,7 @@ backEnd: 25. ## Background annulus end radius
 #backHeight: 40 ## background aperture height (for rectangular background)
 #backWidth: 1502 ## background aperture width (only for rectangular aperture)
 backOffset: [0.,0.] ## Background offset (from source centroid)
-boxFindSize: 6 ## the half-width of the box used for source centroiding
+boxFindSize: 30 ## the half-width of the box used for source centroiding
 jdRef: 2458874 ## JD reference offset to subtract
 #timingMethod: JWSTint ## how to assign integration times? None, 'JWSTint' will add int time
 scaleAperture: False ## Scale the aperture with the FWHM?
