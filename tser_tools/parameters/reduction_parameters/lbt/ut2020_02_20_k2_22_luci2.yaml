@@ -28,6 +28,7 @@ gainKeyword: GAIN ## header keyword for gain correction
 procName: proc_luci2 ## proc directory name
 doNonLin: True
 nonLinFunction: LBT LUCI2
+fixPix: True
 sciExtension: null
 sciExcludeList:
    - luci2.20200220.0001.fits
