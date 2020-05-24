@@ -30,3 +30,4 @@ readNoise: 14 ## Read noise in electrons
 detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 specShiftMultiplier: 1.067 ## this is a multiplier to shift the spectra an extra fraction
+waveCalMethod: NIRCamTS ## the wavelength calibration method (None/null, NIRCamTS)

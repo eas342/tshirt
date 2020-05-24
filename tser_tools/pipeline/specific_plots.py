@@ -7,11 +7,18 @@ from astropy.time import Time
 import astropy.coordinates
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+import astropy.constants as const
 from astropy.table import Table
 import numpy as np
 from scipy.stats import binned_statistic
 import pdb
 
+# try:
+#     from astropy.modeling.models import BlackBody
+#     bbFunc = True
+# except ImportError:
+#     bbFunc = False
+#     print("Blackbody function doesn't work")
 
 from astropy.utils.iers import conf
 conf.auto_max_age = None
@@ -157,11 +164,13 @@ def show_fringing():
             numSplineKnots = 200
             fringAmpGuess = 0.003
             fringOffset = 0.01
+            waveOffset = 0
         elif oneTest == 'cv3':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
             numSplineKnots = 400
             fringAmpGuess = 0.05
             fringOffset = 0.15
+            waveOffset = 0.1
         else:
             raise Exception("Unrecognized test data {}.".format(oneTest))
         
@@ -184,4 +193,40 @@ def show_fringing():
         #pdb.set_trace()
         fig.savefig('plots/spectra/custom_plots/fringing_grism_{}.pdf'.format(oneTest),bbox_inches='tight')
         plt.close(fig)
-        
+
+
+def check_wavecal(otis=False):
+    """
+    Check the wavelength cal 
+    """
+    dat = ascii.read('spectra/specific/reference_data/F322W2_nrc_only_throughput_moda_sorted.txt')
+    
+    yFilt = dat['Throughput']
+    yFiltNorm = yFilt / np.median(yFilt)
+    
+    plt.plot(dat['Wavelength_microns'],yFiltNorm)
+    
+    if otis == True:
+        spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
+        bb_temp = 300
+        spec_offset = 0.0
+    else:
+        bb_temp = 500
+        spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
+        spec_offset = 0.1
+    
+    x, ySpec, yerr = spec.get_avg_spec()
+    lam = spec.wavecal(x) - spec_offset
+    
+    exp_const = const.h * const.c / ( const.k_B * bb_temp * u.K)
+    exp_const_mic = exp_const.to(u.micron).value
+    bb_wien = np.exp(- exp_const_mic/lam) / lam**5
+    #bb = BlackBody(temperature=330*u.K)
+    #wav = lam * u.micron
+    y = ySpec / bb_wien#(wav)
+    
+    yNorm = y / np.nanmedian(y)
+    plt.plot(lam,yNorm)
+    plt.show()
+    
+    
