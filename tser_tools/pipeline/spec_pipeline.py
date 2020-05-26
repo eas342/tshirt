@@ -828,13 +828,25 @@ class spec(phot_pipeline.phot):
             plt.show()
         plt.close(fig)
         
-    def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False):
+    def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False,
+                    transform=None):
         if ind == None:
-            x, y, yerr = self.get_avg_spec(src=src)
+            x_px, y, yerr = self.get_avg_spec(src=src)
         else:
-            x, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
+            x_px, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
         
-        normY = self.norm_spec(x,y,numSplineKnots=200)
+        if transform is None:
+            x = x_px
+            x_unit = 'Frequency (1/px)'
+        elif transform == 'lam-squared':
+            lam = self.wavecal(x_px)
+            x = lam**2
+            x_unit = 'Frequency (1/$\lambda^2$)'
+        else:
+            raise Exception("Unrecognized transform {}".format(tranform))
+            
+        
+        normY = self.norm_spec(x_px,y,numSplineKnots=200)
         yerr_Norm = yerr / y
         #x1, x2 = 
         pts = np.isfinite(normY) & np.isfinite(yerr_Norm)
@@ -846,7 +858,7 @@ class spec(phot_pipeline.phot):
         fig, ax = plt.subplots()
         
         ax.loglog(frequency,power)
-        ax.set_xlabel('Frequency (1/px)')
+        ax.set_xlabel(x_unit)
         ax.set_ylabel('Power')
         
         if astropy.__version__ > "3.0":
@@ -860,18 +872,18 @@ class spec(phot_pipeline.phot):
         else:
             warnings.warn('Not calculating FAP for older version of astropy')
         
-        localPts = frequency < 0.05
-        argmax = np.argmax(power[localPts])
-        freqAtMax = frequency[localPts][argmax]
-        print('Freq at local max power = {}'.format(freqAtMax))
-        print('Corresponding period = {}'.format(1./freqAtMax))
-        if astropy.__version__ > "3.0":
-            print("FAP at local max = {}".format(ls.false_alarm_probability(power[localPts][argmax])))
-        else:
-            warnings.warn('Not calculating FAP for older versions of astropy')
+        # localPts = frequency < 0.05
+        # argmax = np.argmax(power[localPts])
+        # freqAtMax = frequency[localPts][argmax]
+        # print('Freq at local max power = {}'.format(freqAtMax))
+        # print('Corresponding period = {}'.format(1./freqAtMax))
+        # if astropy.__version__ > "3.0":
+        #     print("FAP at local max = {}".format(ls.false_alarm_probability(power[localPts][argmax])))
+        # else:
+        #     warnings.warn('Not calculating FAP for older versions of astropy')
         
         if savePlot == True:
-            periodoName = '{}_spec_periodo_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
+            periodoName = '{}_spec_periodo_{}_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'],transform)
             fig.savefig('plots/spectra/periodograms/{}'.format(periodoName))
         else:
             plt.show()
