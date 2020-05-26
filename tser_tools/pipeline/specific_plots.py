@@ -234,7 +234,7 @@ def check_wavecal(otis=False):
     else:
         bb_temp = 500
         spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
-        spec_offset = 0.1
+        spec_offset = 0.0
     
     x, ySpec, yerr = spec.get_avg_spec()
     lam = spec.wavecal(x) - spec_offset

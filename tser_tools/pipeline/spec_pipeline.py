@@ -1394,6 +1394,8 @@ class spec(phot_pipeline.phot):
                                                                          **kwargs)
         else:
             raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
+            
+        wavelengths = wavelengths - self.param['waveCalOffset']
         return wavelengths
 
 class batch_spec(phot_pipeline.batchPhot):
