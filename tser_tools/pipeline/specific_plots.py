@@ -12,6 +12,7 @@ from astropy.table import Table
 import numpy as np
 from scipy.stats import binned_statistic
 import pdb
+from scipy.interpolate import interp1d
 
 # try:
 #     from astropy.modeling.models import BlackBody
@@ -153,7 +154,11 @@ def k2_22(date='jan25',showTiming=False,detrend=True,doBin=False):
 
 #def fringing_function(x,amp=0.1,period=0.09,periodSlope=.04,offset=0.1):
 def fringing_function(x,amp=0.1,period=6.0,periodSlope=2.0,offset=0.1,phase=0.0):
-    modelY = 1.0 - offset + amp * np.sin(x * np.pi * 2. / (period - (periodSlope * (x - 1100.) / 2048.)) - phase)
+    
+    L = 350. ##microns
+    n_real = 2.7
+    E_0 = np.sin(2. * np.pi * L * n_real / x)
+    modelY = 1.0 - offset + amp * E_0**2
     return modelY
 
 def show_fringing():
@@ -162,32 +167,48 @@ def show_fringing():
         if oneTest == 'otis':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
             numSplineKnots = 200
-            fringAmpGuess = 0.003
-            fringOffset = 0.01
+            fringAmpGuess = 0.006
+            fringOffset = 0.013
             waveOffset = 0
+            yLim = [0.98,1.008]
         elif oneTest == 'cv3':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
             numSplineKnots = 400
-            fringAmpGuess = 0.05
-            fringOffset = 0.15
+            fringAmpGuess = 0.1
+            fringOffset = 0.2
             waveOffset = 0.1
+            yLim = [0.8,1.2]
         else:
             raise Exception("Unrecognized test data {}.".format(oneTest))
         
-        modelY = fringing_function(modelX,amp=fringAmpGuess,offset=fringOffset)
+        #modelY = fringing_function(modelX,amp=fringAmpGuess,offset=fringOffset)
         
         x, y, yerr = spec.get_avg_spec()
+        lam = spec.wavecal(x) - waveOffset
+        modelY = fringing_function(lam,amp=fringAmpGuess,offset=fringOffset)
+        
         normY = spec.norm_spec(x,y,numSplineKnots=400)
         fig, ax = plt.subplots(figsize=(10,4))
         ax.set_xlim(1000,1800)
         ax.plot(x,normY,label='Extracted Spectrum')
-        ax.plot(modelX,modelY,label='Illustrative Model')
+        ax.plot(modelX,modelY,label='Thin Film Model')
         reprPoint = 1500
         ax.errorbar([modelX[reprPoint]],[np.nanpercentile(normY,99)],yerr=yerr[reprPoint]/y[reprPoint],
                     color='green',fmt='o',markerfacecolor='none',label='Representative Error')
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Normalized Flux')
         ax.legend()
+        ax.set_ylim(yLim[0],yLim[1])
+        
+        ## show the wavelengths
+        wave_labels = np.arange(2.5,4.1,0.1)
+        ax2 = ax.twiny()
+        ax2.set_xlim(ax.get_xlim())
+        ax2.set_xticklabels(wave_labels)
+        f = interp1d(lam,x)
+        new_tick_locations = f(wave_labels)
+        ax2.set_xticks(new_tick_locations)
+        ax2.set_xlabel(r"Wavelength ($\mu$m)")
         
         fig.show()
         #pdb.set_trace()
