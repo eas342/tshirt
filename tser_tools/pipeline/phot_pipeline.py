@@ -170,9 +170,11 @@ class phot:
             fileList = origList
         
         if (len(fileList) == 0) & os.path.exists(self.photFile):
-            warnings.warn("File Search comes up empty. Reading from previous phot file instead.")
-            t1 = Table.read(self.photFile,hdu='FILENAMES')
-            fileList = np.array(t1['File Path'])
+            print("Note: File Search comes up empty")
+            if os.path.exists(self.photFile):
+                print("Note: Reading file list from previous phot file instead.")
+                t1 = Table.read(self.photFile,hdu='FILENAMES')
+                fileList = np.array(t1['File Path'])
         
         return fileList
 
