@@ -176,7 +176,7 @@ def show_fringing():
             numSplineKnots = 400
             fringAmpGuess = 0.1
             fringOffset = 0.2
-            waveOffset = 0.1
+            waveOffset = 0.0
             yLim = [0.8,1.2]
         else:
             raise Exception("Unrecognized test data {}.".format(oneTest))
@@ -203,12 +203,12 @@ def show_fringing():
         ## show the wavelengths
         wave_labels = np.arange(2.5,4.1,0.1)
         ax2 = ax.twiny()
-        ax2.set_xlim(ax.get_xlim())
-        ax2.set_xticklabels(wave_labels)
         f = interp1d(lam,x)
         new_tick_locations = f(wave_labels)
         ax2.set_xticks(new_tick_locations)
+        ax2.set_xticklabels(wave_labels)
         ax2.set_xlabel(r"Wavelength ($\mu$m)")
+        ax2.set_xlim(ax.get_xlim())
         
         fig.show()
         #pdb.set_trace()
