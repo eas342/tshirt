@@ -1190,7 +1190,7 @@ class spec(phot_pipeline.phot):
         
         HDUList.close()
     
-    def print_noise_wavebin(self,nbins=10):
+    def print_noise_wavebin(self,nbins=10,shorten=False):
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
@@ -1203,6 +1203,8 @@ class spec(phot_pipeline.phot):
         t['Wave (st)'] = np.round(self.wavecal(disp['Bin Start']),3)
         t['Wave (mid)'] = np.round(self.wavecal(t['Disp Mid']),3)
         t['Wave (end)'] = np.round(self.wavecal(disp['Bin End']),3)
+        if shorten == True:
+            binGrid = binGrid[0:15,:]
         t['Stdev (%)'] = np.round(np.std(binGrid,axis=0) * 100.,4)
         t['Theo Err (%)'] = np.round(np.median(binGrid_err,axis=0) * 100.,4)
         
