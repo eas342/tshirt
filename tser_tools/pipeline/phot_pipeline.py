@@ -1451,6 +1451,8 @@ class phot:
         if self.param['isSlope'] == True:
             if 'INTTIME' in head:
                 intTime = head['INTTIME']
+            elif 'EFFINTTM' in head:
+                intTime = head['EFFINTTM']
             else:
                 warnings.warn("Couldn't find INTTIME in header. Trying EXPTIME")
                 intTime = head['EXPTIME']
