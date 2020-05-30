@@ -829,11 +829,16 @@ class spec(phot_pipeline.phot):
         plt.close(fig)
         
     def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False,
-                    transform=None):
+                    transform=None,trim=False):
         if ind == None:
             x_px, y, yerr = self.get_avg_spec(src=src)
         else:
             x_px, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
+        
+        if trim == True:
+            x_px = x_px[1000:1800]
+            y = y[1000:1800]
+            yerr = yerr[1000:1800]
         
         if transform is None:
             x = x_px
@@ -842,8 +847,12 @@ class spec(phot_pipeline.phot):
             lam = self.wavecal(x_px)
             x = lam**2
             x_unit = 'Frequency (1/$\lambda^2$)'
+        elif transform == 'inv-lam-squared':
+            lam = self.wavecal(x_px)
+            x = 1./lam**2
+            x_unit = 'Frequency ($\lambda^2$)'
         else:
-            raise Exception("Unrecognized transform {}".format(tranform))
+            raise Exception("Unrecognized transform {}".format(transform))
             
         
         normY = self.norm_spec(x_px,y,numSplineKnots=200)
@@ -851,7 +860,7 @@ class spec(phot_pipeline.phot):
         #x1, x2 = 
         pts = np.isfinite(normY) & np.isfinite(yerr_Norm)
         ls = LombScargle(x[pts],normY[pts],yerr_Norm[pts])
-        
+        #pdb.set_trace()
         frequency, power = ls.autopower()
         period = 1./frequency
         
@@ -881,6 +890,8 @@ class spec(phot_pipeline.phot):
         #     print("FAP at local max = {}".format(ls.false_alarm_probability(power[localPts][argmax])))
         # else:
         #     warnings.warn('Not calculating FAP for older versions of astropy')
+        
+        #ax.set_xlim(100,1e4)
         
         if savePlot == True:
             periodoName = '{}_spec_periodo_{}_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'],transform)
