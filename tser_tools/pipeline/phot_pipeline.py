@@ -749,7 +749,15 @@ class phot:
         
         if 'timingMethod' in self.param:
             if self.param['timingMethod'] == 'JWSTint':
-                t0 = t0 + (head['TFRAME'] + head['INTTIME']) * (head['ON_NINT']) * u.second
+                if 'INTTIME' in head:
+                    int_time = head['INTTIME']
+                elif 'EFFINTTM' in head:
+                    int_time = head['EFFINTTM']
+                else:
+                    warnings.warn("Couldn't find inttime in header. Setting to 0")
+                    int_time = 0
+                
+                t0 = t0 + (head['TFRAME'] + int_time) * (head['ON_NINT']) * u.second
         
         return t0
     
