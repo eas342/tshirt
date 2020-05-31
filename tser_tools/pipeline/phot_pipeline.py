@@ -1213,6 +1213,13 @@ class phot:
             warnings.warn('Only once source, so defaulting to refCorrect=False')
             refCorrect = False
         
+        if shorten == True:
+            yCorrected = yCorrected0[0:15]
+            photArr = photArr[0:15,:]
+            nImg = 15
+        else:
+            nImg = self.nImg
+        
         if refCorrect == True:
             yCorrected, yCorrected_err = self.refSeries(photArr,errArr,
                                                         excludeSrc=excludeSrc)
@@ -1225,7 +1232,7 @@ class phot:
             medFlux = np.nanmedian(photArr,axis=0)
             t['Stdev (%)'] = np.round(np.nanstd(photArr,axis=0) / medFlux * 100.,4)
             t['Theo Err (%)'] = np.round(np.nanmedian(errArr,axis=0) / medFlux * 100.,4)
-            tiledFlux = np.tile(medFlux,[self.nImg,1])
+            tiledFlux = np.tile(medFlux,[nImg,1])
             mad = np.nanmedian(np.abs(photArr - tiledFlux),axis=0) / medFlux
             t['Mad (%)'] = np.round(mad * 100.,4)
 
