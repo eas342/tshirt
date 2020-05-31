@@ -698,14 +698,15 @@ class spec(phot_pipeline.phot):
             goodPts = holey_weights > 0.
             correctionFactor[goodPts] = 1./holey_weights[goodPts]
             
+            ## make a 2D correction factor to weight the image around NaNs
+            if self.param['dispDirection'] == 'x':
+                correct2D = np.tile(correctionFactor,[img.shape[0],1])
+            else:
+                correct2D = np.tile(correctionFactor,[img.shape[1],1]).transpose()
+            markBad = badPx & (profile_img > 0.)
+            correct2D[markBad] = 0.
+            
             if saveFits == True:
-                if self.param['dispDirection'] == 'x':
-                    correct2D = np.tile(correctionFactor,[img.shape[0],1])
-                else:
-                    correct2D = np.tile(correctionFactor,[img.shape[1],1]).transpose()
-                markBad = badPx & (profile_img > 0.)
-                correct2D[markBad] = 0.
-                
                 primHDU_prof2Dh = fits.PrimaryHDU(holey_profile)
                 holey_profile_name = 'diagnostics/profile_fit/{}_holey_profile_{}.fits'.format(prefixName,oneSrc)
                 primHDU_prof2Dh.writeto(holey_profile_name,overwrite=True)
@@ -732,7 +733,7 @@ class spec(phot_pipeline.phot):
                 nonz = (profile_img != 0.) & (np.isfinite(profile_img))
                 inverse_prof[nonz] = 1./profile_img[nonz]
                 # avoid div by 0 issues
-                optNumerator = np.nansum(imgSub * weight2D * correctionFactor * inverse_prof,spatialAx)
+                optNumerator = np.nansum(imgSub * weight2D * correct2D * inverse_prof,spatialAx)
                 denom = np.nansum(weight2D,spatialAx)
                 varNumerator = correctionFactor
                 denom_v = denom
@@ -744,16 +745,16 @@ class spec(phot_pipeline.phot):
                 #normprof2 = self.profile_normalize(profile_img,method='peak') * np.median(np.nanmax(profile_img,spatialAx))
                 optNumerator = np.nansum(imgSub * weight2D,spatialAx)
                 denom =  np.nansum(profile_img * weight2D,spatialAx)
-                varNumerator = np.nansum(profile_img * correctionFactor,spatialAx)
+                varNumerator = np.nansum(profile_img * correct2D,spatialAx)
                 denom_v = np.nansum(profile_img**2/varImg,spatialAx)
             else:
-                # optflux = (np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx) /
+                # optflux = (np.nansum(imgSub * profile_img * correct2D/ varImg,spatialAx) /
                 #            np.nansum(profile_img**2/varImg,spatialAx))
-                # varFlux = (np.nansum(profile_img * correctionFactor,spatialAx) /
+                # varFlux = (np.nansum(profile_img * correct2D,spatialAx) /
                 #            np.nansum(profile_img**2/varImg,spatialAx))
-                optNumerator = np.nansum(imgSub * profile_img * correctionFactor/ varImg,spatialAx)
+                optNumerator = np.nansum(imgSub * profile_img * correct2D/ varImg,spatialAx)
                 denom =  np.nansum(profile_img**2/varImg,spatialAx)
-                varNumerator = np.nansum(profile_img * correctionFactor,spatialAx)
+                varNumerator = np.nansum(profile_img * correct2D,spatialAx)
                 denom_v = denom
             
             nonz = (denom != 0.) & np.isfinite(denom)
