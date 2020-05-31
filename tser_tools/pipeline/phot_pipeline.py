@@ -169,7 +169,7 @@ class phot:
         else:
             fileList = origList
         
-        if (len(fileList) == 0) & os.path.exists(self.photFile):
+        if len(fileList) == 0:
             print("Note: File Search comes up empty")
             if os.path.exists(self.photFile):
                 print("Note: Reading file list from previous phot file instead.")
