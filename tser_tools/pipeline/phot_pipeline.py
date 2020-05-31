@@ -1201,7 +1201,7 @@ class phot:
         HDUList.close()
         plt.close(fig)
     
-    def print_phot_statistics(self,refCorrect=True,excludeSrc=None):
+    def print_phot_statistics(self,refCorrect=True,excludeSrc=None,shorten=False):
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
@@ -1214,7 +1214,6 @@ class phot:
             refCorrect = False
         
         if shorten == True:
-            yCorrected = yCorrected0[0:15]
             photArr = photArr[0:15,:]
             nImg = 15
         else:
@@ -1223,6 +1222,9 @@ class phot:
         if refCorrect == True:
             yCorrected, yCorrected_err = self.refSeries(photArr,errArr,
                                                         excludeSrc=excludeSrc)
+            if shorten == True:
+                yCorrected = yCorrected[0:15]
+            
             t['Stdev (%)'] = np.round([np.nanstd(yCorrected) * 100.],4)
             t['Theo Err (%)'] = np.round(np.nanmedian(yCorrected_err) * 100.,4)
             mad = np.nanmedian(np.abs(yCorrected - np.nanmedian(yCorrected)))
