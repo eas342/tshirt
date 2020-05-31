@@ -969,7 +969,7 @@ class spec(phot_pipeline.phot):
     def dyn_specFile(self,src=0):
         return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
         
-    def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=True,
+    def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=False,
                           alignDiagnostics=False,extraFF=False,
                           specType='Optimal'):
         HDUList = fits.open(self.specFile)
