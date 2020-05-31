@@ -4,6 +4,7 @@
 *.pdf
 *.png
 tser_tools/plots/photometry/interactive/*.html
+tser_tools/plots/spectra/interactive/*.html
 tser_tools/spectra/*/*.csv
 tser_tools/chisquare/*/*.csv
 tser_tools/mcmcRuns/*/*/*.pic
