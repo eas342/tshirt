@@ -1209,7 +1209,7 @@ class phot:
         errArr = HDUList['PHOT ERR'].data
         
         t = Table()
-        if head['NSOURCE'] == 1:
+        if (head['NSOURCE'] == 1) & (refCorrect == True):
             warnings.warn('Only once source, so defaulting to refCorrect=False')
             refCorrect = False
         
