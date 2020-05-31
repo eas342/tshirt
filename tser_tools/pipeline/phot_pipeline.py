@@ -1209,6 +1209,10 @@ class phot:
         errArr = HDUList['PHOT ERR'].data
         
         t = Table()
+        if head['NSOURCE'] == 1:
+            warnings.warn('Only once source, so defaulting to refCorrect=False')
+            refCorrect = False
+        
         if refCorrect == True:
             yCorrected, yCorrected_err = self.refSeries(photArr,errArr,
                                                         excludeSrc=excludeSrc)
