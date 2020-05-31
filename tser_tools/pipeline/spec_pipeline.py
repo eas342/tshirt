@@ -20,7 +20,16 @@ from astropy.table import Table
 from astropy.stats import LombScargle
 import multiprocessing
 from multiprocessing import Pool
-
+try:
+    import bokeh.plotting
+    from bokeh.models import ColumnDataSource, HoverTool
+    from bokeh.models import Range1d
+    from bokeh.models import WheelZoomTool
+    from bokeh.palettes import Dark2_5 as palette
+    # itertools handles the cycling
+    import itertools
+except ImportError as err2:
+    print("Could not import bokeh plotting. Interactive plotting may not work")
 
 from . import phot_pipeline
 from . import analysis
@@ -1152,7 +1161,8 @@ class spec(phot_pipeline.phot):
         return np.floor(np.min(time))
     
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
-                            recalculate=True,dispIndices=None,differential=False):
+                            recalculate=True,dispIndices=None,differential=False,
+                            interactive=False):
         """ Plot wavelength-binned time series """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices)
@@ -1174,21 +1184,50 @@ class spec(phot_pipeline.phot):
             avgSeries2D = np.tile(avgSeries,[len(disp),1]).transpose()
             binGrid = binGrid / avgSeries2D
         
-        fig, ax = plt.subplots()
-        for ind,oneDisp in enumerate(disp):
-            ax.errorbar(time - offset_time,binGrid[:,ind] - offset * ind,fmt='o')
+        if interactive == True:
+            outFile = "plots/spectra/interactive/refseries_{}.html".format(self.dataFileDescrip)
         
-        if yLim is not None:
-            ax.set_ylim(yLim[0],yLim[1])
-        
-        if savePlot == True:
-            fig.savefig('plots/spectra/wavebin_tseries/wavebin_tser_{}.pdf'.format(self.dataFileDescrip))
-            plt.close(fig)
-        
+            fileBaseNames = []
+            fileTable = Table.read(self.specFile,hdu='FILENAMES')
+            indexArr = np.arange(len(fileTable))
+            for oneFile in fileTable['File Path']:
+                fileBaseNames.append(os.path.basename(oneFile))
+            
+            bokeh.plotting.output_file(outFile)
+            
+            dataDict = {'t': time - offset_time,'name':fileBaseNames,'ind':indexArr}
+            for ind,oneDisp in enumerate(disp):
+                dataDict["y{:02d}".format(ind)] = binGrid[:,ind] - offset * ind
+            
+            source = ColumnDataSource(data=dataDict)
+            p = bokeh.plotting.figure()
+            p.background_fill_color="#f5f5f5"
+            p.grid.grid_line_color="white"
+            
+            colors = itertools.cycle(palette)
+            for ind,oneDisp in enumerate(disp):
+                p.circle(x='t',y="y{:02d}".format(ind),source=source,color=next(colors))
+            
+            p.add_tools(HoverTool(tooltips=[('name', '@name'),('index','@ind')]))
+            bokeh.plotting.show(p)
+            
         else:
-            fig.show()
-        
-        HDUList.close()
+            fig, ax = plt.subplots()
+            for ind,oneDisp in enumerate(disp):
+                ax.errorbar(time - offset_time,binGrid[:,ind] - offset * ind,fmt='o')
+            
+            if yLim is not None:
+                ax.set_ylim(yLim[0],yLim[1])
+            
+            if savePlot == True:
+                fig.savefig('plots/spectra/wavebin_tseries/wavebin_tser_{}.pdf'.format(self.dataFileDescrip))
+                plt.close(fig)
+            
+            else:
+                fig.show()
+            
+            HDUList.close()
+    
     
     def print_noise_wavebin(self,nbins=10,shorten=False):
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
