@@ -1,7 +1,7 @@
 procFiles: /surtrdata1/tso_analysis/sim_data/mirage_sim/nircam_011_proc/proc/simple_slopes/nircam_011_nircam_011_jw88888001001_01101_00002-seg00*nrca5*/*.slp.fits # files on which to do spec extraction
 excludeList: null
-srcName: WASP-79 b F444W w/ similar param as apall test
-srcNameShort: wasp79f44w_005_sim_to_apall
+srcName: WASP-79 b F444W simple slopes w/ similar param as apall test
+srcNameShort: wasp79f44w_010_simple_slopes_sim_to_apall
 nightName: miragesim01f44w
 bkgSubDirections: ['Y']
 starPositions: ## positions of the stars in the spatial direction. The first one is the target

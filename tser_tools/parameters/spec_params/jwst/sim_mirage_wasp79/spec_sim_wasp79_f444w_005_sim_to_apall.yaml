@@ -1,4 +1,4 @@
-procFiles: /surtrdata1/tso_analysis/sim_data/mirage_sim/nircam_011_proc/proc/raw_separated_PPP_refpix/nircam_011_nircam_011_jw88888001001_01101_00002-seg00*nrca5*/*.slp.fits # files on which to do spec extraction
+procFiles: /surtrdata1/tso_analysis/sim_data/mirage_sim/nircam_011_proc/proc/raw_separated_MMM/nircam_011_nircam_011_jw88888001001_01101_00002-seg00*nrca5*/*.slp.fits # files on which to do spec extraction
 excludeList: null
 srcName: WASP-79 b F444W w/ similar param as apall test
 srcNameShort: wasp79f44w_005_sim_to_apall
