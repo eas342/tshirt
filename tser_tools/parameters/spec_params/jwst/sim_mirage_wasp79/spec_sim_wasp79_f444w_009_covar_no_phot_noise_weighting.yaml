@@ -1,8 +1,8 @@
 procFiles: /surtrdata1/tso_analysis/sim_data/mirage_sim/nircam_011_proc/proc/raw_separated_MMM_refpix/nircam_011_nircam_011_jw88888001001_01101_00002-seg00*nrca5*/*.slp.fits # files on which to do spec extraction
 excludeList: null
-srcName: WASP-79 b F444W
-srcNameShort: wasp79f44w_001
-nightName: miragesim01f44w
+srcName: WASP-79 b F444W MMM no refix cov with no Phot Noise
+srcNameShort: wasp79_008_cov_no_photn
+nightName: miragesim01f444w
 bkgSubDirections: ['Y','X']
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
    - 34
@@ -24,7 +24,7 @@ doCentering: False ## Center the aperturess with Gaussian?
 FITSextension: 0 ## FITS extension of science frames
 HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
 isSlope: True ## Is the FITS image a slope image that should be multiplied by the int time?
-readNoise: 11 ## Read noise in electrons
+readNoise: 8 ## Read noise in electrons
 detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
 waveCalMethod: NIRCamTS ## the wavelength calibration method (None/null, NIRCamTS)
