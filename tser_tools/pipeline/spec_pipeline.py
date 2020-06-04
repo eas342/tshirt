@@ -1269,7 +1269,7 @@ class spec(phot_pipeline.phot):
         
         return t
     
-    def plot_broadband_series(self,src=0,savePlot=False):
+    def plot_broadband_series(self,src=0,savePlot=False,matchIraf=False):
         t = self.get_broadband_series(src=src)
         offset_time = self.get_offset_time(t['time'])
         
@@ -1277,8 +1277,17 @@ class spec(phot_pipeline.phot):
         print('Formal Err = {} ppm '.format(err_ppm))
         fig, ax = plt.subplots()
         
-        ax.plot(t['time'] - offset_time,t['Norm Flux'])
-        ax.set_xlabel("Time - {} (days)".format(offset_time))
+        if matchIraf == True:
+            marker = '.'
+            x = np.arange(len(t))
+            ax.set_xlabel("Int Number")
+        else:
+            marker = 'o'
+            x = t['time'] - offset_time
+            ax.set_xlabel("Time - {} (days)".format(offset_time))
+            
+        
+        ax.plot(x,t['Norm Flux'],marker)
         ax.set_ylabel("Normalized Flux")
         if savePlot == True:
             bb_series_name = '{}_bb_series_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
