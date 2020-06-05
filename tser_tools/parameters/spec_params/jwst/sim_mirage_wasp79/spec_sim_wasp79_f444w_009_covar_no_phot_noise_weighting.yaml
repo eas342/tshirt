@@ -1,7 +1,7 @@
 procFiles: /surtrdata1/tso_analysis/sim_data/mirage_sim/nircam_011_proc/proc/raw_separated_MMM_refpix/nircam_011_nircam_011_jw88888001001_01101_00002-seg00*nrca5*/*.slp.fits # files on which to do spec extraction
 excludeList: null
 srcName: WASP-79 b F444W MMM no refix cov with no Phot Noise
-srcNameShort: wasp79_008_cov_no_photn
+srcNameShort: wasp79_009_cov_no_photn
 nightName: miragesim01f444w
 bkgSubDirections: ['Y','X']
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
