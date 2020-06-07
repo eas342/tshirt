@@ -377,6 +377,43 @@ class spec(phot_pipeline.phot):
             bkgModelTotal = bkgModelTotal + bkgModel
         return subImg, bkgModelTotal, subHead
     
+    def save_one_backsub(self,ind):
+        """
+        Save a background-subtracted 
+        """
+        if np.mod(ind,15) == 0:
+            print("On {} of {}".format(ind,len(self.fileL)))
+        
+        oneImgName = self.fileL[ind]
+        img, head = self.getImg(oneImgName)
+        
+        imgSub, bkgModel, subHead = self.do_backsub(img,head,saveFits=False,
+                                                    directions=self.param['bkgSubDirections'])
+        outHDU = fits.PrimaryHDU(imgSub,subHead)
+        baseName = os.path.splitext(os.path.basename(oneImgName))[0]
+        outName = os.path.join(self.backsubDir,baseName+'.fits')
+        outHDU.writeto(outName)
+        
+    
+    def save_all_backsub(self,useMultiprocessing=False):
+        """
+        Save all background-subtracted images
+        """
+        fileCountArray = np.arange(self.nImg)
+        
+        oneImgPath = self.fileL[0]
+        self.backsubDir = os.path.join(os.path.split(oneImgPath)[0],'backsub_img')
+        if os.path.exists(self.backsubDir) == False:
+            os.mkdir(self.backsubDir)
+        
+        if useMultiprocessing == True:
+            outputSpec = phot_pipeline.run_multiprocessing_phot(self,fileCountArray,method='save_one_backsub')
+        else:
+            outputSpec = []
+            for ind in fileCountArray:
+                outputSpec.append(self.save_one_backsub(ind))
+        
+    
     def profile_normalize(self,img,method='sum'):
         """
         Renormalize a profile along the spatial direction
