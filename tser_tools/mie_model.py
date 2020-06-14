@@ -7,12 +7,13 @@ except ImportError:
 import pdb
 import matplotlib.pyplot as plt
 try:
-    import phot_pipeline
+    from pipeline import phot_pipeline
 except ImportError:
     warnings.warn("Unable to import phot_pipeline. Some of the Mie scattering models may not work")
 import yaml
 
-coeff = yaml.load(open('parameters/mie_params/simplePoly.yaml'))
+with open('parameters/mie_params/simplePoly.yaml') as yamlFile:
+    coeff = yaml.safe_load(yamlFile)
 
 
 def polyExtinct(wavel,rad=1.0,type=r'Simple n=(1.67-0.006j)'):
