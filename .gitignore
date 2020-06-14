@@ -25,6 +25,7 @@ tser_tools/parameters/reduction_parameters/lbt/luci_20180913*.yaml
 tser_tools/parameters/reduction_parameters/lbt/redparam_luci_20180913*.yaml
 tser_tools/parameters/phot_params/lbt/old_superceded/
 tser_tools/parameters/spec_params/hst/kelt9/*.yaml
+tser_tools/parameters/phot_params/lbt/not_in_git/
 tser_tools/tser_data/refcor_phot/*.fits
 tser_tools/tser_data/best_fit_models/kic1255/kic1255_best_fit*.csv
 tser_tools/mcmcRuns/k1255_mod/kuiper/old_mcmc/
