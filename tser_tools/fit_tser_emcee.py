@@ -1105,7 +1105,8 @@ def showTDiff(paramVary='temp',pset='normal'):
     fig.show()
 
 def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
-                  variableSigma=False,ampParameter=r"A$_1$"):
+                  variableSigma=False,ampParameter=r"A$_1$",customSpec=None,
+                  customGuess=None):
     """ Prepares Emcee run for fitting spectra
     
     Parameters
@@ -1114,11 +1115,15 @@ def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
         Method of fitting - Temp Diff vs Mie Scattering
     """
     
-    if useIDLspec == True:
-        dat = ascii.read('tser_data/amp_vs_wavl.txt')
+    if (useIDLspec == True) | (customSpec is not None):
+        if customSpec is not None:
+            specFile = customSpec
+        else:
+            specFile = 'tser_data/amp_vs_wavl.txt'
+        dat = ascii.read(specFile)
         x = np.array(dat['Wavelength(um)'])
         y = np.array(dat['Amp']) * 100.
-        yerr = np.array(dat['Amp_Err']) * 100.        
+        yerr = np.array(dat['Amp_Err']) * 100.
     else:
         specObj = getSpectrum(src)
         t = specObj.getSpectrum(ampParameter)
@@ -1133,12 +1138,16 @@ def prepEmceeSpec(method='tdiff',logNorm=True,useIDLspec=False,src='2mass_1821',
         spread = [0.001,5e-5,200,200]
     elif method == 'mie':
         model = mieModel(logNorm=logNorm,variableSigma=variableSigma)
-        if variableSigma == True:
-            guess = [0.5, 0.2, 0.5]
-            spread = [0.1, 0.1, 0.1]
+        if customGuess is None:
+            if variableSigma == True:
+                guess = [0.5, 0.2, 0.5]
+                spread = [0.1, 0.1, 0.1]
+            else:
+                guess = [0.5,0.2]
+                spread = [0.1,0.1]
         else:
-            guess = [0.5,0.2]
-            spread = [0.1,0.1]
+            guess = customGuess
+            spread = np.ones_like(guess) * 0.1
     else:
         print('Unrecognized model')
         return 0
@@ -1291,7 +1300,7 @@ def checkCleaned(src='2mass_1821'):
     fig.savefig('plots/tser_w_errors.pdf')
     
 
-def showDistributions(src='2mass_1821',fig=None,ax=None):
+def showDistributions(src='2mass_1821',fig=None,ax=None,mcObj=None):
     """ Shows the particle size distributions from the fit """
     mcObj = pickle.load(open('mcmcRuns/mie_model/2mass_1821_mcmc_free_sigma.pic'))
     totChains = mcObj.cleanFlatChain.shape[0]
