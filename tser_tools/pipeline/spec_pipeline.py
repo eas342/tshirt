@@ -876,7 +876,7 @@ class spec(phot_pipeline.phot):
         plt.close(fig)
         
     def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False,
-                    transform=None,trim=False):
+                    transform=None,trim=False,logY=True):
         if ind == None:
             x_px, y, yerr = self.get_avg_spec(src=src)
         else:
@@ -886,6 +886,9 @@ class spec(phot_pipeline.phot):
             x_px = x_px[1000:1800]
             y = y[1000:1800]
             yerr = yerr[1000:1800]
+            # x_px = x_px[1000:1200]
+            # y = y[1000:1200]
+            # yerr = yerr[1000:1200]
         
         if transform is None:
             x = x_px
@@ -894,10 +897,10 @@ class spec(phot_pipeline.phot):
             lam = self.wavecal(x_px)
             x = lam**2
             x_unit = 'Frequency (1/$\lambda^2$)'
-        elif transform == 'inv-lam-squared':
+        elif transform == 'inv-lam':
             lam = self.wavecal(x_px)
-            x = 1./lam**2
-            x_unit = 'Frequency ($\lambda^2$)'
+            x = 1./lam
+            x_unit = '$\lambda^2/(\Delta \lambda) (\mu$m)'
         else:
             raise Exception("Unrecognized transform {}".format(transform))
             
@@ -913,7 +916,11 @@ class spec(phot_pipeline.phot):
         
         fig, ax = plt.subplots()
         
-        ax.loglog(frequency,power)
+        if logY == True:
+            ax.loglog(frequency,power)
+        else:
+            ax.semilogx(frequency,power)
+        
         ax.set_xlabel(x_unit)
         ax.set_ylabel('Power')
         
@@ -943,6 +950,7 @@ class spec(phot_pipeline.phot):
         if savePlot == True:
             periodoName = '{}_spec_periodo_{}_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'],transform)
             fig.savefig('plots/spectra/periodograms/{}'.format(periodoName))
+            plt.close(fig)
         else:
             plt.show()
     
