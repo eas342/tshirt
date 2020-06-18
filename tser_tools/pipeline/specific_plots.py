@@ -155,7 +155,7 @@ def k2_22(date='jan25',showTiming=False,detrend=True,doBin=False):
 #def fringing_function(x,amp=0.1,period=0.09,periodSlope=.04,offset=0.1):
 def fringing_function(x,amp=0.1,period=6.0,periodSlope=2.0,offset=0.1,phase=0.0):
     
-    L = 350. ##microns
+    L = 315. ##microns
     n_real = 2.7
     E_0 = np.sin(2. * np.pi * L * n_real / x)
     modelY = 1.0 - offset + amp * E_0**2
