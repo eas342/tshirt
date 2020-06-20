@@ -876,9 +876,13 @@ class spec(phot_pipeline.phot):
         plt.close(fig)
         
     def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False,
-                    transform=None,trim=False,logY=True):
+                    transform=None,trim=False,logY=True,align=False):
+        """
+        Plot a periodogram of the spectrum to search for periodicities
+        """
+        
         if ind == None:
-            x_px, y, yerr = self.get_avg_spec(src=src)
+            x_px, y, yerr = self.get_avg_spec(src=src,align=align)
         else:
             x_px, y, yerr = self.get_spec(specType=specType,ind=ind,src=src)
         
@@ -993,14 +997,14 @@ class spec(phot_pipeline.phot):
         
         return align2D, offsetIndArr
     
-    def get_avg_spec(self,src=0,redoDynamic=True):
+    def get_avg_spec(self,src=0,redoDynamic=True,align=False):
         """
         Get the average spectrum across all time series
         """
         
         dyn_specFile = self.dyn_specFile(src=src)
         if (os.path.exists(dyn_specFile) == False) | (redoDynamic == True):
-            self.plot_dynamic_spec(src=src,saveFits=True)
+            self.plot_dynamic_spec(src=src,saveFits=True,align=align)
         
         HDUList = fits.open(dyn_specFile)
         x = HDUList['DISP INDICES'].data
