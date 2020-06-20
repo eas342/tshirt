@@ -153,11 +153,18 @@ def k2_22(date='jan25',showTiming=False,detrend=True,doBin=False):
     plt.close(fig)
 
 #def fringing_function(x,amp=0.1,period=0.09,periodSlope=.04,offset=0.1):
-def fringing_function(x,amp=0.1,period=6.0,periodSlope=2.0,offset=0.1,phase=0.0):
+def fringing_function(x,amp=0.1,period=6.0,periodSlope=2.0,offset=0.1,phase=0.0,nd2=1701.):
+    """
+    Simple constant-thickness fringing function
     
-    L = 315. ##microns
-    n_real = 2.7
-    E_0 = np.sin(2. * np.pi * L * n_real / x)
+    Parameters
+    -----------
+    nd2: float
+        The slab double thickness
+        n * d * 2 where n is index of refraction
+                        d is thickness in microns
+    """
+    E_0 = np.sin(nd2 * np.pi / x)
     modelY = 1.0 - offset + amp * E_0**2
     return modelY
 
@@ -171,6 +178,8 @@ def show_fringing():
             fringOffset = 0.013
             waveOffset = 0
             yLim = [0.98,1.008]
+            align=True
+            nd2 = 2192.
         elif oneTest == 'cv3':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
             numSplineKnots = 400
@@ -178,14 +187,16 @@ def show_fringing():
             fringOffset = 0.2
             waveOffset = 0.0
             yLim = [0.8,1.2]
+            align=False
+            nd2 = 1701.
         else:
             raise Exception("Unrecognized test data {}.".format(oneTest))
         
         #modelY = fringing_function(modelX,amp=fringAmpGuess,offset=fringOffset)
         
-        x, y, yerr = spec.get_avg_spec()
+        x, y, yerr = spec.get_avg_spec(align=align)
         lam = spec.wavecal(x) - waveOffset
-        modelY = fringing_function(lam,amp=fringAmpGuess,offset=fringOffset)
+        modelY = fringing_function(lam,amp=fringAmpGuess,offset=fringOffset,nd2=nd2)
         
         normY = spec.norm_spec(x,y,numSplineKnots=400)
         fig, ax = plt.subplots(figsize=(10,4))
