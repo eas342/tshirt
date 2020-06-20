@@ -261,4 +261,15 @@ def check_wavecal(otis=False):
     plt.plot(lam,yNorm)
     plt.show()
     
-    
+def periodograms_for_fringing():
+    for oneTest in ['otis','cv3']:
+        if oneTest == 'otis':
+            spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
+            align=True
+        else:
+            spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
+            align=False
+        
+        spec.periodogram(specType='Optimal',trim=True,transform='inv-lam',logY=False,savePlot=True,align=align)
+        
+        
