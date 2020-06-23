@@ -45,7 +45,7 @@ tser_tools/diagnostics/trimmed_flat/*.fits
 tser_tools/parameters/backup_param/
 tser_tools/diagnostics/phot_poly_backsub/*.fits
 tser_tools/diagnostics/profile_fit/ev_local_*
-build/
+docs/_build/
 dist/
 tser_tools.egg-info/
 sync_plots_and_tser.sh
