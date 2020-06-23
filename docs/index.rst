@@ -20,7 +20,7 @@ The Time Series Helper & Integration Reduction Tool (tshirt) is a general-purpos
    :caption: Contents:
    
    modules
-
+   reduction
 
 Indices and tables
 ==================
