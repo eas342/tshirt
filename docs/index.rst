@@ -6,7 +6,7 @@ Welcome to tshirt's documentation!
    :alt: T shirt logo
    :align: center
 
-The Time Series Helper & Integration Reduction Tool (tshirt) is a general-purpose tool for time series science. It can:
+The Time Series Helper & Integration Reduction Tool :code:`tshirt` is a general-purpose tool for time series science. It can:
 
 - Reduce raw data
 - Extract Photometry
@@ -19,8 +19,14 @@ The Time Series Helper & Integration Reduction Tool (tshirt) is a general-purpos
    :maxdepth: 2
    :caption: Contents:
    
+   installation
+   reduction/reduction
+   
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+   
    modules
-   reduction
 
 Indices and tables
 ==================

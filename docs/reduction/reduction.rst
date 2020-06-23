@@ -9,3 +9,11 @@ Typically the following steps are applied:
 - Non-linearity correction
 
 `tshirt` can apply these steps to common CCD data.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   
+   self
+   reduction_param
+   
