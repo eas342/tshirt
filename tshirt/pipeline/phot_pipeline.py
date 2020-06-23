@@ -1997,7 +1997,7 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
     Example Usage:
     ----------
         import numpy as np
-        from tser_tools import phot_pipeline
+        from tshirt.pipeline import phot_pipeline
         import matplotlib.pyplot as plt
         
         x = np.arange(30)
