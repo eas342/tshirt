@@ -2,14 +2,9 @@ nbsphinx
 photutils
 astropy
 matplotlib
-mpl_toolkits
-os
-glob
 numpy
-pdb
-copy
-yaml
 scipy
-multiprocessing
+pdb
+yaml
 time
 bokeh
