@@ -2,8 +2,7 @@ Installation
 ==========================
 
 Currently, :code:`tshirt` should be installed from source using the following steps.
-Users should install the 
-.. _astroconda package: https://astroconda.readthedocs.io/en/latest/
+Users should install the :code:`astroconda` package: https://astroconda.readthedocs.io/en/latest/
 
 - Activate the astroconda environment
    :code:`conda activate astroconda`
