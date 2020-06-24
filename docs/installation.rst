@@ -29,7 +29,8 @@ Upgrading :code:`tshirt`
    :code:`python setup.py install`
 - Make sure the new code is used
    Either restart your Python session or run the commands below update a specific module
-   .. code-block:: python
+   
+   .. code-block:: python   
    
       from tshirt.pipeline import spec_pipeline
       from importlib import reload
