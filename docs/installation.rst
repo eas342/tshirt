@@ -19,7 +19,7 @@ Upgrading :code:`tshirt`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-- Activate the astroconda environment
+- Activate the astroconda environment in bash
    :code:`conda activate astroconda`
 - Navigate to the :code:`tshirt` directory:
    :code:`cd tshirt`
@@ -28,6 +28,7 @@ Upgrading :code:`tshirt`
 - Reinstall
    :code:`python setup.py install`
 - Make sure the new code is used
+   Either restart your Python session or run the commands below update a specific module
    .. code-block:: python
    
       from tshirt.pipeline import spec_pipeline
