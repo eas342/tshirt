@@ -3,6 +3,7 @@
 *.pyc
 *.pdf
 *.png
+*.ipynb_checkpoints*
 tshirt/plots/photometry/interactive/*.html
 tshirt/plots/spectra/interactive/*.html
 tshirt/spectra/*/*.csv
