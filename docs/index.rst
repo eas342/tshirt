@@ -23,6 +23,7 @@ Its main application is to process raw data on exoplanet systems.
    
    installation
    reduction/reduction
+   spec_pipeline/spec_pipeline
    
 .. toctree::
    :maxdepth: 2
