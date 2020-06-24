@@ -4,7 +4,4 @@ astropy
 matplotlib
 numpy
 scipy
-pdb
-yaml
-time
 bokeh
