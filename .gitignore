@@ -46,6 +46,7 @@ tshirt/parameters/backup_param/
 tshirt/diagnostics/phot_poly_backsub/*.fits
 tshirt/diagnostics/profile_fit/ev_local_*
 docs/_build/
+build/
 dist/
 tshirt.egg-info/
 sync_plots_and_tser.sh
