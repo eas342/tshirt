@@ -1210,7 +1210,7 @@ class spec(phot_pipeline.phot):
     def get_offset_time(self,time):
         return np.floor(np.min(time))
     
-    def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,
+    def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,xLim=None,
                             recalculate=True,dispIndices=None,differential=False,
                             interactive=False):
         """ Plot wavelength-binned time series """
@@ -1268,6 +1268,9 @@ class spec(phot_pipeline.phot):
             
             if yLim is not None:
                 ax.set_ylim(yLim[0],yLim[1])
+            
+            if xLim is not None:
+                ax.set_xlim(xLim[0],xLim[1])
             
             if savePlot == True:
                 fig.savefig('plots/spectra/wavebin_tseries/wavebin_tser_{}.pdf'.format(self.dataFileDescrip))
