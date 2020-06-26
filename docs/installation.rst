@@ -28,7 +28,7 @@ Upgrading :code:`tshirt`
 - Reinstall
    :code:`python setup.py install`
 - Make sure the new code is used
-   Either restart your Python session or run the commands below update a specific module
+   Either restart your iPython session, restart your Jupyter notebook kernel or run the commands below to update a specific module
    
    .. code-block:: python   
    
