@@ -1021,6 +1021,10 @@ class spec(phot_pipeline.phot):
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=False,
                           alignDiagnostics=False,extraFF=False,
                           specType='Optimal'):
+        """
+        Plots a dynamic spectrum of the data
+        """
+        
         HDUList = fits.open(self.specFile)
         if specType == 'Optimal':
             extSpec = HDUList['OPTIMAL SPEC'].data[src]
