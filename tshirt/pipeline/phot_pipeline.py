@@ -1070,9 +1070,10 @@ class phot:
                   normReg=None,doBin=None,doNorm=True,yLim=[None,None],
                   excludeSrc=None,errBar=None):
         """ Plots previously calculated photometry 
+        
         Parameters
         ---------------------
-        offset: float
+        offset : float
             y displacement for overlaying time series
         refCorrect: bool
             Use reference star-corrected photometry?
@@ -1083,11 +1084,9 @@ class phot:
         showLegend: bool
             Show a legend?
         normReg: list with two items or None
-            Relative region over which to fit a baseline and re-normalize
-            This only works on reference-corrected photometry for now
+            Relative region over which to fit a baseline and re-normalize. This only works on reference-corrected photometry for now
         doBin: float or None
-            The bin size if showing binned data
-            This only works on reference-corrected photometry for now
+            The bin size if showing binned data. This only works on reference-corrected photometry for now
         doNorm: bool
             Normalize the individual time series?
         yLim: List
@@ -1095,8 +1094,7 @@ class phot:
         errBar: string or None
             Describes how error bars will be displayed. None=none, 'all'=every point,'one'=representative
         excludeSrc: List or None
-            Custom sources to exclude in the averaging (to exclude specific sources in the reference time series)
-              For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
+            Custom sources to exclude in the averaging (to exclude specific sources in the reference time series). For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
         
         """
         HDUList = fits.open(self.photFile)
