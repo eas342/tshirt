@@ -14,6 +14,7 @@ Its main application is to process raw data on exoplanet systems.
 - Extract Photometry
 - Extract Spectroscopy
 
+The raw code is accessible at https://github.com/eas342/tshirt
 
 .. toctree::
    :maxdepth: 2
