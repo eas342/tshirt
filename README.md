@@ -1,7 +1,7 @@
-
-   <div style="text-align:center">
-   <img src="docs/images/t_shirt_logo.jpg" alt="T shirt logot" width="200 px" align="center">
-   </div>
+<p align="center">
+   <img src="docs/images/t_shirt_logo.jpg" alt="T shirt logot" width="200 px">
+   </br>
+</p>
 
 Time Series Tools README
 ==========================================
