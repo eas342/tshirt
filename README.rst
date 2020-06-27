@@ -1,7 +1,8 @@
-.. image:: docs/images/t_shirt_logo.jpg
-   :width: 100px
-   :alt: T shirt logo
-   :align: center
+.. raw:: html
+   
+   <center>
+   <img src="docs/images/t_shirt_logo.jpg" alt="T shirt logot" width=200 px>
+   </center>
 
 Time Series Tools README
 ==========================================
