@@ -5,9 +5,6 @@
 
 Time Series Tools README
 ==========================================
-This repository contains code for analyzing and reducing time series data.
-It is primarily designed for analysis of exoplanet data.
-
 The Time Series Helper & Integration Reduction Tool `tshirt` is a general-purpose tool for time series science.
 Its main application is to process raw data on exoplanet systems.
 `tshirt` can:
