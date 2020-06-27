@@ -1791,22 +1791,22 @@ def allTser(refCorrect=False,showBestFit=False):
 def do_binning(x,y,nBin=20):
     """
     A function that uses scipy binned_statistic to bin data
-
+    
     It also calculates the standard error in each bin,
     which can be used as an error estimate
-
-    Parameters:
+    
+    Parameters
     --------------
     x: numpy array
         Independent variable for use in assigning data to bins
     y: numpy array
         Dependent variable to be binned
-
-    Outputs:
+    
+    Returns
     -------------
     3 item tuple:
     xBin, yBin, yStd
-
+    
     xBin: numpy array
         Middles of the bins
     yBin: numpy array
