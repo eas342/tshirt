@@ -1,5 +1,4 @@
-.. raw:: html
-   
+
    <center>
    <img src="docs/images/t_shirt_logo.jpg" alt="T shirt logot" width=200 px>
    </center>
@@ -19,4 +18,4 @@ Its main application is to process raw data on exoplanet systems.
 
 
 See the read-the-docs page for information on how to install and use ``tshirt``:
-https://tshirt.readthedocs.io/en/latest/
+[https://tshirt.readthedocs.io/en/latest/](https://tshirt.readthedocs.io/en/latest/)
