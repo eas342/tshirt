@@ -1356,20 +1356,21 @@ class spec(phot_pipeline.phot):
     def showStarChoices(self,img=None,head=None,showBack=True,
                         srcLabel=None,figSize=None,vmin=None,vmax=None,
                         xlim=None,ylim=None):
-        """ Show the star choices for spectrscopy
+        """ Show the star choices for spectroscopy
+                        
         Parameters
         ------------------
-        img: numpy 2D array
-            (optional) An image to plot
-        head: astropy FITS header
-            (optional) header for image
-        showBack: bool
-            (optional) Show the background subtraction regions?
-        srcLabel: str or None
-            (optional) What should the source label be?
-                        The default is "src"
-        vmin: float
-            (optional) Minimum value for imshow
+        img: numpy 2D array, optional
+            An image to plot
+        head: astropy FITS header, optional
+            header for image
+        showBack: bool, optional
+            Show the background subtraction regions?
+        srcLabel: str or None, optional
+            What should the source label be?
+            The default is "src"
+        vmin: float, optional
+            Minimum value for imshow
         vmax: float
             (optional) Maximum value for imshow
         figSize: 2 element list

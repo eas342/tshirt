@@ -41,7 +41,12 @@ def run_one_phot_method(allInput):
     Do a photometry/spectroscopy method on one file
     For example, do aperture photometry on one file
     This is a slightly awkward workaround because multiprocessing doesn't work on object methods
-        So it's a separate function that takes an object and runs the method
+    So it's a separate function that takes an object and runs the method
+    
+    Parameters
+    -----------
+    allInput: 3 part tuple (object, int, string)
+        This contains the object, file index to run (0-based) and name of the method to run
     """
     photObj, ind, method = allInput
     photMethod = getattr(photObj,method)
@@ -230,22 +235,23 @@ class phot:
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
                         srcLabel=None,figSize=None):
-        """ Show the star choices for photometry
+        """
+        Show the star choices for photometry
+        
         Parameters
         ------------------
-        img: numpy 2D array
-            (optional) An image to plot
-        head: astropy FITS header
-            (optional) hader for image
-        custPos: numpy 2D array or list of tuple coordinates
-            (optional) Custom positions
-        showAps: bool
-            (optional) Show apertures rather than circle stars
-        srcLabel: str or None
-            (optional) What should the source label be?
-                        The default is "src"
-        srcLabel: list or None
-            (optional) Specify the size of the plot
+        img : numpy 2D array, optional
+            An image to plot
+        head : astropy FITS header, optional
+            header for image
+        custPos : numpy 2D array or list of tuple coordinates, optional
+            Custom positions
+        showAps : bool, optional
+            Show apertures rather than circle stars
+        srcLabel : str or None, optional
+            What should the source label be? The default is "src"
+        srcLabel : list or None, optional
+            Specify the size of the plot.
             This is useful for looking at high/lower resolution
         """
         fig, ax = plt.subplots(figsize=figSize)
@@ -1075,26 +1081,27 @@ class phot:
         ---------------------
         offset : float
             y displacement for overlaying time series
-        refCorrect: bool
+        refCorrect : bool
             Use reference star-corrected photometry?
-        ax: matplotlib axis object
+        ax : matplotlib axis object
             If the axis was created separately, use the input axis object
-        fig: matplotlib figure object
+        fig : matplotlib figure object
             If the figure was created separately, use the input axis object
-        showLegend: bool
+        showLegend : bool
             Show a legend?
         normReg: list with two items or None
             Relative region over which to fit a baseline and re-normalize. This only works on reference-corrected photometry for now
-        doBin: float or None
+        doBin : float or None
             The bin size if showing binned data. This only works on reference-corrected photometry for now
-        doNorm: bool
+        doNorm : bool
             Normalize the individual time series?
-        yLim: List
+        yLim:  List
             List of Y limit to show
-        errBar: string or None
+        errBar : string or None
             Describes how error bars will be displayed. None=none, 'all'=every point,'one'=representative
-        excludeSrc: List or None
-            Custom sources to exclude in the averaging (to exclude specific sources in the reference time series). For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
+        excludeSrc : List or None
+            Custom sources to exclude in the averaging (to exclude specific sources in the reference time series).
+            For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
         
         """
         HDUList = fits.open(self.photFile)
@@ -1313,14 +1320,13 @@ class phot:
     
     def refSeries(self,photArr,errPhot,reNorm=False,excludeSrc=None,sigRej=5.):
         """ Average together the reference stars
+        
         Parameters
         -------------
         reNorm: bool
-            Re-normalize all stars before averaging? If set all stars have equal weight
-            Otherwise, the stars are summed together, which weights by flux
+            Re-normalize all stars before averaging? If set all stars have equal weight. Otherwise, the stars are summed together, which weights by flux
         excludeSrc: arr
-            Custom sources to use in the averaging (to exclude specific sources in the reference time series
-                For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
+            Custom sources to use in the averaging (to exclude specific sources in the reference time series. For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
         sigRej: int
             Sigma rejection threshold
         """
@@ -1692,6 +1698,7 @@ def saveRefSeries():
 
 def allTser(refCorrect=False,showBestFit=False):
     """ Plot all time series for KIC 1255 
+    
     Parameters
     -----------
     refCorrect: bool
