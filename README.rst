@@ -1,5 +1,5 @@
 .. image:: docs/images/t_shirt_logo.jpg
-   :width: 200px
+   :width: 100px
    :alt: T shirt logo
    :align: center
 
