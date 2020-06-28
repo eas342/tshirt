@@ -9,5 +9,5 @@ setup(
     license='MIE',
     package_data={'tshirt': ['parameters/phot_params/keywords_for_phot_pipeline.csv'],
                   'tshirt': ['parameters/spec_params/default_params.yaml']},
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
 )
