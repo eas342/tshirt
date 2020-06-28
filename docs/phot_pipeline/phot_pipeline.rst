@@ -1,6 +1,6 @@
-
-Usage for Time Series Aperture Photometry
+Photometric Pipeline
 ==========================================
+This pipeline will take image data that have been :doc:`reduced<../reduction/reduction>` and calculate lightcurves on the stars/sources in the field.
 
 Photometry Parameters File
 ---------------------------

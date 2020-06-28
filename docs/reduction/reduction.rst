@@ -1,4 +1,4 @@
-Image Reduction
+Image Reduction Pipeline
 ==================================
 Image "reduction" turns raw data into processed data.
 Typically the following steps are applied:
