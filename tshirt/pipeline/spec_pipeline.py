@@ -1358,7 +1358,7 @@ class spec(phot_pipeline.phot):
     
     def showStarChoices(self,img=None,head=None,showBack=True,
                         srcLabel=None,figSize=None,vmin=None,vmax=None,
-                        xlim=None,ylim=None):
+                        xlim=None,ylim=None,showPlot=False):
         """ Show the star choices for spectroscopy
                         
         Parameters
@@ -1383,6 +1383,8 @@ class spec(phot_pipeline.phot):
             (optional) Set the x limit of plot
         ylim: list or None
             (optional) Set the y limit of plot
+        showPlot: bool
+            Make the plot visible?
         """
         fig, ax = plt.subplots(figsize=figSize)
         
@@ -1465,10 +1467,13 @@ class spec(phot_pipeline.phot):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
-        fig.show()
+        
         fig.savefig('plots/spectra/star_labels/{}'.format(outName),
                     bbox_inches='tight')
-        plt.close(fig)
+        if showPlot == True:
+            fig.show()
+        else:
+            plt.close(fig)
     
     def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3,binMin=10,binMax=250):
         """
