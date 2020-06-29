@@ -1276,6 +1276,9 @@ class spec(phot_pipeline.phot):
             if xLim is not None:
                 ax.set_xlim(xLim[0],xLim[1])
             
+            ax.set_xlabel('Time (JD - {})'.format(offset_time))
+            ax.set_ylabel('Normalized Flux')
+            
             if savePlot == True:
                 fig.savefig('plots/spectra/wavebin_tseries/wavebin_tser_{}.pdf'.format(self.dataFileDescrip))
                 plt.close(fig)
