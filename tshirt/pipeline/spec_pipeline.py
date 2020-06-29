@@ -1020,9 +1020,14 @@ class spec(phot_pipeline.phot):
         
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=False,
                           alignDiagnostics=False,extraFF=False,
-                          specType='Optimal'):
+                          specType='Optimal',showPlot=False):
         """
         Plots a dynamic spectrum of the data
+        
+        Parameters
+        -----------
+        showPlot: bool, optional
+            Show the plot in addition to saving?
         """
         
         HDUList = fits.open(self.specFile)
@@ -1121,7 +1126,11 @@ class spec(phot_pipeline.phot):
         
         dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
         fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
-        plt.close(fig)
+        
+        if showPlot == True:
+            fig.show()
+        else:
+            plt.close(fig)
         
         HDUList.close()
     
