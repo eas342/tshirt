@@ -3,7 +3,7 @@
    </br>
 </p>
 
-Time Series Tools README
+`tshirt` README
 ==========================================
 The Time Series Helper & Integration Reduction Tool `tshirt` is a general-purpose tool for time series science.
 Its main application is to process raw data on exoplanet systems.
