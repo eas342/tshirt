@@ -14,7 +14,9 @@ Spectroscopic Pipeline
 Batch Processing
 ----------------
 A batch object can iterate over any spec object.
+
 .. code-block:: python
+
    bspec = spec_pipeline.batch_spec(batchFile='corot1_batch_file.yaml')
    bspec.batch_run('plot_wavebin_series', nbins=1, interactive=True) 
    
