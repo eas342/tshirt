@@ -856,7 +856,29 @@ class spec(phot_pipeline.phot):
     
     def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal'],
                       normalize=False,numSplineKnots=None,savePlot=False):
+        """
+        Plot one example spectrum after extraction has been run
         
+        Parameters
+        ----------
+        src: int, optional
+            The number of the source to plot
+        ind: int or None, optional
+            An index number to pass to get_spec().
+            It tells which spectrum to plot.
+            Defaults to number of images //2
+        specTypes: list of strings, optional
+            List of which spectra to show
+            'Sum' for sum extraction
+            'Optimal' for optimal extraction
+        normalize: bool, optional
+            Normalize and/or flatten spectrum using `self.norm_spec`
+        numSplitKnots: int or None, optional
+            Number of spline knots to pass to `self.norm_spec` for flattening
+        savePlot: bool
+            Save the plot? If True, saves an image
+            If False, it renders the image with plt.show()
+        """
         fig, ax = plt.subplots()
         
         for oneSpecType in specTypes:
