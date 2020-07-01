@@ -124,7 +124,8 @@ class phot:
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': 'zero', 'backOffset': [0.0,0.0],
                          'FITSextension': 0, 'HEADextension': 0,
-                         'refPhotCentering': None,'isSlope': False,'readNoise': None,
+                         'refPhotCentering': None,'isSlope': False,
+                         'itimeKeyword': 'INTTIME','readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
                          'dateFormat': 'Two Part','copyCentroidFile': None,
@@ -1474,7 +1475,8 @@ class phot:
         
         head = HDUList[headExtension].header
         if self.param['isSlope'] == True:
-            if 'INTTIME' in head:
+            itimeKey = self.param['integrationTimeKeyword']
+            if itimeKey in head:
                 intTime = head['INTTIME']
             elif 'EFFINTTM' in head:
                 intTime = head['EFFINTTM']
