@@ -1477,11 +1477,11 @@ class phot:
         if self.param['isSlope'] == True:
             itimeKey = self.param['itimeKeyword']
             if itimeKey in head:
-                intTime = head['INTTIME']
+                intTime = head[itimeKey]
             elif 'EFFINTTM' in head:
                 intTime = head['EFFINTTM']
             else:
-                warnings.warn("Couldn't find INTTIME in header. Trying EXPTIME")
+                warnings.warn("Couldn't find {} in header. Trying EXPTIME".format(itimeKey))
                 intTime = head['EXPTIME']
             ## If it's a slope image, multiply rate time intTime to get counts
             img = img * intTime
