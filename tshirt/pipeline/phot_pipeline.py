@@ -1475,7 +1475,7 @@ class phot:
         
         head = HDUList[headExtension].header
         if self.param['isSlope'] == True:
-            itimeKey = self.param['integrationTimeKeyword']
+            itimeKey = self.param['itimeKeyword']
             if itimeKey in head:
                 intTime = head['INTTIME']
             elif 'EFFINTTM' in head:
