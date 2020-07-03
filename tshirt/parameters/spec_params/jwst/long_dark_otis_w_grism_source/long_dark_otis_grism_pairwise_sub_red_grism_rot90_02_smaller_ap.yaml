@@ -9,7 +9,7 @@ starPositions: ## positions of the stars in the spatial direction. The first one
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 bkgSubDirections: ['X', 'Y'] ## Do background subtraction along the Y direction?
 bkgRegionsX: ## a list of background regions in the X direction
-   - [1447, 1747]
+   - [1533, 1747]
    - [1787, 2044]
 bkgOrderX: 1 ## order of polynomial subtraction in the X direction
 bkgRegionsY: ## a list of background regions in the Y direction
