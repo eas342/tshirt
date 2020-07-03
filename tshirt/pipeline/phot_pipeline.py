@@ -1633,9 +1633,10 @@ class batchPhot:
     
 
 class prevPhot(phot):
-    """ Loads in previous photometry from FITS data. Inherits functions from the phot class
+    """
+    Loads in previous photometry from FITS data. Inherits functions from the phot class
     
-    Parameters:
+    Parameters
     ---------------
     photFile: str
         Directory of the photometry file
