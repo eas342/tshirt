@@ -1339,9 +1339,10 @@ class spec(phot_pipeline.phot):
         
         Examples
         --------
-        from tshirt.pipeline import spec_pipeline
-        spec = spec_pipeline.spec()
-        t1, t2 = spec.get_wavebin_series()
+        
+        >>> from tshirt.pipeline import spec_pipeline
+        >>> spec = spec_pipeline.spec()
+        >>> t1, t2 = spec.get_wavebin_series()
         """
         sFile = self.wavebin_specFile(nbins=nbins)
         if os.path.exists(sFile) == False:
