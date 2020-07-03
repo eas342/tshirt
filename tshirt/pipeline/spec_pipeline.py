@@ -305,6 +305,23 @@ class spec(phot_pipeline.phot):
             Save a fits file of the subtraction model?
         showEach: bool
             Show each polynomial fit?
+        
+        Returns
+        --------
+        imgSub, model, head: tuple of (numpy array, numpy array, :code:`astropy.fits.header`)
+            'imgSub' is a background-subtracted image
+            'model' is a background model image
+            'head' is a header for the background-subtracted image
+        
+        Example
+        --------
+        .. code-block:: python
+        
+            from tshirt.pipeline import spec_pipeline
+            spec_pipeline.spec()
+            img, head = spec.get_default_im()
+            img2, bkmodel2, head2 = spec.backsub_oneDir(img,head,'X')
+        
         """
         
         if oneDirection == 'X':
@@ -1365,6 +1382,23 @@ class spec(phot_pipeline.phot):
         return t1, t2
     
     def print_noise_wavebin(self,nbins=10,shorten=False):
+        """ 
+        Get a table of noise measurements for all wavelength bins
+        
+        Parameters
+        ----------
+        nbins: int
+            The number of wavelength bins
+        shorten: bool
+            Use a short segment of the full time series?
+            This could be useful for avoiding bad data or a deep transit
+        
+        Returns
+        ---------
+        t: an astropy.table object
+            A table of wavelength bins, with theoretical noise
+            and measured standard deviation across time
+        """
         sFile = self.wavebin_specFile(nbins=nbins)
         if os.path.exists(sFile) == False:
             self.plot_wavebin_series(nbins=nbins)
