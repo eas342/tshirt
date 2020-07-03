@@ -1320,8 +1320,54 @@ class spec(phot_pipeline.phot):
             HDUList.close()
     
     
-    def print_noise_wavebin(self,nbins=10,shorten=False):
+    def get_wavebin_series(self,nbins=10):
+        """
+        Get a table of the the wavelength-binned time series
+        
+        
+        Parameters
+        -----------
+        nbins: int
+            The number of wavelength bins
+        
+        Returns
+        --------
+        t1: astropy table
+            A table of wavelength-binned flux values
+        t2: astropy table
+            A table of wavelength-binned error values
+        
+        Examples
+        --------
+        from tshirt.pipeline import spec_pipeline
+        spec = spec_pipeline.spec()
+        t1, t2 = spec.get_wavebin_series()
+        """
+        sFile = self.wavebin_specFile(nbins=nbins)
+        if os.path.exists(sFile) == False:
+            self.plot_wavebin_series(nbins=nbins)
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        disp = HDUList['DISP INDICES'].data
+        binGrid = HDUList['BINNED F'].data
+        binGrid_err = HDUList['BINNED ERR'].data
+        time = HDUList['TIME'].data
+        t1, t2 = Table(), Table()
+        t1['Time'] = time
+        t2['Time'] = time
+        pdb.set_trace()
+        for ind,oneBin in enumerate(disp['Bin Middle']):
+            wave = np.round(self.wavecal(oneBin),3)
+            t1['{:.3f}um Flux'.format(wave)] = binGrid[:,ind]
+            t2['{:.3f}um Error'.format(wave)] = binGrid_err[:,ind]
+        
+        HDUList.close()
+        return t1, t2
+    
+    def print_noise_wavebin(self,nbins=10,shorten=False):
+        sFile = self.wavebin_specFile(nbins=nbins)
+        if os.path.exists(sFile) == False:
+            self.plot_wavebin_series(nbins=nbins)
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))            
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
         binGrid_err = HDUList['BINNED ERR'].data
