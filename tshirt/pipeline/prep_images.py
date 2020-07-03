@@ -312,11 +312,29 @@ def lbt_luci2_lincor(img,dataUnit=u.adu,ndit=1.0,k2=2.767e-6):
     """
     LUCI2 linearity correction from 
     https://sites.google.com/a/lbto.org/luci/observing/calibrations/calibration-details
+    
     Input image should be in ADU
     
     Parameters
     ----------
-    Ruquires the NDIT to give the non-linearity for one integration
+    img: numpy array
+        An input image to do linearity correction on
+    
+    dataUnit: astropy unit
+        Unit of the image, such as :code:`astropy.units.adu`
+    
+    ndit: float
+        The number of the detection integration time in LUCI2's readout system
+        This has to be updated for the science observations in question
+    
+    k2: float
+        Quadratic coefficient in non-linearity correction
+    
+    Returns
+    -------
+    ADUlin * ndit: numpy array
+        A new image that has been linearity-corrected
+    
     """
     if dataUnit == u.adu:
         imgUse = img
