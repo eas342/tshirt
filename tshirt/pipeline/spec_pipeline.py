@@ -1382,6 +1382,23 @@ class spec(phot_pipeline.phot):
         return t1, t2
     
     def print_noise_wavebin(self,nbins=10,shorten=False):
+        """ 
+        Get a table of noise measurements for all wavelength bins
+        
+        Parameters
+        ----------
+        nbins: int
+            The number of wavelength bins
+        shorten: bool
+            Use a short segment of the full time series?
+            This could be useful for avoiding bad data or a deep transit
+        
+        Returns
+        ---------
+        t: an astropy.table object
+            A table of wavelength bins, with theoretical noise
+            and measured standard deviation across time
+        """
         sFile = self.wavebin_specFile(nbins=nbins)
         if os.path.exists(sFile) == False:
             self.plot_wavebin_series(nbins=nbins)
