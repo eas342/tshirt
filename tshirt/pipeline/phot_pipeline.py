@@ -1605,15 +1605,27 @@ class batchPhot:
         
         **kwargs: keywords or dict
            Arguments to be passed to this method
+        
+        Returns
+        -------
+        batch_result: list or None
+            A list of results from the photometry method.
+            If all results are None, then batch_run returns None
+        
         """
+        batch_result = []
         for oneDict in self.paramDicts:
             thisPhot = self.make_pipe_obj(oneDict)
             print("Working on {} for batch {} {} ".format(method,
                                                          thisPhot.param['srcName'],
                                                          thisPhot.dataFileDescrip))
             photMethod = getattr(thisPhot,method)
-            photMethod(**kwargs)
+            result = photMethod(**kwargs)
+            batch_result.append(result)
+        if all(v is None for v in batch_result):
+            batch_result = None
         
+        return batch_result
     
     def run_all(self,useMultiprocessing=False):
         self.batch_run('showStarChoices',showAps=True,srcLabel='0')
