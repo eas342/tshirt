@@ -16,6 +16,7 @@ Spectroscopic Pipeline
    
    batch_processing
    test_spec_pipeline.ipynb
+   CoRoT-1b_Example_Annotated_Notebook.ipynb
    parameter_file
    
 
