@@ -1337,7 +1337,7 @@ class spec(phot_pipeline.phot):
             HDUList.close()
     
     
-    def get_wavebin_series(self,nbins=10):
+    def get_wavebin_series(self,nbins=10,recalculate=True):
         """
         Get a table of the the wavelength-binned time series
         
@@ -1346,6 +1346,11 @@ class spec(phot_pipeline.phot):
         -----------
         nbins: int
             The number of wavelength bins
+        
+        recalculate: bool, optional
+            Recalculate the dynamic spectrum?
+            This is good to keep True when there is an update to
+            the parameter file.
         
         Returns
         --------
@@ -1363,7 +1368,7 @@ class spec(phot_pipeline.phot):
         """
         sFile = self.wavebin_specFile(nbins=nbins)
         if os.path.exists(sFile) == False:
-            self.plot_wavebin_series(nbins=nbins)
+            self.plot_wavebin_series(nbins=nbins,recalculate=recalculate)
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
