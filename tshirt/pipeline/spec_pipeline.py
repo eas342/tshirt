@@ -1655,7 +1655,8 @@ class batch_spec(phot_pipeline.batchPhot):
         return spec(directParam=directParam)
     
     def run_all(self,useMultiprocessing=False):
-        self.batch_run('do_extraction')
+        self.batch_run('showStarChoices')
+        self.batch_run('do_extraction',useMultiprocessing=useMultiprocessing)
         self.batch_run('plot_dynamic_spec',saveFits=True)
     
     def plot_all(self):
