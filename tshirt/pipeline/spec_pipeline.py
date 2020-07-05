@@ -287,7 +287,7 @@ class spec(phot_pipeline.phot):
         
     
     def backsub_oneDir(self,img,head,oneDirection,saveFits=False,
-                       showEach=False,ind=None):
+                       showEach=False,ind=None,custPrefix=None):
         """
         Do the background subtraction in a specified direction
         Either row-by-row or column-by-column
@@ -305,6 +305,13 @@ class spec(phot_pipeline.phot):
             Save a fits file of the subtraction model?
         showEach: bool
             Show each polynomial fit?
+        ind: int or None
+            The ind in the fileL. This is mainly used for naming files,
+            if files are being saved.
+        custPrefix: str or None
+            A custom prefix for saved file names of the subtraction.
+            If None and ind is None, it saves the prefix as unnamed
+            If None and ind is an int, it uses the original file name
         
         Returns
         --------
@@ -369,7 +376,9 @@ class spec(phot_pipeline.phot):
         
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
-            if ind == None:
+            if custPrefix is not None:
+                prefixName = custPrefix
+            elif ind == None:
                 prefixName = 'unnamed'
             else:
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
@@ -384,13 +393,44 @@ class spec(phot_pipeline.phot):
         
         return img - bkgModel, bkgModel, outHead
     
-    def do_backsub(self,img,head,ind=None,saveFits=False,directions=['Y','X']):
+    def do_backsub(self,img,head,ind=None,saveFits=False,directions=['Y','X'],
+                   custPrefix=None):
+        """
+        Do all background subtractions
+        
+        Parameters
+        ----------
+        img: numpy array
+            The image do to background subtraction on
+        head: astropy.fits.header object
+            The header of the image
+        ind: int, or NOne
+            The index of the file list.
+            This is used to name diagnostic images, if requested
+        saveFits: bool
+            Save diagnostic FITS images of the background subtracted steps?
+        directions: list of str
+            The directions to extract, such as ['Y','X'] to subtract along Y
+            and then X
+        custPrefix: str or None
+            A prefix for the output file name if saving diagnostic files
+        
+        Returns
+        -------
+        subImg: numpy array
+            Background subtracted image
+        bkgModelTotal: numpy array
+            The background model
+        subHead: astropy.fits.header object
+            A header for the background-subtracted image
+        """
         subImg = img
         subHead = head
         bkgModelTotal = np.zeros_like(subImg)
         for oneDirection in directions:
             subImg, bkgModel, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,
-                                                            ind=ind,saveFits=saveFits)
+                                                            ind=ind,saveFits=saveFits,
+                                                            custPrefix=custPrefix)
             bkgModelTotal = bkgModelTotal + bkgModel
         return subImg, bkgModelTotal, subHead
     
