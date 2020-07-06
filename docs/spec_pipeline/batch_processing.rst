@@ -18,4 +18,22 @@ One way to check if the batch file is working and test a method is to have the b
    bspec = spec_pipeline.batch_spec(batchFile='corot1_batch_file.yaml')
    spec = bspec.return_spec_obj()
    spec.plot_one_spec()
+   
+Bokeh Interactive Plotting
+--------------------------
+Bokeh is an interactive visualization library that can easily make interactive plots, dashboards, and data applications. Before attempting to create an interactive plot follow the instructions on how to install `Bokeh`_ .
+
+.. _Bokeh: https://docs.bokeh.org/en/latest/docs/user_guide/quickstart.html 
+
+The Bokeh interface has a variety of modules. In the case of creating an interactive plot with tshirt’s ``spec_pipeline`` module, import specific functions of the ``bokeh.io`` module, and the ``bokeh.plotting`` module. From the ``bokeh.plotting`` module import ``figure`` to create a new figure for plotting if needed. From ``bokeh.io`` import the following:
+
+* ``output_notebook`` to configure the default output state and generate the output in the notebook cells. 
+* ``show`` to immediately display a Bokeh object or application.
+* ``push_notebook`` to update Bokeh plots in a Jupyter notebook output cells with new data or property values.
+
+The code below shows an example of how to import these various functions. ::
+
+   from bokeh.io import push_notebook, show, output_notebook
+   from bokeh.plotting import figure
+   output_notebook()
 
