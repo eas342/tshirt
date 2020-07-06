@@ -287,7 +287,7 @@ class spec(phot_pipeline.phot):
         
     
     def backsub_oneDir(self,img,head,oneDirection,saveFits=False,
-                       showEach=False,ind=None):
+                       showEach=False,ind=None,custPrefix=None):
         """
         Do the background subtraction in a specified direction
         Either row-by-row or column-by-column
@@ -305,6 +305,30 @@ class spec(phot_pipeline.phot):
             Save a fits file of the subtraction model?
         showEach: bool
             Show each polynomial fit?
+        ind: int or None
+            The ind in the fileL. This is mainly used for naming files,
+            if files are being saved.
+        custPrefix: str or None
+            A custom prefix for saved file names of the subtraction.
+            If None and ind is None, it saves the prefix as unnamed
+            If None and ind is an int, it uses the original file name
+        
+        Returns
+        --------
+        imgSub, model, head: tuple of (numpy array, numpy array, :code:`astropy.fits.header`)
+            'imgSub' is a background-subtracted image
+            'model' is a background model image
+            'head' is a header for the background-subtracted image
+        
+        Example
+        --------
+        .. code-block:: python
+        
+            from tshirt.pipeline import spec_pipeline
+            spec_pipeline.spec()
+            img, head = spec.get_default_im()
+            img2, bkmodel2, head2 = spec.backsub_oneDir(img,head,'X')
+        
         """
         
         if oneDirection == 'X':
@@ -352,7 +376,9 @@ class spec(phot_pipeline.phot):
         
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
-            if ind == None:
+            if custPrefix is not None:
+                prefixName = custPrefix
+            elif ind == None:
                 prefixName = 'unnamed'
             else:
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
@@ -367,13 +393,44 @@ class spec(phot_pipeline.phot):
         
         return img - bkgModel, bkgModel, outHead
     
-    def do_backsub(self,img,head,ind=None,saveFits=False,directions=['Y','X']):
+    def do_backsub(self,img,head,ind=None,saveFits=False,directions=['Y','X'],
+                   custPrefix=None):
+        """
+        Do all background subtractions
+        
+        Parameters
+        ----------
+        img: numpy array
+            The image do to background subtraction on
+        head: astropy.fits.header object
+            The header of the image
+        ind: int, or NOne
+            The index of the file list.
+            This is used to name diagnostic images, if requested
+        saveFits: bool
+            Save diagnostic FITS images of the background subtracted steps?
+        directions: list of str
+            The directions to extract, such as ['Y','X'] to subtract along Y
+            and then X
+        custPrefix: str or None
+            A prefix for the output file name if saving diagnostic files
+        
+        Returns
+        -------
+        subImg: numpy array
+            Background subtracted image
+        bkgModelTotal: numpy array
+            The background model
+        subHead: astropy.fits.header object
+            A header for the background-subtracted image
+        """
         subImg = img
         subHead = head
         bkgModelTotal = np.zeros_like(subImg)
         for oneDirection in directions:
             subImg, bkgModel, subHead = self.backsub_oneDir(subImg,subHead,oneDirection,
-                                                            ind=ind,saveFits=saveFits)
+                                                            ind=ind,saveFits=saveFits,
+                                                            custPrefix=custPrefix)
             bkgModelTotal = bkgModelTotal + bkgModel
         return subImg, bkgModelTotal, subHead
     
@@ -856,7 +913,29 @@ class spec(phot_pipeline.phot):
     
     def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal'],
                       normalize=False,numSplineKnots=None,savePlot=False):
+        """
+        Plot one example spectrum after extraction has been run
         
+        Parameters
+        ----------
+        src: int, optional
+            The number of the source to plot
+        ind: int or None, optional
+            An index number to pass to get_spec().
+            It tells which spectrum to plot.
+            Defaults to number of images //2
+        specTypes: list of strings, optional
+            List of which spectra to show
+            'Sum' for sum extraction
+            'Optimal' for optimal extraction
+        normalize: bool, optional
+            Normalize and/or flatten spectrum using `self.norm_spec`
+        numSplitKnots: int or None, optional
+            Number of spline knots to pass to `self.norm_spec` for flattening
+        savePlot: bool
+            Save the plot? If True, saves an image
+            If False, it renders the image with plt.show()
+        """
         fig, ax = plt.subplots()
         
         for oneSpecType in specTypes:
@@ -1298,8 +1377,77 @@ class spec(phot_pipeline.phot):
             HDUList.close()
     
     
-    def print_noise_wavebin(self,nbins=10,shorten=False):
+    def get_wavebin_series(self,nbins=10,recalculate=True):
+        """
+        Get a table of the the wavelength-binned time series
+        
+        
+        Parameters
+        -----------
+        nbins: int
+            The number of wavelength bins
+        
+        recalculate: bool, optional
+            Recalculate the dynamic spectrum?
+            This is good to keep True when there is an update to
+            the parameter file.
+        
+        Returns
+        --------
+        t1: astropy table
+            A table of wavelength-binned flux values
+        t2: astropy table
+            A table of wavelength-binned error values
+        
+        Examples
+        --------
+        
+        >>> from tshirt.pipeline import spec_pipeline
+        >>> spec = spec_pipeline.spec()
+        >>> t1, t2 = spec.get_wavebin_series()
+        """
+        sFile = self.wavebin_specFile(nbins=nbins)
+        if os.path.exists(sFile) == False:
+            self.plot_wavebin_series(nbins=nbins,recalculate=recalculate)
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        disp = HDUList['DISP INDICES'].data
+        binGrid = HDUList['BINNED F'].data
+        binGrid_err = HDUList['BINNED ERR'].data
+        time = HDUList['TIME'].data
+        t1, t2 = Table(), Table()
+        t1['Time'] = time
+        t2['Time'] = time
+        pdb.set_trace()
+        for ind,oneBin in enumerate(disp['Bin Middle']):
+            wave = np.round(self.wavecal(oneBin),3)
+            t1['{:.3f}um Flux'.format(wave)] = binGrid[:,ind]
+            t2['{:.3f}um Error'.format(wave)] = binGrid_err[:,ind]
+        
+        HDUList.close()
+        return t1, t2
+    
+    def print_noise_wavebin(self,nbins=10,shorten=False):
+        """ 
+        Get a table of noise measurements for all wavelength bins
+        
+        Parameters
+        ----------
+        nbins: int
+            The number of wavelength bins
+        shorten: bool
+            Use a short segment of the full time series?
+            This could be useful for avoiding bad data or a deep transit
+        
+        Returns
+        ---------
+        t: an astropy.table object
+            A table of wavelength bins, with theoretical noise
+            and measured standard deviation across time
+        """
+        sFile = self.wavebin_specFile(nbins=nbins)
+        if os.path.exists(sFile) == False:
+            self.plot_wavebin_series(nbins=nbins)
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))            
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
         binGrid_err = HDUList['BINNED ERR'].data
@@ -1547,7 +1695,8 @@ class batch_spec(phot_pipeline.batchPhot):
         return spec(directParam=directParam)
     
     def run_all(self,useMultiprocessing=False):
-        self.batch_run('do_extraction')
+        self.batch_run('showStarChoices')
+        self.batch_run('do_extraction',useMultiprocessing=useMultiprocessing)
         self.batch_run('plot_dynamic_spec',saveFits=True)
     
     def plot_all(self):

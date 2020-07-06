@@ -124,7 +124,8 @@ class phot:
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': 'zero', 'backOffset': [0.0,0.0],
                          'FITSextension': 0, 'HEADextension': 0,
-                         'refPhotCentering': None,'isSlope': False,'readNoise': None,
+                         'refPhotCentering': None,'isSlope': False,
+                         'itimeKeyword': 'INTTIME','readNoise': None,
                          'detectorGain': None,'cornerSubarray': False,
                          'subpixelMethod': 'exact','excludeList': None,
                          'dateFormat': 'Two Part','copyCentroidFile': None,
@@ -1474,12 +1475,13 @@ class phot:
         
         head = HDUList[headExtension].header
         if self.param['isSlope'] == True:
-            if 'INTTIME' in head:
-                intTime = head['INTTIME']
+            itimeKey = self.param['itimeKeyword']
+            if itimeKey in head:
+                intTime = head[itimeKey]
             elif 'EFFINTTM' in head:
                 intTime = head['EFFINTTM']
             else:
-                warnings.warn("Couldn't find INTTIME in header. Trying EXPTIME")
+                warnings.warn("Couldn't find {} in header. Trying EXPTIME".format(itimeKey))
                 intTime = head['EXPTIME']
             ## If it's a slope image, multiply rate time intTime to get counts
             img = img * intTime
@@ -1603,15 +1605,27 @@ class batchPhot:
         
         **kwargs: keywords or dict
            Arguments to be passed to this method
+        
+        Returns
+        -------
+        batch_result: list or None
+            A list of results from the photometry method.
+            If all results are None, then batch_run returns None
+        
         """
+        batch_result = []
         for oneDict in self.paramDicts:
             thisPhot = self.make_pipe_obj(oneDict)
             print("Working on {} for batch {} {} ".format(method,
                                                          thisPhot.param['srcName'],
                                                          thisPhot.dataFileDescrip))
             photMethod = getattr(thisPhot,method)
-            photMethod(**kwargs)
+            result = photMethod(**kwargs)
+            batch_result.append(result)
+        if all(v is None for v in batch_result):
+            batch_result = None
         
+        return batch_result
     
     def run_all(self,useMultiprocessing=False):
         self.batch_run('showStarChoices',showAps=True,srcLabel='0')
@@ -1631,9 +1645,10 @@ class batchPhot:
     
 
 class prevPhot(phot):
-    """ Loads in previous photometry from FITS data. Inherits functions from the phot class
+    """
+    Loads in previous photometry from FITS data. Inherits functions from the phot class
     
-    Parameters:
+    Parameters
     ---------------
     photFile: str
         Directory of the photometry file

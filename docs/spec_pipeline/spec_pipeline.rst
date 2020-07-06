@@ -9,11 +9,14 @@ Spectroscopic Pipeline
 - Gather together a dynamic spectrum
 - Plot and save wavelength-binned data
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    
+   batch_processing
    test_spec_pipeline.ipynb
+   CoRoT-1b_Example_Annotated_Notebook.ipynb
    parameter_file
    
 
