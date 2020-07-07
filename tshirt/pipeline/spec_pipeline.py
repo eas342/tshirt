@@ -1417,7 +1417,7 @@ class spec(phot_pipeline.phot):
         t1, t2 = Table(), Table()
         t1['Time'] = time
         t2['Time'] = time
-        pdb.set_trace()
+        
         for ind,oneBin in enumerate(disp['Bin Middle']):
             wave = np.round(self.wavecal(oneBin),3)
             t1['{:.3f}um Flux'.format(wave)] = binGrid[:,ind]
