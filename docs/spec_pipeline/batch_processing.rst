@@ -25,11 +25,16 @@ Bokeh is an interactive visualization library that can easily make interactive p
 
 .. _Bokeh: https://docs.bokeh.org/en/latest/docs/user_guide/quickstart.html 
 
+"How-To"
+^^^^^^^^
+
 The Bokeh interface has a variety of modules. In the case of creating an interactive plot with tshirt’s ``spec_pipeline`` module, import specific functions of the ``bokeh.io`` module, and the ``bokeh.plotting`` module. From the ``bokeh.plotting`` module import ``figure`` to create a new figure for plotting if needed. From ``bokeh.io`` import the following:
 
 * ``output_notebook`` to configure the default output state and generate the output in the notebook cells. 
 * ``show`` to immediately display a Bokeh object or application.
 * ``push_notebook`` to update Bokeh plots in a Jupyter notebook output cells with new data or property values.
+
+Note that when running ``tshirt`` in a Jupyter notebook setting, use ``output_notebook`` to generate embedded interactive plots within the Jupyter notebook space.
 
 The code below shows an example of how to import these various functions. ::
 
