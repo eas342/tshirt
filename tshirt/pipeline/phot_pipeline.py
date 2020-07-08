@@ -113,16 +113,16 @@ class phot:
         """
         self.pipeType = 'photometry'
         self.get_parameters(paramFile=paramFile,directParam=directParam)
-            
-        xCoors, yCoors = [], []
-        positions = self.param['refStarPos']
-        self.nsrc = len(positions)
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': 'zero', 'backOffset': [0.0,0.0],
+                        'srcName': 'WASP 62','srcNameShort': 'wasp62',
+                         'refStarPos': [[50,50]],'procFiles': '*.fits',
+                         'apRadius': 9,'FITSextension': 0,
+                         'nightName': 'UT2020-01-20','srcName'
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,
                          'itimeKeyword': 'INTTIME','readNoise': None,
@@ -133,10 +133,14 @@ class phot:
                          'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X'],
                          'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0}
         
-
+        
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
                 self.param[oneKey] = defaultParams[oneKey]
+        
+        xCoors, yCoors = [], []
+        positions = self.param['refStarPos']
+        self.nsrc = len(positions)
         
         ## Set up file names for output
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
