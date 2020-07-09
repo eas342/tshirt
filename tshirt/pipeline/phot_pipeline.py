@@ -122,6 +122,7 @@ class phot:
                         'srcName': 'WASP 62','srcNameShort': 'wasp62',
                          'refStarPos': [[50,50]],'procFiles': '*.fits',
                          'apRadius': 9,'FITSextension': 0,
+                         'jdRef': 2458868,
                          'nightName': 'UT2020-01-20','srcName'
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,
@@ -1114,7 +1115,7 @@ class phot:
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
                   normReg=None,doBin=None,doNorm=True,yLim=[None,None],
-                  excludeSrc=None,errBar=None):
+                  excludeSrc=None,errBar=None,showPlot=False):
         """ Plots previously calculated photometry 
         
         Parameters
@@ -1142,7 +1143,8 @@ class phot:
         excludeSrc : List or None
             Custom sources to exclude in the averaging (to exclude specific sources in the reference time series).
             For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
-        
+        showPlot: bool
+            Show the plot? Otherwise, it saves it to a file
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
@@ -1236,15 +1238,18 @@ class phot:
         if showLegend == True:
             ax.legend(loc='best',fontsize=10)
         
-        fig.show()
-        
-        if refCorrect == True:
-            fig.savefig('plots/photometry/tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip))
+        if showPlot == True:
+            fig.show()
         else:
-            fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
+            if refCorrect == True:
+                fig.savefig('plots/photometry/tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip))
+            else:
+                fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
+            plt.close(fig)
         
         HDUList.close()
-        plt.close(fig)
+        
+        
     
     def print_phot_statistics(self,refCorrect=True,excludeSrc=None,shorten=False):
         HDUList = fits.open(self.photFile)
