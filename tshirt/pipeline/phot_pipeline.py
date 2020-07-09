@@ -864,8 +864,17 @@ class phot:
             
             if self.param['bkgMethod'] == 'mean':
                 bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
-                bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
-                bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+                if photutils.__version__ > '0.6':
+                    ## photutils changed area from a method to an attribute after this version
+                    bkgArea = self.bkgApertures.area
+                    srcArea = self.srcApertures.area
+                else:
+                    ## older photutils
+                    bkgArea = self.bkgApertures.area()
+                    srcArea = self.srcApertures.area()
+                
+                bkgVals = bkgPhot['aperture_sum'] / bkgArea * srcArea
+                bkgValsErr = bkgPhot['aperture_sum_err'] / bkgArea * srcArea
                 
                 ## Background subtracted fluxes
                 srcPhot = rawPhot['aperture_sum'] - bkgVals
