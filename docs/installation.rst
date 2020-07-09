@@ -44,8 +44,8 @@ Dependencies
 Another option is to manually install dependencies (beta)
 
 - ``astropy``, ``numpy``
+- ``photutils`` - needed for photometric extraction on images
 - ``ccdphot`` - only needed for flat fielding, dark subtraction etc. for
 - ``emcee`` - only needed for time series analysis and model fitting
 - ``miescatter`` - only needed for fitting Mie extinction to spectra. Note: I had trouble with ``pip install miescatter`` where it was looking for an old gcc5 it couldn't find and had to download the source from pyPI and run ``python setup.py install``
-- ``photutils`` - needed for photometric extraction on images
 
