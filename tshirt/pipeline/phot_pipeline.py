@@ -1442,6 +1442,35 @@ class phot:
         
         return yCorrNorm, yErrNorm
     
+    def get_tSeries(self):
+        """
+        Get a simple table of the photometry after extraction
+        
+        Returns
+        --------
+        t1: astropy.table object
+            A table of fluxes and time
+        t2: astropy.table object
+            A table of flux errors and time
+        """
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
+        
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        
+        t1, t2 = Table(), Table()
+        t1['Time (JD)'] = jdArr
+        t2['Time (JD)'] = jdArr
+        for oneSrc in np.arange(self.nsrc):
+            t1['Flux {}'.format(oneSrc)] = photArr[:,oneSrc]
+            t2['Error {}'.format(oneSrc)] = errArr[:,oneSrc]
+        HDUList.close()
+        
+        return t1, t2
+    
     def get_refSeries(self,excludeSrc=None):
         """
         Get the reference-corrected time series
