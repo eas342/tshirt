@@ -38,7 +38,10 @@ Upgrading :code:`tshirt`
       from tshirt.pipeline import spec_pipeline
       from importlib import reload
       reload(spec_pipeline)
-
+      spec = spec_pipeline.spec('path_to_paramfile.yaml')
+      
+It is important to **re-create** the spec object after the reload, as in the above example.
+      
 Dependencies
 ~~~~~~~~~~~~~~~~~~~~
 Another option is to manually install dependencies (beta)
