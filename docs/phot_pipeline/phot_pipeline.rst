@@ -10,4 +10,5 @@ This pipeline will take image data that have been :doc:`reduced<../reduction/red
    phot_pipeline_parameters
    example_phot_param_file
    running_phot_pipeline
+   box_time_series_cookbook.ipynb
    
