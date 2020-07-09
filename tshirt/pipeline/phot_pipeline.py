@@ -239,7 +239,7 @@ class phot:
         return showApPos
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
-                        srcLabel=None,figSize=None):
+                        srcLabel=None,figSize=None,showPlot=False):
         """
         Show the star choices for photometry
         
@@ -258,6 +258,8 @@ class phot:
         srcLabel : list or None, optional
             Specify the size of the plot.
             This is useful for looking at high/lower resolution
+        showPlot : bool
+            Show the plot? If True, it will show, otherwise it is saved as a file
         """
         fig, ax = plt.subplots(figsize=figSize)
         
@@ -307,10 +309,13 @@ class phot:
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
-        fig.show()
-        fig.savefig('plots/photometry/star_labels/{}'.format(outName),
-                    bbox_inches='tight')
-        plt.close(fig)
+        
+        if showPlot == True:
+            fig.show()
+        else:
+            fig.savefig('plots/photometry/star_labels/{}'.format(outName),
+                        bbox_inches='tight')
+            plt.close(fig)
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None,
                    vmin=None,vmax=None,showPlot=False,boxsize=None):
@@ -386,9 +391,9 @@ class phot:
         
         if showPlot == True:
             fig.show()
-        
-        fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
-        plt.close(fig)
+        else:
+            fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
+            plt.close(fig)
         
     def showCustSet(self,index=None,ptype='Stamps',defaultCen=False,vmin=None,vmax=None):
         """ Show a custom stamp or star identification plot for a given image index 
