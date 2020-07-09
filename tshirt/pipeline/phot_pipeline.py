@@ -239,7 +239,9 @@ class phot:
         return showApPos
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
-                        srcLabel=None,figSize=None,showPlot=False):
+                        srcLabel=None,figSize=None,showPlot=False,
+                        apColor='black',backColor='black',
+                        vmin=None,vmax=None):
         """
         Show the star choices for photometry
         
@@ -260,15 +262,31 @@ class phot:
             This is useful for looking at high/lower resolution
         showPlot : bool
             Show the plot? If True, it will show, otherwise it is saved as a file
+        apColor: str
+            The color for the source apertures
+        backColor: str
+            The color for the background apertures
+        vmin: float or None
+            A value for the :code:`matplotlib.pyplot.plot.imshow` vmin parameter
+        vmax: float or None
+            A value for the :code:`matplotlib.pyplot.plot.imshow` vmax parameter
+        
         """
         fig, ax = plt.subplots(figsize=figSize)
         
         img, head = self.get_default_im(img=img,head=None)
         
-        lowVmin = np.nanpercentile(img,1)
-        highVmin = np.nanpercentile(img,99)
-
-        imData = ax.imshow(img,cmap='viridis',vmin=lowVmin,vmax=highVmin,interpolation='nearest')
+        if vmin is None:
+            useVmin = np.nanpercentile(img,1)
+        else:
+            useVmin = vmin
+        
+        if vmax is None:
+            useVmax = np.nanpercentile(img,99)
+        else:
+            useVmax = vmax
+        
+        imData = ax.imshow(img,cmap='viridis',vmin=useVmin,vmax=useVmax,interpolation='nearest')
         ax.invert_yaxis()
         rad, txtOffset = 50, 20
 
@@ -278,13 +296,13 @@ class phot:
             apsShow.positions = showApPos
             
             
-            apsShow.plot(ax=ax)
+            apsShow.plot(ax=ax,color=apColor)
             if self.param['bkgSub'] == True:
                 backApsShow = deepcopy(self.bkgApertures)
                 backApsShow.positions = showApPos
                 backApsShow.positions[:,0] = backApsShow.positions[:,0] + self.param['backOffset'][0]
                 backApsShow.positions[:,1] = backApsShow.positions[:,1] + self.param['backOffset'][1]
-                backApsShow.plot(ax=ax)
+                backApsShow.plot(ax=ax,color=backColor)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
             ax.scatter(showApPos[:,0],showApPos[:,1], s=rad, facecolors='none', edgecolors='r')
