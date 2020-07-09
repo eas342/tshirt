@@ -14,6 +14,7 @@ Spectroscopic Pipeline
    :maxdepth: 2
    :caption: Contents:
    
+   self
    test_spec_pipeline.ipynb
    CoRoT-1b_Example_Annotated_Notebook.ipynb
    batch_processing
