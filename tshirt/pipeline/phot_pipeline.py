@@ -334,7 +334,10 @@ class phot:
         showApPos = self.get_default_cen(custPos=custPos)
         
         for ind, onePos in enumerate(showApPos):
-            ax = axArr.ravel()[ind]
+            if self.nsrc == 1:
+                ax = axArr
+            else:
+                ax = axArr.ravel()[ind]
             
             yStamp = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=np.int)
             xStamp = np.array(onePos[0] + np.array([-1,1]) * boxsize,dtype=np.int)
