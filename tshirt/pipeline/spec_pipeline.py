@@ -1345,7 +1345,7 @@ class spec(phot_pipeline.phot):
             p = bokeh.plotting.figure()
             p.background_fill_color="#f5f5f5"
             p.grid.grid_line_color="white"
-            p.xaxis.axis_label = 'Time (JD - {})'.format(offset_time)'
+            p.xaxis.axis_label = 'Time (JD - {})'.format(offset_time)
             p.yaxis.axis_label = 'Normalized Flux'
             
             colors = itertools.cycle(palette)
