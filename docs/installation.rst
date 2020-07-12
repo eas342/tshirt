@@ -16,7 +16,7 @@ Then proceed to the steps below.
 - Navigate to the :code:`tshirt` directory:
    :code:`cd tshirt`
 - Reinstall
-   :code:`python setup.py install`
+   :code:`pip install .`
 
 Upgrading :code:`tshirt`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,7 +29,7 @@ Upgrading :code:`tshirt`
 - Pull the latest code from github
    :code:`git pull`
 - Reinstall
-   :code:`python setup.py install`
+   :code:`pip install .`
 - Make sure the new code is used
    Either restart your iPython session, restart your Jupyter notebook kernel or run the commands below to update a specific module
    
@@ -41,7 +41,7 @@ Upgrading :code:`tshirt`
       spec = spec_pipeline.spec('path_to_paramfile.yaml')
       
 It is important to **re-create** the spec object after the reload, as in the above example.
-      
+
 Dependencies
 ~~~~~~~~~~~~~~~~~~~~
 Another option is to manually install dependencies (beta)
@@ -52,3 +52,21 @@ Another option is to manually install dependencies (beta)
 - ``emcee`` - only needed for time series analysis and model fitting
 - ``miescatter`` - only needed for fitting Mie extinction to spectra. Note: I had trouble with ``pip install miescatter`` where it was looking for an old gcc5 it couldn't find and had to download the source from pyPI and run ``python setup.py install``
 
+Upgrading from older versions of :code:`tshirt`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you are upgrading from older versions of :code:`tshirt`, it may give you an error:
+
+.. code-block:: text
+
+   ERROR: Cannot uninstall 'tshirt'. It is a distutils installed
+   project and thus we cannot accurately determine which files belong
+   to it which would lead to only a partial uninstall.
+   
+In this case, you should remove the old files with the following procedure in your Unix shell:
+
+.. code-block:: bash
+
+   rm -r ~/anaconda/envs/this-environment/lib/python3.6/site-packages/tshirt
+   rm ~/anaconda/envs/this-environment/lib/python3.6/site-packages/tshirt-0.1dev-py2.7.egg-info
+
+where :code:`this-environment` is the environment where you installed :code:`tshirt`.
