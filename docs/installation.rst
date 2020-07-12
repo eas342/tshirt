@@ -54,7 +54,7 @@ Another option is to manually install dependencies (beta)
 
 Upgrading from older versions of :code:`tshirt`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-If you are upgrading from older versions of :code:`tshirt`, it may give you an error:
+If you are upgrading from older versions of :code:`tshirt`, it will use useful to back up your parameters directory. Also, installation may give you an error:
 
 .. code-block:: text
 
