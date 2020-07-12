@@ -1,7 +1,7 @@
 Modules
 ===========
 
-Photometry Modules
+Photometric Module
 ~~~~~~~~~~~~~~~~~~~
 .. autoclass:: tshirt.pipeline.phot_pipeline.phot
    :members:
@@ -9,7 +9,7 @@ Photometry Modules
 .. automodule:: tshirt.pipeline.phot_pipeline
    :members:
 
-Spectroscopy Modules
+Spectroscopic Module
 ~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: tshirt.pipeline.spec_pipeline.spec
    :members:
@@ -17,7 +17,7 @@ Spectroscopy Modules
 .. automodule:: tshirt.pipeline.spec_pipeline
    :members:
 
-Image Preparation Modules
+Image Preparation Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automodule:: tshirt.pipeline.prep_images
    :members:

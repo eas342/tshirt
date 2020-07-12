@@ -113,16 +113,17 @@ class phot:
         """
         self.pipeType = 'photometry'
         self.get_parameters(paramFile=paramFile,directParam=directParam)
-            
-        xCoors, yCoors = [], []
-        positions = self.param['refStarPos']
-        self.nsrc = len(positions)
         
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'nanTreatment': 'zero', 'backOffset': [0.0,0.0],
+                        'srcName': 'WASP 62','srcNameShort': 'wasp62',
+                         'refStarPos': [[50,50]],'procFiles': '*.fits',
+                         'apRadius': 9,'FITSextension': 0,
+                         'jdRef': 2458868,
+                         'nightName': 'UT2020-01-20','srcName'
                          'FITSextension': 0, 'HEADextension': 0,
                          'refPhotCentering': None,'isSlope': False,
                          'itimeKeyword': 'INTTIME','readNoise': None,
@@ -133,10 +134,14 @@ class phot:
                          'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X'],
                          'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0}
         
-
+        
         for oneKey in defaultParams.keys():
             if oneKey not in self.param:
                 self.param[oneKey] = defaultParams[oneKey]
+        
+        xCoors, yCoors = [], []
+        positions = self.param['refStarPos']
+        self.nsrc = len(positions)
         
         ## Set up file names for output
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
@@ -235,7 +240,9 @@ class phot:
         return showApPos
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
-                        srcLabel=None,figSize=None):
+                        srcLabel=None,figSize=None,showPlot=False,
+                        apColor='black',backColor='black',
+                        vmin=None,vmax=None):
         """
         Show the star choices for photometry
         
@@ -254,15 +261,33 @@ class phot:
         srcLabel : list or None, optional
             Specify the size of the plot.
             This is useful for looking at high/lower resolution
+        showPlot : bool
+            Show the plot? If True, it will show, otherwise it is saved as a file
+        apColor: str
+            The color for the source apertures
+        backColor: str
+            The color for the background apertures
+        vmin: float or None
+            A value for the :code:`matplotlib.pyplot.plot.imshow` vmin parameter
+        vmax: float or None
+            A value for the :code:`matplotlib.pyplot.plot.imshow` vmax parameter
+        
         """
         fig, ax = plt.subplots(figsize=figSize)
         
         img, head = self.get_default_im(img=img,head=None)
         
-        lowVmin = np.nanpercentile(img,1)
-        highVmin = np.nanpercentile(img,99)
-
-        imData = ax.imshow(img,cmap='viridis',vmin=lowVmin,vmax=highVmin,interpolation='nearest')
+        if vmin is None:
+            useVmin = np.nanpercentile(img,1)
+        else:
+            useVmin = vmin
+        
+        if vmax is None:
+            useVmax = np.nanpercentile(img,99)
+        else:
+            useVmax = vmax
+        
+        imData = ax.imshow(img,cmap='viridis',vmin=useVmin,vmax=useVmax,interpolation='nearest')
         ax.invert_yaxis()
         rad, txtOffset = 50, 20
 
@@ -272,13 +297,13 @@ class phot:
             apsShow.positions = showApPos
             
             
-            apsShow.plot(ax=ax)
+            apsShow.plot(ax=ax,color=apColor)
             if self.param['bkgSub'] == True:
                 backApsShow = deepcopy(self.bkgApertures)
                 backApsShow.positions = showApPos
                 backApsShow.positions[:,0] = backApsShow.positions[:,0] + self.param['backOffset'][0]
                 backApsShow.positions[:,1] = backApsShow.positions[:,1] + self.param['backOffset'][1]
-                backApsShow.plot(ax=ax)
+                backApsShow.plot(ax=ax,color=backColor)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
         else:
             ax.scatter(showApPos[:,0],showApPos[:,1], s=rad, facecolors='none', edgecolors='r')
@@ -303,10 +328,13 @@ class phot:
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
-        fig.show()
-        fig.savefig('plots/photometry/star_labels/{}'.format(outName),
-                    bbox_inches='tight')
-        plt.close(fig)
+        
+        if showPlot == True:
+            fig.show()
+        else:
+            fig.savefig('plots/photometry/star_labels/{}'.format(outName),
+                        bbox_inches='tight')
+            plt.close(fig)
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None,
                    vmin=None,vmax=None,showPlot=False,boxsize=None):
@@ -325,7 +353,10 @@ class phot:
         showApPos = self.get_default_cen(custPos=custPos)
         
         for ind, onePos in enumerate(showApPos):
-            ax = axArr.ravel()[ind]
+            if self.nsrc == 1:
+                ax = axArr
+            else:
+                ax = axArr.ravel()[ind]
             
             yStamp = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=np.int)
             xStamp = np.array(onePos[0] + np.array([-1,1]) * boxsize,dtype=np.int)
@@ -382,9 +413,9 @@ class phot:
         
         if showPlot == True:
             fig.show()
-        
-        fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
-        plt.close(fig)
+        else:
+            fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
+            plt.close(fig)
         
     def showCustSet(self,index=None,ptype='Stamps',defaultCen=False,vmin=None,vmax=None):
         """ Show a custom stamp or star identification plot for a given image index 
@@ -834,8 +865,17 @@ class phot:
             
             if self.param['bkgMethod'] == 'mean':
                 bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
-                bkgVals = bkgPhot['aperture_sum'] / self.bkgApertures.area() * self.srcApertures.area()
-                bkgValsErr = bkgPhot['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+                if photutils.__version__ > '0.6':
+                    ## photutils changed area from a method to an attribute after this version
+                    bkgArea = self.bkgApertures.area
+                    srcArea = self.srcApertures.area
+                else:
+                    ## older photutils
+                    bkgArea = self.bkgApertures.area()
+                    srcArea = self.srcApertures.area()
+                
+                bkgVals = bkgPhot['aperture_sum'] / bkgArea * srcArea
+                bkgValsErr = bkgPhot['aperture_sum_err'] / bkgArea * srcArea
                 
                 ## Background subtracted fluxes
                 srcPhot = rawPhot['aperture_sum'] - bkgVals
@@ -1075,7 +1115,7 @@ class phot:
     
     def plot_phot(self,offset=0.,refCorrect=False,ax=None,fig=None,showLegend=True,
                   normReg=None,doBin=None,doNorm=True,yLim=[None,None],
-                  excludeSrc=None,errBar=None):
+                  excludeSrc=None,errBar=None,showPlot=False):
         """ Plots previously calculated photometry 
         
         Parameters
@@ -1103,7 +1143,8 @@ class phot:
         excludeSrc : List or None
             Custom sources to exclude in the averaging (to exclude specific sources in the reference time series).
             For example, for 5 sources, excludeSrc = [2] will use [1,3,4] for the reference
-        
+        showPlot: bool
+            Show the plot? Otherwise, it saves it to a file
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
@@ -1197,15 +1238,18 @@ class phot:
         if showLegend == True:
             ax.legend(loc='best',fontsize=10)
         
-        fig.show()
-        
-        if refCorrect == True:
-            fig.savefig('plots/photometry/tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip))
+        if showPlot == True:
+            fig.show()
         else:
-            fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
+            if refCorrect == True:
+                fig.savefig('plots/photometry/tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip))
+            else:
+                fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
+            plt.close(fig)
         
         HDUList.close()
-        plt.close(fig)
+        
+        
     
     def print_phot_statistics(self,refCorrect=True,excludeSrc=None,shorten=False):
         HDUList = fits.open(self.photFile)
@@ -1397,6 +1441,35 @@ class phot:
         yErrNorm = np.sqrt(normErr[:,0]**2 + (combErr/ combRef)**2)
         
         return yCorrNorm, yErrNorm
+    
+    def get_tSeries(self):
+        """
+        Get a simple table of the photometry after extraction
+        
+        Returns
+        --------
+        t1: astropy.table object
+            A table of fluxes and time
+        t2: astropy.table object
+            A table of flux errors and time
+        """
+        HDUList = fits.open(self.photFile)
+        photHDU = HDUList['PHOTOMETRY']
+        photArr = photHDU.data
+        errArr = HDUList['PHOT ERR'].data
+        
+        jdHDU = HDUList['TIME']
+        jdArr = jdHDU.data
+        
+        t1, t2 = Table(), Table()
+        t1['Time (JD)'] = jdArr
+        t2['Time (JD)'] = jdArr
+        for oneSrc in np.arange(self.nsrc):
+            t1['Flux {}'.format(oneSrc)] = photArr[:,oneSrc]
+            t2['Error {}'.format(oneSrc)] = errArr[:,oneSrc]
+        HDUList.close()
+        
+        return t1, t2
     
     def get_refSeries(self,excludeSrc=None):
         """
