@@ -1542,7 +1542,9 @@ class phot:
         
     def interactive_refSeries(self,excludeSrc=None):
         t, yCorr, yCorr_err = self.get_refSeries(excludeSrc=excludeSrc)
-        outFile = "plots/photometry/interactive/refseries_{}.html".format(self.dataFileDescrip)
+        outName = "refseries_{}.html".format(self.dataFileDescrip)
+        
+        outFile = os.path.join(self.baseDir,'plots','photometry','interactive',outName)
         
         fileBaseNames = []
         fileTable = Table.read(self.photFile,hdu='FILENAMES')
