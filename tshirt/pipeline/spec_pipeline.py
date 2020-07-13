@@ -86,15 +86,21 @@ class spec(phot_pipeline.phot):
         self.srcNames[0] = 'src'
         
         ## Set up file names for output
+        self.check_file_structure()
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
-        self.specFile = 'tser_data/spec/spec_'+self.dataFileDescrip+'.fits'
+        specFile_name = 'spec_'+self.dataFileDescrip+'.fits'
+        self.specFile = os.path.join(self.baseDir,'tser_data','spec',specFile_name)
         
-        self.dyn_specFile_prefix = 'tser_data/dynamic_spec/dyn_spec_{}'.format(self.dataFileDescrip)
+        dyn_specFileName_prefix = 'dyn_spec_{}'.format(self.dataFileDescrip)
+        self.dyn_specFile_prefix = os.path.join(self.baseDir,'tser_data','dynamic_spec',
+                                                dyn_specFileName_prefix)
         
-        self.wavebin_file_prefix = 'tser_data/wavebin_spec/wavebin_spec_{}'.format(self.dataFileDescrip)
+        wavebin_fileName_prefix = 'wavebin_spec_{}'.format(self.dataFileDescrip)
+        self.wavebin_file_prefix = os.path.join(self.baseDir,'tser_data','wavebin_spec',
+                                                wavebin_fileName_prefix)
         
-        self.profile_dir = 'tser_data/saved_profiles'
-        self.weight_dir = 'tser_data/saved_weights'
+        self.profile_dir = os.path.join(self.baseDir,'tser_data','saved_profiles')
+        self.weight_dir = os.path.join(self.baseDir,'tser_data','saved_weights')
         
         self.master_profile_prefix = 'master_{}'.format(self.dataFileDescrip)
         #self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
@@ -108,7 +114,7 @@ class spec(phot_pipeline.phot):
         self.minPixForCovarianceWeights = 3
         
         self.check_parameters()
-        self.check_file_structure()
+        
         
     def check_parameters(self):
         if ('bkgSubY' in self.param) | ('bkgSubY' in self.param):
@@ -388,12 +394,17 @@ class spec(phot_pipeline.phot):
                 prefixName = 'unnamed'
             else:
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
-            origName = 'diagnostics/spec_backsub/{}_for_backsub_{}.fits'.format(prefixName,oneDirection)
+            origName = '{}_for_backsub_{}.fits'.format(prefixName,oneDirection)
+            origPath = os.path.join(self.baseDir,'diagnostics','spec_backsub',origName)
             primHDU.writeto(origName,overwrite=True)
             primHDU_mod = fits.PrimaryHDU(bkgModel)
-            subModelName = 'diagnostics/spec_backsub/{}_backsub_model_{}.fits'.format(prefixName,oneDirection)
+            
+            subModelName = '{}_backsub_model_{}.fits'.format(prefixName,oneDirection)
+            subModelPath = os.path.join(self.baseDir,'diagnostics','spec_backsub',subModelName)
             primHDU_mod.writeto(subModelName,overwrite=True)
-            subName = 'diagnostics/spec_backsub/{}_subtracted_{}.fits'.format(prefixName,oneDirection)
+            
+            subName = '{}_subtracted_{}.fits'.format(prefixName,oneDirection)
+            subPath = os.path.join(self.baseDir,'diagnostics','spec_backsub',subName)
             subHDU = fits.PrimaryHDU(img - bkgModel,outHead)
             subHDU.writeto(subName,overwrite=True)
         
@@ -585,8 +596,9 @@ class spec(phot_pipeline.phot):
                 prefixName = 'unnamed'
             else:
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
-            origName = 'diagnostics/profile_fit/{}_for_profile_fit.fits'.format(prefixName)
-            primHDU.writeto(origName,overwrite=True)
+            origName = '{}_for_profile_fit.fits'.format(prefixName)
+            origPath = os.path.join(self.baseDir,'diagnostics','profile_fit',origName)
+            primHDU.writeto(origPath,overwrite=True)
             for ind,profile_img in enumerate(profile_img_list):
                 ## Saved the smoothed model
                 primHDU_smooth = fits.PrimaryHDU(smooth_img_list[ind])
@@ -764,9 +776,10 @@ class spec(phot_pipeline.phot):
         
         if saveFits == True:
             prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
-            varName = 'diagnostics/variance_img/{}_variance.fits'.format(prefixName)
+            varName = '{}_variance.fits'.format(prefixName)
+            varPath = os.path.join(self.baseDir,'diagnostics','variance_img',varName)
             primHDU = fits.PrimaryHDU(varImg)
-            primHDU.writeto(varName,overwrite=True)
+            primHDU.writeto(varPath,overwrite=True)
         
         spatialAx = self.spatialAx
         dispAx = self.dispAx
@@ -808,12 +821,14 @@ class spec(phot_pipeline.phot):
             
             if saveFits == True:
                 primHDU_prof2Dh = fits.PrimaryHDU(holey_profile)
-                holey_profile_name = 'diagnostics/profile_fit/{}_holey_profile_{}.fits'.format(prefixName,oneSrc)
-                primHDU_prof2Dh.writeto(holey_profile_name,overwrite=True)
+                holey_profile_name = '{}_holey_profile_{}.fits'.format(prefixName,oneSrc)
+                holey_profile_path = os.path.join(self.baseDir,'diagnostics','profile_fit',hole_profile_name)
+                primHDU_prof2Dh.writeto(holey_profile_path,overwrite=True)
                 
                 corrHDU = fits.PrimaryHDU(correct2D)
-                correction2DName = 'diagnostics/profile_fit/{}_correct_2D_{}.fits'.format(prefixName,oneSrc)
-                corrHDU.writeto(correction2DName,overwrite=True)
+                correction2DName = '{}_correct_2D_{}.fits'.format(prefixName,oneSrc)
+                correction2DPath = os.path.join(self.baseDir,'diagnostics','profile_fit',correction2DName)
+                corrHDU.writeto(correction2DPath,overwrite=True)
             
             srcMask = profile_img > 0.
             
@@ -888,9 +903,10 @@ class spec(phot_pipeline.phot):
                     weight2D = profile_img * correctionFactor/ varImg
                     weightName = ''
                 
-                weightName = 'diagnostics/variance_img/{}_weights{}.fits'.format(prefixName,weightName)
+                weightName = '{}_weights{}.fits'.format(prefixName,weightName)
+                weightPath = os.path.join(self.baseDir,'diagnostics','variance_img',weightName)
                 primHDU = fits.PrimaryHDU(weight2D)
-                primHDU.writeto(weightName,overwrite=True)
+                primHDU.writeto(weightPath,overwrite=True)
             
         
         extractDict = {} ## spectral extraction dictionary
@@ -953,9 +969,9 @@ class spec(phot_pipeline.phot):
         ax.set_xlabel("{} pixel".format(self.param['dispDirection'].upper()))
         ax.set_ylabel("Counts (e$^-$)")
         if savePlot == True:
-            outName = 'plots/spectra/individual_spec/{}_ind_spec_{}.pdf'.format(self.param['srcNameShort'],
-                                                                                self.param['nightName'])
-            fig.savefig(outName,bbox_inches='tight')
+            outName = '{}_ind_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
+            outPath = os.path.join(self.baseDir,'plots','spectra','individual_spec',outName)
+            fig.savefig(outPath,bbox_inches='tight')
         else:
             plt.show()
         plt.close(fig)
@@ -1038,7 +1054,8 @@ class spec(phot_pipeline.phot):
         
         if savePlot == True:
             periodoName = '{}_spec_periodo_{}_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'],transform)
-            fig.savefig('plots/spectra/periodograms/{}'.format(periodoName))
+            outPath = os.path.join(self.baseDir,'plots','spectra','periodograms',periodoName)
+            fig.savefig(outPath)
             plt.close(fig)
         else:
             plt.show()
@@ -1210,7 +1227,8 @@ class spec(phot_pipeline.phot):
             
         
         dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
-        fig.savefig('plots/spectra/dynamic_spectra/{}'.format(dyn_spec_name),bbox_inches='tight')
+        dyn_spec_path = os.path.join(self.baseDir,'plots','spectra','dynamic_spectra',dyn_spec_name)
+        fig.savefig(dyn_spec_path,bbox_inches='tight')
         
         if showPlot == True:
             fig.show()
@@ -1231,7 +1249,9 @@ class spec(phot_pipeline.phot):
         ax.set_xlabel("JD - {} (days)".format(offset_time))
         ax.set_ylabel("Dispersion Offset (px)")
         
-        fig.savefig('plots/spectra/spec_offsets/spec_offsets_{}.pdf'.format(self.dataFileDescrip))
+        outName = 'spec_offsets_{}.pdf'.format(self.dataFileDescrip)
+        outPath = os.path.join(self.baseDir,'plots','spectra','spec_offsets',outName)
+        fig.savefig(outPath)
         plt.close(fig)
     
     def wavebin_specFile(self,nbins=10):
@@ -1333,15 +1353,17 @@ class spec(phot_pipeline.phot):
             binGrid = binGrid / avgSeries2D
         
         if interactive == True:
-            outFile = "plots/spectra/interactive/refseries_{}.html".format(self.dataFileDescrip)
-        
+            
+            outFile = "refseries_{}.html".format(self.dataFileDescrip)
+            outPath = os.path.join(self.baseDir,'plots','spectra','interactive',outFile)
+            
             fileBaseNames = []
             fileTable = Table.read(self.specFile,hdu='FILENAMES')
             indexArr = np.arange(len(fileTable))
             for oneFile in fileTable['File Path']:
                 fileBaseNames.append(os.path.basename(oneFile))
             
-            bokeh.plotting.output_file(outFile)
+            bokeh.plotting.output_file(outPath)
             
             dataDict = {'t': time - offset_time,'name':fileBaseNames,'ind':indexArr}
             for ind,oneDisp in enumerate(disp):
@@ -1376,7 +1398,9 @@ class spec(phot_pipeline.phot):
             ax.set_ylabel('Normalized Flux')
             
             if savePlot == True:
-                fig.savefig('plots/spectra/wavebin_tseries/wavebin_tser_{}.pdf'.format(self.dataFileDescrip))
+                outName = 'wavebin_tser_{}.pdf'.format(self.dataFileDescrip)
+                outPath = os.path.join(self.baseDir,'plots','spectra','wavebin_tseries',outName)
+                fig.savefig(outPath)
                 plt.close(fig)
             
             else:
@@ -1515,7 +1539,7 @@ class spec(phot_pipeline.phot):
         ax.set_ylabel("Normalized Flux")
         if savePlot == True:
             bb_series_name = '{}_bb_series_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
-            outName = 'plots/spectra/broadband_series/{}'.format(bb_series_name)
+            outName = os.path.join(self.baseDir,'plots','spectra','broadband_series',bb_series_name)
             fig.savefig(outName)
         else:
             fig.show()
@@ -1633,8 +1657,8 @@ class spec(phot_pipeline.phot):
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
         
-        fig.savefig('plots/spectra/star_labels/{}'.format(outName),
-                    bbox_inches='tight')
+        outPath = os.path.join(self.baseDir,'plots','spectra','star_labels',outName)
+        fig.savefig(outPath, bbox_inches='tight')
         if showPlot == True:
             fig.show()
         else:
@@ -1745,7 +1769,11 @@ def get_spectrum(specFile,specType='Optimal',ind=None,src=0):
     
     return x, y, yerr
 
-comparisonFileNames = glob.glob('tser_data/spec/spec_o9*.fits')
+if 'TSHIRT_DATA' in os.environ:
+    baseDir = os.environ['TSHIRT_DATA']
+else:
+    baseDir = '.'
+comparisonFileNames = glob.glob(os.path.join(baseDir,'tser_data','spec','spec_o9*.fits'))
 
 def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=False,
                     normalize=False):
@@ -1762,6 +1790,7 @@ def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=Fa
     if showPlot == True:
         plt.show()
     else:
-        fig.savefig('plots/spectra/comparison_spec/comparison_spec.pdf')
+        outPath = os.path.join(baseDir,'plots','spectra','comparison_spec','comparison_spec.pdf')
+        fig.savefig(outPath)
         plt.close(fig)
         
