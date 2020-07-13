@@ -149,10 +149,11 @@ class phot:
         self.nsrc = len(positions)
         
         ## Set up file names for output
+        self.check_file_structure()
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
-        self.photFile = 'tser_data/phot/phot_'+self.dataFileDescrip+'.fits'
-        self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
-        self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
+        self.photFile = os.path.join(self.baseDir,'tser_data','phot','phot_'+self.dataFileDescrip+'.fits')
+        self.centroidFile = os.path.join(self.baseDir,'centroids','cen_'+self.dataFileDescrip+'.fits')
+        self.refCorPhotFile = os.path.join(self.baseDir,'tser_data','refcor_phot','refcor_'+self.dataFileDescrip+'.fits')
         
         # Get the file list
         self.fileL = self.get_fileList()
@@ -164,7 +165,7 @@ class phot:
         self.set_up_apertures(positions)
         
         self.check_parameters()
-        self.check_file_structure()
+        
     
     def get_parameters(self,paramFile,directParam=None):
         if directParam is None:
@@ -190,7 +191,7 @@ class phot:
             if os.path.exists(fullPath) == False:
                 print("Creating {} for tshirt file output".format(fullPath))
                 os.makedirs(fullPath)
-        
+        self.baseDir = baseDir
     
     def get_fileList(self):
         if self.param['readFromTshirtExamples'] == True:
@@ -362,7 +363,8 @@ class phot:
         if showPlot == True:
             fig.show()
         else:
-            fig.savefig('plots/photometry/star_labels/{}'.format(outName),
+            outF = os.path.join(self.baseDir,'plots','photometry','star_labels',outName)
+            fig.savefig(outF,
                         bbox_inches='tight')
             plt.close(fig)
 
@@ -444,7 +446,9 @@ class phot:
         if showPlot == True:
             fig.show()
         else:
-            fig.savefig('plots/photometry/postage_stamps/stamps_'+self.dataFileDescrip+'.pdf')
+            outName = 'stamps_'+self.dataFileDescrip+'.pdf'
+            outPath = os.join(self.baseDir,'plots','photometry','postage_stamps',outName)
+            fig.savefig(outPath)
             plt.close(fig)
         
     def showCustSet(self,index=None,ptype='Stamps',defaultCen=False,vmin=None,vmax=None):
@@ -1272,9 +1276,12 @@ class phot:
             fig.show()
         else:
             if refCorrect == True:
-                fig.savefig('plots/photometry/tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip))
+                outName = 'tser_refcor/refcor_{}.pdf'.format(self.dataFileDescrip)
+                outPath = os.path.join(self.baseDir,'plots','photometry',outName)
             else:
-                fig.savefig('plots/photometry/tser_allstar/raw_tser_{}.pdf'.format(self.dataFileDescrip))
+                outName = 'raw_tser_{}.pdf'.format(self.dataFileDescrip)
+                outPath = os.path.join(self.baseDir,'plots','photometry','tser_allstar',outName)
+            fig.savefig(outPath)
             plt.close(fig)
         
         HDUList.close()
@@ -1906,9 +1913,10 @@ def allTser(refCorrect=False,showBestFit=False):
     
     fig.show()
     if refCorrect == True:
-        fig.savefig('plots/photometry/tser_refcor/all_kic1255.pdf')
+        outPath = os.path.join(self.baseDir,'plots','photometry','tser_refcor','all_kic1255.pdf')
     else:
-        fig.savefig('plots/photometry/tser_allstar/all_kic1255.pdf')
+        outPath = os.path.join(self.baseDir,'plots','photometry','tser_allstar','all_kic1255.pdf')
+    fig.savefig(outPath)
 
 
 def do_binning(x,y,nBin=20):
@@ -2045,7 +2053,9 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     ax.set_ylim(yLim)
     ax.legend()
     ax.set_title("Allan Variance (Linear De-trend = {})".format(removeLinear))
-    fig.savefig('plots/allan_variance/all_var_{}_removelinear_{}.pdf'.format(customShortName,removeLinear),
+    outName = 'all_var_{}_removelinear_{}.pdf'.format(customShortName,removeLinear)
+    outPath = os.path.join(self.baseDir,'plots','allan_variance',outName)
+    fig.savefig(outPath,
                 bbox_inches='tight')
     
     
