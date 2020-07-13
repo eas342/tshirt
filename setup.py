@@ -12,7 +12,6 @@ setup(
               'tshirt.pipeline.instrument_specific'],
     url="https://github.com/eas342/tshirt",
     description="A package to analyze time series data, especially for exoplanets",
-    package_data={'tshirt': ['parameters/phot_params/keywords_for_phot_pipeline.csv'],
-                  'tshirt': ['parameters/spec_params/default_params.yaml']},
+    include_package_data=True,
     long_description_content_type='text/markdown'
 )
