@@ -3,6 +3,7 @@ from astropy.io import fits, ascii
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
+import pkg_resources
 if 'DISPLAY' not in os.environ:
     mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -35,8 +36,11 @@ from . import phot_pipeline
 from . import analysis
 from . import instrument_specific
 
+path_to_example = "parameters/spec_params/example_spec_parameters.yaml"
+exampleParamPath = pkg_resources.resource_filename('tshirt',path_to_example)
+
 class spec(phot_pipeline.phot):
-    def __init__(self,paramFile='parameters/spec_params/example_spec_parameters.yaml',
+    def __init__(self,paramFile=exampleParamPath,
                  directParam=None):
         """ Spectroscopy class
     
