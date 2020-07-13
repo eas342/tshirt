@@ -39,6 +39,9 @@ from . import instrument_specific
 path_to_example = "parameters/spec_params/example_spec_parameters.yaml"
 exampleParamPath = pkg_resources.resource_filename('tshirt',path_to_example)
 
+path_to_defaults = "parameters/spec_params/default_params.yaml"
+defaultParamPath = pkg_resources.resource_filename('tshirt',path_to_defaults)
+
 class spec(phot_pipeline.phot):
     def __init__(self,paramFile=exampleParamPath,
                  directParam=None):
@@ -66,8 +69,6 @@ class spec(phot_pipeline.phot):
         self.pipeType = 'spectroscopy'
         self.get_parameters(paramFile=paramFile,directParam=directParam)
         
-        defaultParamPath = os.path.join(os.path.dirname(__file__), '..', 'parameters','spec_params',
-                                       'default_params.yaml')
         defaultParams = phot_pipeline.read_yaml(defaultParamPath)
         
         for oneKey in defaultParams.keys():
