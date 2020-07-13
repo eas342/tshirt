@@ -18,6 +18,17 @@ Then proceed to the steps below.
 - Reinstall
    :code:`pip install .`
 
+Setting up a :code:`TSHIRT-DATA` directory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is recommended that users choose a directory to store all of the output from :code:`tshirt`. To define the directory, edit your :code:`~/.bash_profile` file so it contains the following line:
+
+.. code-block:: bash
+
+   export TSHIRT_DATA="/path/to/tshirt_data"
+
+where :code:`"path/to/tshirt_data"` is the path to where you want the tshirt output to go. Without this line, :code:`tshirt` creates a directory structure to store the output in the directory you run it in.
+
+
 Upgrading :code:`tshirt`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
