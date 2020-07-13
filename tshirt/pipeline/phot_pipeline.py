@@ -3,6 +3,7 @@ from astropy.io import fits, ascii
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
+import pkg_resources
 if 'DISPLAY' not in os.environ:
     mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -84,8 +85,11 @@ def read_yaml(filePath):
         yamlStructure = yaml.safe_load(yamlFile)
     return yamlStructure
 
+path_to_example = "parameters/phot_params/example_phot_parameters.yaml"
+exampleParamPath = pkg_resources.resource_filename('tshirt',path_to_example)
+
 class phot:
-    def __init__(self,paramFile='parameters/phot_params/example_phot_parameters.yaml',
+    def __init__(self,paramFile=exampleParamPath,
                  directParam=None):
         """ Photometry class
     
