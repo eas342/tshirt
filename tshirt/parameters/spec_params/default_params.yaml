@@ -47,3 +47,4 @@ readNoiseCorrDispVal: 0.01 ## The value of read noise correlation in disp direct
 ignorePhotNoiseInCovariance: False ## a diagnostic parameter to see covariance weights w/ out photon noise
 superWeights: False ## Use (S/N)^2 to weight instead of optimal extraction
 fixedProfile: False ## Use a fixed profile for all images?
+readFromTshirtExamples: False ## read the data from T-shirt examples within the package? Use only for examples.

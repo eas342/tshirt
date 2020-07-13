@@ -136,6 +136,7 @@ class phot:
                          'dateFormat': 'Two Part','copyCentroidFile': None,
                          'bkgMethod': 'mean','diagnosticMode': False,
                          'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X'],
+                         'readFromTshirtExamples': False,
                          'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0}
         
         
@@ -174,7 +175,14 @@ class phot:
             self.param = directParam
     
     def get_fileList(self):
-        origList = np.sort(glob.glob(self.param['procFiles']))
+        if self.param['readFromTshirtExamples'] == True:
+            ## Find the files from the package data examples
+            ## This is only when running example pipeline runs or tests
+            search_path = pkg_resources.resource_filename('tshirt',self.param['procFiles'])
+        else:
+            search_path = self.param['procFiles']
+        
+        origList = np.sort(glob.glob(search_path))
         if self.param['excludeList'] is not None:
             fileList = []
             
