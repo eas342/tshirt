@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='tshirt',
-    version='0.1dev',
+    version='0.1dev2',
     author='Everett Schlawin',
     packages=['tshirt','tshirt.pipeline',
               'tshirt.pipeline.instrument_specific'],
