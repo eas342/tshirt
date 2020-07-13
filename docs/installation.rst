@@ -27,6 +27,12 @@ It is recommended that users choose a directory to store all of the output from 
    export TSHIRT_DATA="/path/to/tshirt_data"
 
 where :code:`"path/to/tshirt_data"` is the path to where you want the tshirt output to go. Without this line, :code:`tshirt` creates a directory structure to store the output in the directory you run it in.
+Another option is to specify the :code:`TSHIRT_DATA` path in your python session or Jupyter notebook like so:
+
+.. code-block:: python
+
+   import os
+   os.environ['TSHIRT_DATA']="/path/to/tshirt_data"
 
 
 Upgrading :code:`tshirt`
@@ -55,7 +61,7 @@ It is important to **re-create** the spec object after the reload, as in the abo
 
 Dependencies
 ~~~~~~~~~~~~~~~~~~~~
-Another option is to manually install dependencies (beta)
+If you do not wish to use the :code:`anaconda` environment, another option is to manually install dependencies (beta).
 
 - ``astropy``, ``numpy``
 - ``photutils`` - needed for photometric extraction on images
