@@ -18,7 +18,7 @@ Then proceed to the steps below.
 - Reinstall
    :code:`pip install .`
 
-Setting up a :code:`TSHIRT-DATA` directory
+Setting up a :code:`TSHIRT_DATA` directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 It is recommended that users choose a directory to store all of the output from :code:`tshirt`. To define the directory, edit your :code:`~/.bash_profile` file so it contains the following line:
 
