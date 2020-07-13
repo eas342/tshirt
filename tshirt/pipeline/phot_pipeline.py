@@ -3,7 +3,7 @@ from astropy.io import fits, ascii
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
-import pkg_resources
+from pkg_resources import resource_filename
 if 'DISPLAY' not in os.environ:
     mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -86,7 +86,7 @@ def read_yaml(filePath):
     return yamlStructure
 
 path_to_example = "parameters/phot_params/example_phot_parameters.yaml"
-exampleParamPath = pkg_resources.resource_filename('tshirt',path_to_example)
+exampleParamPath = resource_filename('tshirt',path_to_example)
 
 class phot:
     def __init__(self,paramFile=exampleParamPath,
@@ -164,7 +164,7 @@ class phot:
         self.set_up_apertures(positions)
         
         self.check_parameters()
-        
+        self.check_file_structure()
     
     def get_parameters(self,paramFile,directParam=None):
         if directParam is None:
@@ -174,11 +174,29 @@ class phot:
             self.paramFile = 'direct dictionary'
             self.param = directParam
     
+    def check_file_structure(self):
+        """
+        Check the file structure for plotting/saving data
+        """
+        if 'TSHIRT_DATA' in os.environ:
+            baseDir = os.environ['TSHIRT_DATA']
+        else:
+            baseDir = '.'
+        structure_file = resource_filename('tshirt','directory_info/directory_list.yaml')
+        dirList = read_yaml(structure_file)
+        for oneFile in dirList:
+            fullPath = os.path.join(baseDir,os.path.split(oneFile)[0])
+            
+            if os.path.exists(fullPath) == False:
+                print("Creating {} for tshirt file output".format(fullPath))
+                os.makedirs(fullPath)
+        
+    
     def get_fileList(self):
         if self.param['readFromTshirtExamples'] == True:
             ## Find the files from the package data examples
             ## This is only when running example pipeline runs or tests
-            search_path = pkg_resources.resource_filename('tshirt',self.param['procFiles'])
+            search_path = resource_filename('tshirt',self.param['procFiles'])
         else:
             search_path = self.param['procFiles']
         

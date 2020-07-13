@@ -108,6 +108,7 @@ class spec(phot_pipeline.phot):
         self.minPixForCovarianceWeights = 3
         
         self.check_parameters()
+        self.check_file_structure()
         
     def check_parameters(self):
         if ('bkgSubY' in self.param) | ('bkgSubY' in self.param):
