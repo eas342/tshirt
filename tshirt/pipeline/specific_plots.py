@@ -227,25 +227,41 @@ def show_fringing():
         plt.close(fig)
 
 
-def check_wavecal(otis=False):
+def check_wavecal(testName='otis',nrc_filter='F322W2'):
     """
     Check the wavelength cal 
     """
-    dat = ascii.read('spectra/specific/reference_data/F322W2_nrc_only_throughput_moda_sorted.txt')
+    
+    dat = ascii.read('spectra/specific/reference_data/{}_nrc_only_throughput_moda_sorted.txt'.format(nrc_filter))
     
     yFilt = dat['Throughput']
     yFiltNorm = yFilt / np.median(yFilt)
     
     plt.plot(dat['Wavelength_microns'],yFiltNorm)
     
-    if otis == True:
-        spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
+    if testName == 'otis':
+        if nrc_filter == 'F322W2':
+            paramFile = 'otis_grism_ts_w_flats_PPP_w_f322w2.yaml'
+        else:
+            raise Exception("Filter {} not prepared".format(nrc_filter))
+        
+        spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/{}'.format(paramFile))
         bb_temp = 300
         spec_offset = 0.0
     else:
-        bb_temp = 500
-        spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
+        if nrc_filter == 'F322W2':
+            paramFile = 'f322w2_grism_example.yaml'
+            bb_temp = 500
+        elif nrc_filter == 'F444W':
+            paramFile = 'f444w_grism_example.yaml'
+            bb_temp = 500
+        else:
+            raise Exception("Filter {} not prepared".format(nrc_filter))
+        
+        
+        spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/{}'.format(paramFile))
         spec_offset = 0.0
+    
     
     x, ySpec, yerr = spec.get_avg_spec()
     lam = spec.wavecal(x) - spec_offset
@@ -262,10 +278,13 @@ def check_wavecal(otis=False):
     plt.show()
     
 def periodograms_for_fringing():
-    for oneTest in ['otis','cv3']:
+    for oneTest in ['otis','cv3_444','cv3']:
         if oneTest == 'otis':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
             align=True
+        elif oneTest == 'cv3_444':
+            spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f444w_grism_example.yaml')
+            align=False
         else:
             spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
             align=False
