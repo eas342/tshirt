@@ -186,20 +186,20 @@ def show_fringing():
             numSplineKnots = 50
             fringAmpGuess = 0.01
             fringOffset = 0.05
-            yLim = [0.8,1.2]
+            yLim = [0.95,1.05]
             align=False
             nd2 = 2200.
-            xLim = [1200,1800]
+            xLim = [1000,1800]
             reprPoint = 1700
         elif oneTest == 'cv3':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
             numSplineKnots = 400
             fringAmpGuess = 0.1
             fringOffset = 0.2
-            yLim = [0.95,1.05]
+            yLim = [0.8,1.2]
             align=False
             nd2 = 1701.
-            xLim = [1300.,1800.]
+            xLim = [1000.,1800.]
             reprPoint = 1500
         else:
             raise Exception("Unrecognized test data {}.".format(oneTest))
