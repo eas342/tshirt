@@ -176,7 +176,6 @@ def show_fringing():
             numSplineKnots = 200
             fringAmpGuess = 0.006
             fringOffset = 0.013
-            waveOffset = 0
             yLim = [0.98,1.008]
             align=True
             nd2 = 2192.
@@ -185,7 +184,6 @@ def show_fringing():
             numSplineKnots = 400
             fringAmpGuess = 0.1
             fringOffset = 0.2
-            waveOffset = 0.0
             yLim = [0.8,1.2]
             align=False
             nd2 = 1701.
@@ -195,7 +193,7 @@ def show_fringing():
         #modelY = fringing_function(modelX,amp=fringAmpGuess,offset=fringOffset)
         
         x, y, yerr = spec.get_avg_spec(align=align)
-        lam = spec.wavecal(x) - waveOffset
+        lam = spec.wavecal(x)
         modelY = fringing_function(lam,amp=fringAmpGuess,offset=fringOffset,nd2=nd2)
         
         normY = spec.norm_spec(x,y,numSplineKnots=400)
