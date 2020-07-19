@@ -212,7 +212,7 @@ def show_fringing():
         
         normY = spec.norm_spec(x,y,numSplineKnots=400)
         fig, ax = plt.subplots(figsize=(10,4))
-        ax.set_xlim(xLim[0],xLim[1])
+        
         ax.plot(x,normY,label='Extracted Spectrum')
         ax.plot(modelX,modelY,label='Thin Film Model')
         ax.errorbar([modelX[reprPoint]],[np.nanpercentile(normY,99)],yerr=yerr[reprPoint]/y[reprPoint],
@@ -220,6 +220,7 @@ def show_fringing():
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Normalized Flux')
         ax.legend()
+        ax.set_xlim(xLim[0],xLim[1])
         ax.set_ylim(yLim[0],yLim[1])
         
         ## show the wavelengths
