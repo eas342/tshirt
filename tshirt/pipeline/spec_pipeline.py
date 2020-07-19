@@ -1101,7 +1101,25 @@ class spec(phot_pipeline.phot):
     
     def get_avg_spec(self,src=0,redoDynamic=True,align=False):
         """
-        Get the average spectrum across all time series
+        Get the average spectrum across all of the time series
+        
+        Parameters
+        ----------
+        src: int
+            The index number for the source (0 for the first source's spectrum)
+        redoDynamic: bool
+            Re-run the :any:`plot_dynamic_spec` method to save the average spectrum
+        align: bool
+            Pass this to the :any:`plot_dynamic_spec` method
+        
+        Returns
+        -------
+        x: numpy array
+            the Wavelength dispersion values (in pixels)
+        y: numpy array
+            The Flux values of the average spectrum
+        yerr: numpy array
+            The error in the average flux
         """
         
         dyn_specFile = self.dyn_specFile(src=src)
