@@ -170,7 +170,7 @@ def fringing_function(x,amp=0.1,period=6.0,periodSlope=2.0,offset=0.1,phase=0.0,
 
 def show_fringing():
     modelX = np.array(np.arange(0,2048),dtype=np.float)
-    for oneTest in ['otis','cv3']:
+    for oneTest in ['otis-throughput','otis','cv3']:
         if oneTest == 'otis':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_ts_w_flats_PPP_w_f322w2.yaml')
             numSplineKnots = 200
@@ -179,14 +179,28 @@ def show_fringing():
             yLim = [0.98,1.008]
             align=True
             nd2 = 2192.
+            xLim = [1000.,1800.]
+            reprPoint = 1500
+        elif oneTest == 'otis-throughput':
+            spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_throughput_PPP_w_f322w2.yaml')
+            numSplineKnots = 50
+            fringAmpGuess = 0.01
+            fringOffset = 0.05
+            yLim = [0.8,1.2]
+            align=False
+            nd2 = 2200.
+            xLim = [1200,1800]
+            reprPoint = 1700
         elif oneTest == 'cv3':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
             numSplineKnots = 400
             fringAmpGuess = 0.1
             fringOffset = 0.2
-            yLim = [0.8,1.2]
+            yLim = [0.95,1.05]
             align=False
             nd2 = 1701.
+            xLim = [1300.,1800.]
+            reprPoint = 1500
         else:
             raise Exception("Unrecognized test data {}.".format(oneTest))
         
@@ -198,10 +212,9 @@ def show_fringing():
         
         normY = spec.norm_spec(x,y,numSplineKnots=400)
         fig, ax = plt.subplots(figsize=(10,4))
-        ax.set_xlim(1000,1800)
+        ax.set_xlim(xLim[0],xLim[1])
         ax.plot(x,normY,label='Extracted Spectrum')
         ax.plot(modelX,modelY,label='Thin Film Model')
-        reprPoint = 1500
         ax.errorbar([modelX[reprPoint]],[np.nanpercentile(normY,99)],yerr=yerr[reprPoint]/y[reprPoint],
                     color='green',fmt='o',markerfacecolor='none',label='Representative Error')
         ax.set_xlabel('X (px)')
@@ -212,10 +225,11 @@ def show_fringing():
         ## show the wavelengths
         wave_labels = np.arange(2.5,4.1,0.1)
         ax2 = ax.twiny()
-        f = interp1d(lam,x)
+        f = interp1d(lam,x,bounds_error=False)
         new_tick_locations = f(wave_labels)
         ax2.set_xticks(new_tick_locations)
-        ax2.set_xticklabels(wave_labels)
+        ax2.set_xticklabels(np.array(np.round(wave_labels,3),dtype=np.str))
+        
         ax2.set_xlabel(r"Wavelength ($\mu$m)")
         ax2.set_xlim(ax.get_xlim())
         
