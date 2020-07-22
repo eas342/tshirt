@@ -185,12 +185,12 @@ def show_fringing():
             spec = spec_pipeline.spec('parameters/spec_params/jwst/otis_grism/otis_grism_throughput_PPP_w_f322w2.yaml')
             numSplineKnots = 50
             fringAmpGuess = 0.01
-            fringOffset = 0.05
-            yLim = [0.95,1.05]
+            fringOffset = 0.025
+            yLim = [0.97,1.04]
             align=False
             nd2 = 2200.
-            xLim = [1000,1800]
-            reprPoint = 1700
+            xLim = [1300,2000]
+            reprPoint = 1500
         elif oneTest == 'cv3':
             spec = spec_pipeline.spec('parameters/spec_params/jwst/grism_cv3/f322w2_grism_example.yaml')
             numSplineKnots = 400
@@ -210,7 +210,7 @@ def show_fringing():
         lam = spec.wavecal(x)
         modelY = fringing_function(lam,amp=fringAmpGuess,offset=fringOffset,nd2=nd2)
         
-        normY = spec.norm_spec(x,y,numSplineKnots=400)
+        normY = spec.norm_spec(x,y,numSplineKnots=numSplineKnots)
         fig, ax = plt.subplots(figsize=(10,4))
         
         ax.plot(x,normY,label='Extracted Spectrum')
