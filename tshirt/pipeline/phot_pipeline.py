@@ -447,7 +447,7 @@ class phot:
             fig.show()
         else:
             outName = 'stamps_'+self.dataFileDescrip+'.pdf'
-            outPath = os.join(self.baseDir,'plots','photometry','postage_stamps',outName)
+            outPath = os.path.join(self.baseDir,'plots','photometry','postage_stamps',outName)
             fig.savefig(outPath)
             plt.close(fig)
         
