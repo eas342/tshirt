@@ -451,7 +451,8 @@ class phot:
             fig.savefig(outPath)
             plt.close(fig)
         
-    def showCustSet(self,index=None,ptype='Stamps',defaultCen=False,vmin=None,vmax=None):
+    def showCustSet(self,index=None,ptype='Stamps',defaultCen=False,vmin=None,vmax=None,
+                    boxsize=None,showPlot=False):
         """ Show a custom stamp or star identification plot for a given image index 
         
         Parameters
@@ -462,7 +463,16 @@ class phot:
             Plot type - 'Stamps' for postage stamps
                         'Map' for star identification map
         defaultCen: bool
-            Use the default centroid? If true, it will use the guess centroids
+            Use the default centroid? If True, it will use the guess centroids to 
+                    show the guess before centering.
+        boxsize: int or None
+            The size of the box to cut out for plotting postage stamps.
+            If None, will use defaults.
+            Only use when ptype is 'Stamps'
+        showPlot: bool
+            Show the plot in notebook or iPython session?
+            If True, it will show the plot.
+            If False, it will save the plot in the default directory.
         """
         self.get_allimg_cen()
         if index == None:
@@ -476,9 +486,9 @@ class phot:
             cen = self.cenArr[index]
         
         if ptype == 'Stamps':
-            self.showStamps(custPos=cen,img=img,head=head,vmin=vmin,vmax=vmax)
+            self.showStamps(custPos=cen,img=img,head=head,vmin=vmin,vmax=vmax,showPlot=showPlot,boxsize=boxsize)
         elif ptype == 'Map':
-            self.showStarChoices(custPos=cen,img=img,head=head,showAps=True)
+            self.showStarChoices(custPos=cen,img=img,head=head,showAps=True,showPlot=showPlot)
         else:
             print('Unrecognized plot type')
             
