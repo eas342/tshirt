@@ -21,4 +21,9 @@ Image Preparation Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automodule:: tshirt.pipeline.prep_images
    :members:
+
+Pipeline Analysis Module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automodule:: tshirt.pipeline.analysis
+   :members:
    
