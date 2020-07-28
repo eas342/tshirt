@@ -1071,6 +1071,7 @@ class spec(phot_pipeline.phot):
         align2D = np.zeros_like(data2D)
         nImg = data2D.shape[0]
         dispPix = self.param['dispPixels']
+        Noffset = self.param['nOffsetCC']
         
         if refInd == None:
             refInd = nImg // 2
@@ -1087,7 +1088,7 @@ class spec(phot_pipeline.phot):
             else:
                 doDiagnostics = False
             
-            offsetX, offsetInd = analysis.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=20,
+            offsetX, offsetInd = analysis.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=Noffset,
                                                           diagnostics=doDiagnostics,subPixel=True,
                                                           lowPassFreq=self.param['lowPassFreqCC'],
                                                           highPassFreq=self.param['hiPassFreqCC'])

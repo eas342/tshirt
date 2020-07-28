@@ -37,6 +37,7 @@ numSplineKnots: 20 ## number of spline Knots when fitting the Splines along the 
 nanTreatment: 'leave' ## How to treat NaNs in image? 'zero' will set to 0, 'leave' will leave at NaN
 lowPassFreqCC: 0.99 ## Below this frequency, all information is included for cross-corr alignment analysis
 hiPassFreqCC: 0.015 ## Above this frequency, all information is included for cross-corr alignment analysis
+nOffsetCC: 20 ## maximum number of pixels for cross-correlation during alignment stage
 specShiftMultiplier: 1.0 ## this is a multiplier to shift the spectra an extra fraction
 waveCalMethod: null ## the wavelength calibration method (None/null, NIRCamTS)
 waveCalOffset: 0.0 ## offset to the wavelength calibration, subtracted afterwards
