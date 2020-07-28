@@ -186,8 +186,13 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
     
     if subPixel == True:
         indOffset, yPeak, yModel = subpixel_peak(offsetIndices,corr)
-        fInterp = interp1d(offsetIndices,offsets)
-        xOffset = np.float(fInterp(indOffset))
+        if indOffset < np.min(offsetIndices):
+            xOffset = np.min(offsets)
+        elif indOffset > np.max(offsetIndices):
+            xOffset = np.max(offsets)
+        else:
+            fInterp = interp1d(offsetIndices,offsets)
+            xOffset = np.float(fInterp(indOffset))
     else:
         peakArg = np.argmax(corr)
         yPeak = corr[peakArg]
