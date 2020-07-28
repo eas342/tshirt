@@ -1082,7 +1082,7 @@ class spec(phot_pipeline.phot):
         
         for imgInd in np.arange(nImg):
             thisSpec = data2D[imgInd,dispPix[0]:dispPix[1]]
-            if (imgInd > 199) & (diagnostics == True):
+            if (imgInd > 5) & (diagnostics == True):
                 doDiagnostics = True
             else:
                 doDiagnostics = False
