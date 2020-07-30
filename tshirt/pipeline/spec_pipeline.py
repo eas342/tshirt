@@ -1,3 +1,4 @@
+print("hello")
 import photutils
 from astropy.io import fits, ascii
 import matplotlib as mpl
