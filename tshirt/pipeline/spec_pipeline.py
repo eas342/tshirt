@@ -1723,7 +1723,9 @@ class spec(phot_pipeline.phot):
             Dispersion Middle X-axis values
             
         waveCalMethod: str, optional 
-            Corresponds to instrumnetation used
+            Corresponds to instrumentation used.
+            Use 'NIRCamTS' for the NIRCam time series mode.
+            Use 'wfc3Dispersion' for the HST WFC3 grism.
             
         head: astropy FITS header, optional
             header for image
