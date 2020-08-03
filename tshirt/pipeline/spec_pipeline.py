@@ -1716,6 +1716,17 @@ class spec(phot_pipeline.phot):
     def wavecal(self,dispIndices,waveCalMethod=None,head=None,**kwargs):
         """
         Wavelength calibration to turn the dispersion pixels into wavelengths
+        
+        Parameters
+        -------------
+        dispIndices: numpy array 
+            Dispersion Middle X-axis values
+            
+        waveCalMethod: str, optional 
+            Corresponds to instrumnetation used
+            
+        head: astropy FITS header, optional
+            header for image
         """
         if waveCalMethod == None:
             waveCalMethod = self.param['waveCalMethod']
@@ -1727,6 +1738,9 @@ class spec(phot_pipeline.phot):
                 head = fits.getheader(self.specFile,extname='ORIG HEADER')
             wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'],
                                                                          **kwargs)
+        elif waveCalMethod == 'wfc3Dispersion':
+            wavelengths = instrument_specific.hst_inst_funcs.hstwfc3_wavecal(dispIndices,**kwargs)
+            
         else:
             raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
             
