@@ -12,9 +12,9 @@ def hstwfc3_wavecal(dispIndices,xc0=None,yc0=None,DirIm_x_appeture=522,DirIm_y_a
         dispIndices: numpy array 
             Dispersion Middle X-axis values
         xc0: float
-            X coordinate of direct image centroid
+            Initial X coordinate of direct image centroid
         yc0: float
-            Y coordinate of direct image centroid
+            Initial Y coordinate of direct image centroid
         DirIm_x_appeture: float
             Chip Reference X-Pixel dependent upon direct image centroid apeture 
         DirIm_y_appeture: float
