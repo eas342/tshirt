@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import numpy as np
 from scipy.interpolate import interp1d
 
-def hstwfc3_wavecal(dispIndices,xc0=None,yc0=None,DirIm_x_appeture=522,DirIm_y_appeture=522,SpecIm_x_appeture=410,
+def hstwfc3_wavecal(dispIndices,xc0=75.0,yc0=75.0,DirIm_x_appeture=522,DirIm_y_appeture=522,SpecIm_x_appeture=410,
                     SpecIm_y_appeture=522,subarray=128):
     """
         Wavelength calibration to turn the dispersion pixels into wavelengths
