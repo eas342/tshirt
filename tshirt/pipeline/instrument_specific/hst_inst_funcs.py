@@ -25,7 +25,9 @@ def hstwfc3_wavecal(dispIndices,xc0=75.0,yc0=75.0,DirIm_x_appeture=522,DirIm_y_a
             Chip Reference Y-Pixel dependent upon spectral image centroid apeture
         subarray:
             Length of detector array 
-            
+        
+        Notes
+        --------
         Note that direct image and spectral image should be taken with the
         same aperture. If not, please adjust the centroid measurement
         according to table in: https://www.stsci.edu/hst/instrumentation/focus-and-pointing/fov-geometry
