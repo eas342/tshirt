@@ -17,6 +17,15 @@ Spectroscopic Module
 .. automodule:: tshirt.pipeline.spec_pipeline
    :members:
 
+Instrument-Specific Modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automodule:: tshirt.pipeline.instrument_specific.hst_inst_funcs
+   :members:
+
+.. automodule:: tshirt.pipeline.instrument_specific.jwst_inst_func
+   :members:
+
+
 Image Preparation Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automodule:: tshirt.pipeline.prep_images

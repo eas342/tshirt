@@ -1724,8 +1724,8 @@ class spec(phot_pipeline.phot):
             
         waveCalMethod: str, optional 
             Corresponds to instrumentation used.
-            Use 'NIRCamTS' for the NIRCam time series mode.
-            Use 'wfc3Dispersion' for the HST WFC3 grism.
+            Use 'NIRCamTS' for the NIRCam time series mode (:any:`jwst_inst_funcs.ts_wavecal`).
+            Use 'wfc3Dispersion' for the HST WFC3 grism (:any:`ts_wavecal`).
             
         head: astropy FITS header, optional
             header for image
