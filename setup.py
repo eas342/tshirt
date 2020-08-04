@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 setup(
     name='tshirt',
     version='0.1dev2',
-    author='Everett Schlawin',
+    author='Everett Schlawin, Kayli Glidic',
     packages=['tshirt','tshirt.pipeline',
               'tshirt.pipeline.instrument_specific'],
     url="https://github.com/eas342/tshirt",
