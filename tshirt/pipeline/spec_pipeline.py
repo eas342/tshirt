@@ -396,17 +396,18 @@ class spec(phot_pipeline.phot):
                 prefixName = os.path.splitext(os.path.basename(self.fileL[ind]))[0]
             origName = '{}_for_backsub_{}.fits'.format(prefixName,oneDirection)
             origPath = os.path.join(self.baseDir,'diagnostics','spec_backsub',origName)
-            primHDU.writeto(origName,overwrite=True)
+            primHDU.writeto(origPath,overwrite=True)
             primHDU_mod = fits.PrimaryHDU(bkgModel)
             
             subModelName = '{}_backsub_model_{}.fits'.format(prefixName,oneDirection)
             subModelPath = os.path.join(self.baseDir,'diagnostics','spec_backsub',subModelName)
-            primHDU_mod.writeto(subModelName,overwrite=True)
+            primHDU_mod.writeto(subModelPath,overwrite=True)
             
             subName = '{}_subtracted_{}.fits'.format(prefixName,oneDirection)
             subPath = os.path.join(self.baseDir,'diagnostics','spec_backsub',subName)
             subHDU = fits.PrimaryHDU(img - bkgModel,outHead)
-            subHDU.writeto(subName,overwrite=True)
+            subHDU.writeto(subPath,overwrite=True)
+            
         
         return img - bkgModel, bkgModel, outHead
     
@@ -1350,7 +1351,47 @@ class spec(phot_pipeline.phot):
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,xLim=None,
                             recalculate=True,dispIndices=None,differential=False,
                             interactive=False):
-        """ Plot wavelength-binned time series """
+        """
+        Plot a normalized lightcurve for wavelength-binned data one wavelength at a time with
+        an offset between the lightcurves.
+        
+        Parameters
+        ----------
+        nbins: int
+            The number of wavelength bins to use
+        offset: float
+            The normalized flux offset between wavelengths
+        savePlot: bool
+            Save the plot? 
+            This is superseded by the interactive keyword. If interactive is True,
+            savePlot is ignored and it saves
+            an html file in plots/spectra/interactive/.
+            If True (and interactive is False), it is saved in 
+            plots/spectra/wavebin_tseries/. If False (and interactive is False),
+            no plot is saved and instead the plot is displayed in the
+            matplotlib framework.
+        yLim: list of 2 elements or None
+            If None, it will automatically set the Y axis. If a list [y_min,y_max],
+            it will make the Y axis limits y_min to y_max
+        xLim: list of 2 elements or None
+            If None, it will automatically set the X axis. If a list [x_min,x_max],
+            it will make the X axis limits x_min to x_max
+        recalculate: bool
+            If True, it will calculate the values from the dynamic spectrum.
+            If False, it will used cached results from a previous set of lightcurves.
+        dispIndices: list of 2 elements or None
+            If None, it will use the dispIndices from the parameter file.
+            If a 2 element list of [disp_min,disp_max], it will use those coordinates
+        differential: bool
+            If True, it will first divide each wavelength's lightcurve by the lightcurve average
+            of all wavelengths. This means that it shows the differential time series from average.
+            If False, no division is applied (other than normalization)
+        interactive: bool
+            If True, it will use :code:`bokeh` to create an interactive HTML javascript plot
+            where you can hover over data points to find out the file name for them. It saves
+            the html plot in plots/spectra/interactive/. If False,
+            it will create a regular matplotlib plot.
+        """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices)
         
