@@ -243,6 +243,8 @@ class spec(phot_pipeline.phot):
         sumSpec_err = np.zeros_like(optSpec)
         backSpec = np.zeros_like(optSpec)
         
+        refRows = np.zeros([self.nImg,nDisp]) * np.nan
+        
         for ind in fileCountArray:
             specDict = outputSpec[ind]
             timeArr.append(specDict['t0'].jd)
@@ -251,6 +253,9 @@ class spec(phot_pipeline.phot):
             sumSpec[:,ind,:] = specDict['sum spec']
             sumSpec_err[:,ind,:] = specDict['sum spec err']
             backSpec[:,ind,:] = specDict['back spec']
+            if 'ref row' in specDict:
+                refRows[ind,:] = specDict['ref row']
+                
         
         hdu = fits.PrimaryHDU(optSpec)
         hdu.header['NSOURCE'] = (self.nsrc,'Number of sources with spectroscopy')
@@ -292,9 +297,18 @@ class spec(phot_pipeline.phot):
         hduTime.header['AXIS1'] = ('time', 'time in Julian Day (JD)')
         hduTime.name = 'TIME'
         
+        ## Save the mean refence pixel rows
+        hduRef = fits.ImageHDU(refRows)
+        hduRef.header['AXIS1'] = ('X','Image X axis')
+        hduRef.header['AXIS2'] = ('image', 'image axis, ie. which integration')
+        hduRef.header['BUNIT'] = ('counts', 'should be e- if gain has been applied')
+        hduRef.header['VAL'] = ('Mean','Each pixel is the mean of the 4 bottom reference pixels')
+        hduRef.name = 'REFPIX'
+         
         HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,
                                 hduBack,hduDispIndices,
-                                hduTime,hduFileNames,hduOrigHeader])
+                                hduTime,hduFileNames,hduOrigHeader,
+                                hduRef])
         HDUList.writeto(self.specFile,overwrite=True)
         
     
@@ -752,7 +766,20 @@ class spec(phot_pipeline.phot):
         return weight2D
     
     def spec_for_one_file(self,ind,saveFits=False,diagnoseCovariance=False):
-        """ Get spectroscopy for one file """
+        """ Get spectroscopy for one file
+        Calculate the optimal and sum extractions
+        
+        If `saveRefRow` is True, the reference pixel row will be saved
+        
+        Parameters
+        ----------
+        ind: int
+            File index
+        saveFits: bool
+            Save the background subtraction and profile fits?
+        diagnoseCovariance: bool
+            Diagnostic information for the covariance profile weighting
+        """
         if np.mod(ind,15) == 0:
             print("On {} of {}".format(ind,len(self.fileL)))
         
@@ -919,6 +946,10 @@ class spec(phot_pipeline.phot):
         extractDict['sum spec err'] = sumSpectra_err
         extractDict['back spec'] = backSpectra
         
+        if self.param['saveRefRow'] == True:
+            refRow = np.mean(img[0:4,:],axis=0)
+            extractDict['ref row'] = refRow
+        
         return extractDict
     
     def norm_spec(self,x,y,numSplineKnots=None):
@@ -1062,6 +1093,28 @@ class spec(phot_pipeline.phot):
             plt.show()
     
     def get_spec(self,specType='Optimal',ind=None,src=0):
+        """
+        Get a spectrum from the saved FITS file
+        
+        Parameters
+        ------------
+        specType: str
+            The type of spectrum 'Optimal" for optimal extraction.
+            'Sum' for sum extraction
+        ind: int or None
+            The index from the file list. If None, it will use the default.
+        src: int
+            The source index
+        
+        Returns
+        --------
+        x: numpy array
+            The spectral pixel numbers
+        y: numpy array
+            the extracted flux
+        yerr: numpy array
+            the error in the extracted flux
+        """
         if os.path.exists(self.specFile) == False:
             self.do_extraction()
         
@@ -1789,6 +1842,8 @@ class spec(phot_pipeline.phot):
             
         wavelengths = wavelengths - self.param['waveCalOffset']
         return wavelengths
+        
+        
 
 class batch_spec(phot_pipeline.batchPhot):
     def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):

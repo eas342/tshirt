@@ -49,3 +49,4 @@ ignorePhotNoiseInCovariance: False ## a diagnostic parameter to see covariance w
 superWeights: False ## Use (S/N)^2 to weight instead of optimal extraction
 fixedProfile: False ## Use a fixed profile for all images?
 readFromTshirtExamples: False ## read the data from T-shirt examples within the package? Use only for examples.
+saveRefRow: False ## save rows of reference pixels?
