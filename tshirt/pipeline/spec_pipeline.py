@@ -1605,7 +1605,7 @@ class spec(phot_pipeline.phot):
         HDUList.close()
         return t1, t2
     
-    def print_noise_wavebin(self,nbins=10,shorten=False):
+    def print_noise_wavebin(self,nbins=10,shorten=False,recalculate=False):
         """ 
         Get a table of noise measurements for all wavelength bins
         
@@ -1616,6 +1616,9 @@ class spec(phot_pipeline.phot):
         shorten: bool
             Use a short segment of the full time series?
             This could be useful for avoiding bad data or a deep transit
+        
+        recalculate: bool
+            Recalculate the wavebin series and dynamic spectrum?
         
         Returns
         ---------
