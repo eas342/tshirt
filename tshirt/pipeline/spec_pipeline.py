@@ -1203,6 +1203,20 @@ class spec(phot_pipeline.phot):
         -----------
         showPlot: bool, optional
             Show the plot in addition to saving?
+        saveFits: bool
+            Save a FITS file of the dynamic spectrum?
+        specAtTop: bool
+            Plot the average spectrum at the top of the dynamic spectrum?
+        align: bool
+            Automatically align all the spectra?
+        alignDiagnostics: bool
+            Show diagnostics of the alignment process?
+        extraFF: bool
+            Apply an extra flattening step?
+        specType: str
+            Spectrum type - 'Optimal' or 'Sum'
+        showPlot: bool
+            Show a plot with the spectrum?
         """
         
         HDUList = fits.open(self.specFile)
@@ -1330,8 +1344,28 @@ class spec(phot_pipeline.phot):
     def wavebin_specFile(self,nbins=10):
         return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
     
-    def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None):
-        if os.path.exists(self.dyn_specFile(src)) == False:
+    def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None,
+                            recalculate=False,align=False):
+        """
+        Bin wavelengths together and generate a time series from the dynamic spectrum
+        
+        Parameters
+        ----------
+        specType: str
+            Type of extraction 'Optimal' vs 'Sum'
+        src: int
+            Which source index is this for
+        nbins: int
+            Number of wavelength bins
+        dispIndices: list of ints
+            The detector pixel indices over which to create the wavelength bins
+        recalculate: bool
+            Re-caalculate the dynamic spectrum?
+        align: bool
+            Automatically align all the spectra? This is passed to plot_dynamic_spec
+        """
+        
+        if (os.path.exists(self.dyn_specFile(src)) == False) | (recalculate == True):
             self.plot_dynamic_spec(src=src,saveFits=True)
         HDUList = fits.open(self.dyn_specFile(src))
         dynSpec = HDUList['DYNAMIC SPEC'].data
@@ -1402,7 +1436,7 @@ class spec(phot_pipeline.phot):
         return np.floor(np.min(time))
     
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,xLim=None,
-                            recalculate=True,dispIndices=None,differential=False,
+                            recalculate=False,dispIndices=None,differential=False,
                             interactive=False):
         """
         Plot a normalized lightcurve for wavelength-binned data one wavelength at a time with
@@ -1446,7 +1480,7 @@ class spec(phot_pipeline.phot):
             it will create a regular matplotlib plot.
         """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
-            self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices)
+            self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices,recalculate=recalculate)
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         time = HDUList['TIME'].data
@@ -1522,7 +1556,7 @@ class spec(phot_pipeline.phot):
             HDUList.close()
     
     
-    def get_wavebin_series(self,nbins=10,recalculate=True):
+    def get_wavebin_series(self,nbins=10,recalculate=False):
         """
         Get a table of the the wavelength-binned time series
         
@@ -1534,7 +1568,7 @@ class spec(phot_pipeline.phot):
         
         recalculate: bool, optional
             Recalculate the dynamic spectrum?
-            This is good to keep True when there is an update to
+            This is good to set as True when there is an update to
             the parameter file.
         
         Returns
@@ -1552,7 +1586,7 @@ class spec(phot_pipeline.phot):
         >>> t1, t2 = spec.get_wavebin_series()
         """
         sFile = self.wavebin_specFile(nbins=nbins)
-        if os.path.exists(sFile) == False:
+        if (os.path.exists(sFile) == False) | (recalculate == True):
             self.plot_wavebin_series(nbins=nbins,recalculate=recalculate)
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         disp = HDUList['DISP INDICES'].data
