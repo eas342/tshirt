@@ -1627,8 +1627,8 @@ class spec(phot_pipeline.phot):
             and measured standard deviation across time
         """
         sFile = self.wavebin_specFile(nbins=nbins)
-        if os.path.exists(sFile) == False:
-            self.plot_wavebin_series(nbins=nbins)
+        if (os.path.exists(sFile) == False) | (recalculate=True):
+            self.plot_wavebin_series(nbins=nbins,recalculate=recalculate)
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))            
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
