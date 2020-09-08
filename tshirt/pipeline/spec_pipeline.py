@@ -828,7 +828,7 @@ class spec(phot_pipeline.phot):
             smooth_img = smooth_img_list[oneSrc]
             
             ## Find the bad pixels and their missing weights
-            finitep = np.isfinite(img)
+            finitep = (np.isfinite(img) & np.isfinite(varImg))
             badPx = finitep == False ## start by marking NaNs as bad pixels
             ## also mark large deviations from profile fit
             badPx[finitep] = np.abs(smooth_img[finitep] - img[finitep]) > self.param['sigForBadPx'] * np.sqrt(varImg[finitep])
