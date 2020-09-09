@@ -1298,7 +1298,28 @@ class phot:
         
         
     
-    def print_phot_statistics(self,refCorrect=True,excludeSrc=None,shorten=False):
+    def print_phot_statistics(self,refCorrect=True,excludeSrc=None,shorten=False,
+                              returnOnly=False):
+        """
+        Print the calculated and theoretical noise as a table
+                              
+        Parameters
+        ----------
+        refCorrect: bool
+            Use reference stars to correct target?
+            If True, there is only one row in the table for the target.
+            If False, there is a row for each star's absolute noise
+        excludeSrc: list, or None
+            A list of sources (or None) to exclude as reference stars
+            Given by index number
+        shorten: bool
+            Shorten the number of points used the time series?
+            Useful if analyzing the baseline befor transit, for example.
+        returnOnly: bool
+            If True, a table is returned.
+            If False, a table is printed and another is returned
+        
+        """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
@@ -1334,8 +1355,12 @@ class phot:
             tiledFlux = np.tile(medFlux,[nImg,1])
             mad = np.nanmedian(np.abs(photArr - tiledFlux),axis=0) / medFlux
             t['Mad (%)'] = np.round(mad * 100.,4)
-
-        print(t)
+        
+        if returnOnly:
+            pass
+        else:
+            print(t)
+        
         HDUList.close()
         return t
     
@@ -1765,6 +1790,101 @@ class batchPhot:
         """
         return phot(directParam=self.paramDicts[ind])
     
+
+
+def aperture_size_analysis(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
+                           minAnnulusT=2,shorten=False):
+    """
+    Find the optimum Aperture Size parameters for a given phot object
+    
+    Parameters
+    -----------
+    stepSize: float
+        The step size
+    srcRange: two element list
+        The minimum and maximum src radii to explore
+    backRange: two element list
+        The minimum and maximum aperture radii to explore (both for the inner & outer)
+    minAnnulusT: float
+        The minimum thickness for the background annulus
+    shorten: bool
+        Shorten the time series? (This is passed to print_phot_statistics)
+    """
+    
+    ## change the short name to avoid over-writing previous files
+    origParam = deepcopy(phot_obj.param)
+    origName = origParam['srcNameShort']
+    param = deepcopy(origParam)
+    
+    ## show the most compact configuration
+    param['srcNameShort'] = origName + '_compact'
+    param['apRadius'] = srcRange[0]
+    param['backStart'] = np.max([srcRange[0],backRange[0]])
+    param['backEnd'] = phot_obj.param['backStart'] + minAnnulusT
+    new_phot = phot(directParam=param)
+    new_phot.showStamps(boxsize=backRange[1]+5)
+    #new_phot.showStamps(boxsize=new_phot.param['backEnd'] + 2)
+    
+    ## show the most expanded configuration
+    param['srcNameShort'] = origName + '_expanded'
+    param['apRadius'] = srcRange[1]
+    param['backStart'] = backRange[1] - minAnnulusT
+    param['backEnd'] = backRange[1]
+    new_phot = phot(directParam=param)
+    new_phot.showStamps(boxsize=new_phot.param['backEnd'] + 5)
+    
+    
+    apertureSets = []
+    t = Table(names=['src','back_st','back_end'])
+    for srcSize in np.arange(srcRange[0],srcRange[1],stepSize):
+        ## start from the backRange min or the src, whichever is bigger
+        back_st_minimum = np.max([srcSize,backRange[0]])
+        
+        ## finish at the backRange max, but allow thickness
+        back_st_maximum = backRange[1] - minAnnulusT
+        
+        for back_st in np.arange(back_st_minimum,back_st_maximum,stepSize):
+            ## start the outer background annulus, at least minAnnulusT away
+            back_end_minimum = back_st + minAnnulusT
+            back_end_maximum = backRange[1]
+            for back_end in np.arange(back_end_minimum,back_end_maximum,stepSize):
+                apertureSets.append([srcSize,back_st,back_end])
+                t.add_row([srcSize,back_st,back_end])
+                #print("src: {}, back st: {}, back end: {}".format(srcSize,back_st,back_end))
+                
+    ## for the rest, it will save a common file name
+    param['srcNameShort'] = origName + '_aperture_sizing'
+    
+    stdevArr, theo_err, mad_arr = [], [], []
+    for i,apSet in enumerate(apertureSets):
+        print("src: {}, back st: {}, back end: {}".format(apSet[0],apSet[1],apSet[2]))
+        param['apRadius'] = apSet[0]
+        param['backStart'] = apSet[1]
+        param['backEnd'] = apSet[2]
+        
+        new_phot = phot(directParam=param)
+        new_phot.do_phot(useMultiprocessing=True)
+        noiseTable = new_phot.print_phot_statistics(refCorrect=True,returnOnly=True,shorten=shorten)
+        stdevArr.append(noiseTable['Stdev (%)'][0])
+        theo_err.append(noiseTable['Theo Err (%)'][0])
+        mad_arr.append(noiseTable['MAD (%)'][0])
+    t['stdev'] = stdevArr
+    t['theo_err'] = theo_err
+    t['mad_arr'] = theo_err
+    
+    outTable_name = 'aperture_opt_'+new_phot.dataFileDescrip+'.csv'
+    outTable_path = os.path.join(new_phot.baseDir,'tser_data','phot_aperture_optimization',outTable_name)
+    t.write(outTable_path,overwrite=True)
+    
+    print('Writing table to {}'.format(outTable_path))
+    
+    ind = np.argmin(t['stdev'])
+    print("Min Stdev results:")
+    
+    print(t[ind])
+    
+    return t
+
 
 class prevPhot(phot):
     """

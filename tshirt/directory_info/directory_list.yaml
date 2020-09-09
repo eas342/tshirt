@@ -25,6 +25,7 @@
 - plots/allan_variance/README.md
 - plots/photometry/interactive/README.md
 - tser_data/saved_weights/README.md
+- tser_data/phot_aperture_optimization/README.md
 - tser_data/spec/README.md
 - tser_data/README.md
 - tser_data/saved_profiles/README.md
