@@ -1883,7 +1883,7 @@ def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
         mad_arr.append(noiseTable['MAD (%)'][0])
     t['stdev'] = stdevArr
     t['theo_err'] = theo_err
-    t['mad_arr'] = theo_err
+    t['mad_arr'] = mad_arr
     
     outTable_name = 'aperture_opt_{}_src_{}_{}_step_{}_back_{}_{}_step_{}.csv'.format(new_phot.dataFileDescrip,
                                                                               srcRange[0],srcRange[1],stepSizeSrc,
@@ -1924,7 +1924,7 @@ def plot_apsizes(apertureSweepFile,showPlot=True):
     for statInd,statistic in enumerate(statistics):
         axArr1D = axArr2D[statInd]
         for ind, ax in enumerate(axArr1D):
-            ax.semilogy(dat[keys[ind]],dat['stdev'],'.')
+            ax.semilogy(dat[keys[ind]],dat[statistic],'.')
             ax.set_xlabel(labels[ind])
             if ind==0:
                 ax.set_ylabel(statistic)
