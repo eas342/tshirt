@@ -1935,7 +1935,10 @@ def plot_apsizes(apertureSweepFile,showPlot=True):
             ax.set_xlabel(labels[ind])
             if ind==0:
                 ax.set_ylabel(statistic)
-    fig.show()
+    if showPlot == True:
+        fig.show()
+    else:
+        raise NotImplementedError
 
 
 class prevPhot(phot):
