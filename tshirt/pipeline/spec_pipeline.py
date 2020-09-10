@@ -792,7 +792,7 @@ class spec(phot_pipeline.phot):
         readNoise = self.get_read_noise(head)
         ## Background and read noise only.
         ## Smoothed source flux added below
-        varImg = readNoise**2 + bkgModel ## in electrons because it should be gain-corrected
+        varImg = readNoise**2 + np.abs(bkgModel) ## in electrons because it should be gain-corrected
         
         if self.param['fixedProfile'] == True:
             profile_img_list, smooth_img_list = self.read_profiles()
