@@ -1792,24 +1792,37 @@ class batchPhot:
     
 
 
-def aperture_size_analysis(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
-                           minAnnulusT=2,shorten=False):
+def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
+                           minAnnulusT=2,stepSizeSrc=None,stepSizeBack=None,
+                           shorten=False):
     """
-    Find the optimum Aperture Size parameters for a given phot object
+    Calculate the Noise Statistics for a "Sweep" of Aperture Sizes
+    Loops through a series of source sizes and background sizes in a grid search
     
     Parameters
     -----------
     stepSize: float
-        The step size
+        The step size. It will be superseded by stepSize_bck or stepSizeSrc if used.
     srcRange: two element list
         The minimum and maximum src radii to explore
     backRange: two element list
         The minimum and maximum aperture radii to explore (both for the inner & outer)
     minAnnulusT: float
         The minimum thickness for the background annulus
+    stepSizeSrc: float
+        (optional) Specify the step size for the source that will supersed the general
+        stepSize
+    stepSizeBack: float
+        (optional) Specify the step size for the background that will supersed the general
+        stepSize
     shorten: bool
         Shorten the time series? (This is passed to print_phot_statistics)
     """
+    
+    if stepSizeSrc == None:
+        stepSizeSrc = stepSize
+    if stepSizeBack == None:
+        stepSizeBack = stepSize
     
     ## change the short name to avoid over-writing previous files
     origParam = deepcopy(phot_obj.param)
@@ -1836,14 +1849,14 @@ def aperture_size_analysis(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
     
     apertureSets = []
     t = Table(names=['src','back_st','back_end'])
-    for srcSize in np.arange(srcRange[0],srcRange[1],stepSize):
+    for srcSize in np.arange(srcRange[0],srcRange[1],stepSizeSrc):
         ## start from the backRange min or the src, whichever is bigger
         back_st_minimum = np.max([srcSize,backRange[0]])
         
         ## finish at the backRange max, but allow thickness
         back_st_maximum = backRange[1] - minAnnulusT
         
-        for back_st in np.arange(back_st_minimum,back_st_maximum,stepSize):
+        for back_st in np.arange(back_st_minimum,back_st_maximum,stepSizeBack):
             ## start the outer background annulus, at least minAnnulusT away
             back_end_minimum = back_st + minAnnulusT
             back_end_maximum = backRange[1]
@@ -1872,7 +1885,10 @@ def aperture_size_analysis(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
     t['theo_err'] = theo_err
     t['mad_arr'] = theo_err
     
-    outTable_name = 'aperture_opt_'+new_phot.dataFileDescrip+'.csv'
+    outTable_name = 'aperture_opt_{}_src_{}_{}_step_{}_back_{}_{}_step_{}.csv'.format(new_phot.dataFileDescrip,
+                                                                              srcRange[0],srcRange[1],stepSizeSrc,
+                                                                              backRange[0],backRange[1],
+                                                                              stepSizeBack)
     outTable_path = os.path.join(new_phot.baseDir,'tser_data','phot_aperture_optimization',outTable_name)
     t.write(outTable_path,overwrite=True)
     
@@ -1884,6 +1900,35 @@ def aperture_size_analysis(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
     print(t[ind])
     
     return t
+
+def plot_apsizes(apertureSweepFile,showPlot=True):
+    """
+    Plot the aperture sizes calculated from :any:`aperture_size_sweep`
+    
+    Parameters
+    ----------
+    apertureSweepFile: str
+        A .csv file created by aperture_size_sweep
+    showPlot: bool
+        Show the plot w/ matplotlib? otherwise, it saves to file
+    """
+    
+    dat = ascii.read(apertureSweepFile)
+    
+    fig, axArr2D = plt.subplots(3,3,sharex=True)
+    
+    labels = ['Source Radius','Back Start','Back End']
+    keys = ['src','back_st','back_end']
+    
+    statistics = ['stdev','theo_err','mad_arr']
+    for statInd,statistic in enumerate(statistics):
+        axArr1D = axArr2D[statInd]
+        for ind, ax in enumerate(axArr1D):
+            ax.semilogy(dat[keys[ind]],dat['stdev'],'.')
+            ax.set_xlabel(labels[ind])
+            if ind==0:
+                ax.set_ylabel(statistic)
+    fig.show()
 
 
 class prevPhot(phot):
