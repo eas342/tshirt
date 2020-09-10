@@ -1915,7 +1915,14 @@ def plot_apsizes(apertureSweepFile,showPlot=True):
     
     dat = ascii.read(apertureSweepFile)
     
-    fig, axArr2D = plt.subplots(3,3,sharex=True)
+    fig, axArr2D = plt.subplots(3,3,sharey=True)
+    
+    ## share axes along columns
+    for oneColumn in [0,1,2]:
+        axTop = axArr2D[0,oneColumn]
+        axMid = axArr2D[1,oneColumn]
+        axBot = axArr2D[2,oneColumn]
+        axTop.get_shared_x_axes().join(axMid, axBot)
     
     labels = ['Source Radius','Back Start','Back End']
     keys = ['src','back_st','back_end']
