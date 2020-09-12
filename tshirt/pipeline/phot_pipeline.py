@@ -2,6 +2,7 @@ import photutils
 from astropy.io import fits, ascii
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import sys
 import os
 from pkg_resources import resource_filename
 if 'DISPLAY' not in os.environ:
