@@ -1,0 +1,14 @@
+photometry/luci2.20200220.0200.fits
+photometry/luci2.20200220.0201.fits
+photometry/luci2.20200220.0202.fits
+photometry/luci2.20200220.0203.fits
+photometry/luci2.20200220.0204.fits
+photometry/luci2.20200220.0205.fits
+photometry/luci2.20200220.0206.fits
+photometry/luci2.20200220.0207.fits
+photometry/luci2.20200220.0208.fits
+photometry/luci2.20200220.0209.fits
+spec_time_series/NRCN83-256-O9LW-7251174918_1_485_SE_2017-09-08T21h39m19_I150.slp.fits
+spec_time_series/NRCN83-256-O9LW-7251174918_1_485_SE_2017-09-08T21h39m19_I151.slp.fits
+spec_time_series/NRCN83-256-O9LW-7251174918_1_485_SE_2017-09-08T21h39m19_I152.slp.fits
+spec_time_series/NRCN83-256-O9LW-7251174918_1_485_SE_2017-09-08T21h39m19_I153.slp.fits

@@ -76,6 +76,7 @@ class spec(phot_pipeline.phot):
                 self.param[oneKey] = defaultParams[oneKey]
         
         # Get the file list
+        self.check_file_structure()
         self.photFile = 'none'
         self.fileL = self.get_fileList()
         self.nImg = len(self.fileL)
@@ -86,7 +87,6 @@ class spec(phot_pipeline.phot):
         self.srcNames[0] = 'src'
         
         ## Set up file names for output
-        self.check_file_structure()
         self.dataFileDescrip = self.param['srcNameShort'] + '_'+ self.param['nightName']
         specFile_name = 'spec_'+self.dataFileDescrip+'.fits'
         self.specFile = os.path.join(self.baseDir,'tser_data','spec',specFile_name)

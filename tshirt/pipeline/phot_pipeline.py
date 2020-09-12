@@ -27,6 +27,8 @@ from astropy.table import Table
 import multiprocessing
 from multiprocessing import Pool
 import time
+import logging
+import urllib.request
 maxCPUs = multiprocessing.cpu_count() // 3
 try:
     import bokeh.plotting
@@ -179,10 +181,7 @@ class phot:
         """
         Check the file structure for plotting/saving data
         """
-        if 'TSHIRT_DATA' in os.environ:
-            baseDir = os.environ['TSHIRT_DATA']
-        else:
-            baseDir = '.'
+        baseDir = get_baseDir()
         structure_file = resource_filename('tshirt','directory_info/directory_list.yaml')
         dirList = read_yaml(structure_file)
         for oneFile in dirList:
@@ -197,7 +196,10 @@ class phot:
         if self.param['readFromTshirtExamples'] == True:
             ## Find the files from the package data examples
             ## This is only when running example pipeline runs or tests
-            search_path = resource_filename('tshirt',self.param['procFiles'])
+            search_path = os.path.join(self.baseDir,'example_tshirt_data',self.param['procFiles'])
+            if len(glob.glob(search_path)) == 0:
+                logging.info("Did not find example tshirt data. Now attempting to download...")
+                get_tshirt_example_data()
         else:
             search_path = self.param['procFiles']
         
@@ -1940,6 +1942,36 @@ def plot_apsizes(apertureSweepFile,showPlot=True):
     else:
         raise NotImplementedError
 
+def get_baseDir():
+    if 'TSHIRT_DATA' in os.environ:
+        baseDir = os.environ['TSHIRT_DATA']
+    else:
+        baseDir = '.'
+    return baseDir
+
+def get_tshirt_example_data():
+    """
+    Download all example tshirt data. This is needed to run tests and
+    the default parameter files
+    """
+    baseDir = get_baseDir()
+    data_list_file = resource_filename('tshirt','example_data/example_data_list.txt')
+    with open(data_list_file) as dlf:
+        fileList = dlf.read().splitlines()
+    onlineDir = 'https://github.com/eas342/tshirt/blob/master/tshirt/example_data/'
+    
+    example_tshirt_dir = os.path.join(baseDir,'example_tshirt_data','example_data')
+    for oneFile in fileList:
+        onlinePath = onlineDir + str(oneFile) + '?raw=true'
+        #print('Online Path: {}'.format(onlinePath))
+                
+        outPath = os.path.join(example_tshirt_dir,oneFile)
+        if os.path.exists(outPath) == False:
+            logging.info("Attempting to download {}".format(onlinePath))
+            f = urllib.request.urlopen(onlinePath)
+            with open(outPath,'wb') as f_out:
+                f_out.write(f.read())
+            
 
 class prevPhot(phot):
     """

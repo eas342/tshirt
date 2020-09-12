@@ -1,2 +1,0 @@
-include tshirt/example_data/photometry/*.fits
-include tshirt/example_data/spec_time_series/*.fits
