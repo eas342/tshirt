@@ -28,7 +28,7 @@ import multiprocessing
 from multiprocessing import Pool
 import time
 import logging
-import urllib.request
+import urllib
 maxCPUs = multiprocessing.cpu_count() // 3
 try:
     import bokeh.plotting
@@ -1955,7 +1955,7 @@ def get_tshirt_example_data():
     the default parameter files
     """
     baseDir = get_baseDir()
-    data_list_file = resource_filename('tshirt','example_data/example_data_list.txt')
+    data_list_file = resource_filename('tshirt','directory_info/example_data_list.txt')
     with open(data_list_file) as dlf:
         fileList = dlf.read().splitlines()
     onlineDir = 'https://github.com/eas342/tshirt/blob/master/tshirt/example_data/'
@@ -1968,7 +1968,10 @@ def get_tshirt_example_data():
         outPath = os.path.join(example_tshirt_dir,oneFile)
         if os.path.exists(outPath) == False:
             logging.info("Attempting to download {}".format(onlinePath))
-            f = urllib.request.urlopen(onlinePath)
+            if sys.version > '3':
+                f = urllib.request.urlopen(onlinePath)
+            else:
+                f = urllib.open(onlinePath)
             with open(outPath,'wb') as f_out:
                 f_out.write(f.read())
             
