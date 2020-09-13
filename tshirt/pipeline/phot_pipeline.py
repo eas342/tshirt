@@ -199,7 +199,7 @@ class phot:
             ## This is only when running example pipeline runs or tests
             search_path = os.path.join(self.baseDir,'example_tshirt_data',self.param['procFiles'])
             if len(glob.glob(search_path)) == 0:
-                logging.info("Did not find example tshirt data. Now attempting to download...")
+                print("Did not find example tshirt data. Now attempting to download...")
                 get_tshirt_example_data()
         else:
             search_path = self.param['procFiles']
