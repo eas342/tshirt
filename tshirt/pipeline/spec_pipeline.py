@@ -42,6 +42,17 @@ exampleParamPath = pkg_resources.resource_filename('tshirt',path_to_example)
 path_to_defaults = "parameters/spec_params/default_params.yaml"
 defaultParamPath = pkg_resources.resource_filename('tshirt',path_to_defaults)
 
+import traceback
+import sys
+
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+
+    log = file if hasattr(file,'write') else sys.stderr
+    traceback.print_stack(file=log)
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+#warnings.showwarning = warn_with_traceback
+
 class spec(phot_pipeline.phot):
     def __init__(self,paramFile=exampleParamPath,
                  directParam=None):
@@ -1294,8 +1305,11 @@ class spec(phot_pipeline.phot):
             avgErrHDU = fits.ImageHDU(avgSpec_err)
             avgErrHDU.name = 'AVG SPEC ERR'
             
-            outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU])
-            outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
+            ## Expect a card-too-long warning
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message= "Card is too long, comment will be truncated")
+                outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU])           
+                outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
         
         if specAtTop == True:
             fig, axArr = plt.subplots(2, sharex=True,gridspec_kw={'height_ratios': [1, 3]})
