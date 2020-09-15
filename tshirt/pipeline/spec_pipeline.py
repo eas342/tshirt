@@ -1254,12 +1254,19 @@ class spec(phot_pipeline.phot):
             useSpec = extSpec
             specOffsets = np.zeros(nImg)
         
-        avgSpec = np.nanmean(useSpec,0)
+        ## Expecting a RuntimeWarning if all NaN a long a slice
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            avgSpec = np.nanmean(useSpec,0)
+        
         specCounts = np.ones_like(errSpec)
         nanPt = (np.isfinite(useSpec) == False) | (np.isfinite(errSpec) == False)
         specCounts[nanPt] = np.nan
         
-        avgSpec_err = np.sqrt(np.nansum(errSpec**2,0)) / np.nansum(specCounts,0)
+        ## Expecting a Runtime Warning if all NaN along a slice again
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            avgSpec_err = np.sqrt(np.nansum(errSpec**2,0)) / np.nansum(specCounts,0)
         
         waveIndices = HDUList['DISP INDICES'].data
         normImg = np.tile(avgSpec,[nImg,1])
