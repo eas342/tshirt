@@ -267,7 +267,7 @@ class phot:
     def get_default_cen(self,custPos=None):
         """ Get the default centroids for postage stamps or star identification maps"""
         if custPos is None:
-            showApPos = self.srcApertures.positions
+            showApPos = deepcopy(self.srcApertures.positions)
         else:
             showApPos = custPos
         
@@ -339,9 +339,9 @@ class phot:
                 backApsShow.positions[:,1] = backApsShow.positions[:,1] + self.param['backOffset'][1]
                 backApsShow.plot(ax=ax,color=backColor)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
+            
         else:
             ax.scatter(showApPos[:,0],showApPos[:,1], s=rad, facecolors='none', edgecolors='r')
-            
             outName = 'st_labels_{}.pdf'.format(self.dataFileDescrip)
         
         for ind, onePos in enumerate(showApPos):
