@@ -1796,7 +1796,7 @@ class batchPhot:
 
 
 def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
-                           minAnnulusT=2,stepSizeSrc=None,stepSizeBack=None,
+                           minBackground=2,stepSizeSrc=None,stepSizeBack=None,
                            shorten=False):
     """
     Calculate the Noise Statistics for a "Sweep" of Aperture Sizes
@@ -1810,8 +1810,8 @@ def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
         The minimum and maximum src radii to explore
     backRange: two element list
         The minimum and maximum aperture radii to explore (both for the inner & outer)
-    minAnnulusT: float
-        The minimum thickness for the background annulus
+    minBackground: float
+        The minimum thickness for the background annulus or rectangle width
     stepSizeSrc: float
         (optional) Specify the step size for the source that will supersed the general
         stepSize
@@ -1832,22 +1832,20 @@ def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
     origName = origParam['srcNameShort']
     param = deepcopy(origParam)
     
-    ## show the most compact configuration
-    param['srcNameShort'] = origName + '_compact'
-    param['apRadius'] = srcRange[0]
-    param['backStart'] = np.max([srcRange[0],backRange[0]])
-    param['backEnd'] = phot_obj.param['backStart'] + minAnnulusT
-    new_phot = phot(directParam=param)
-    new_phot.showStamps(boxsize=backRange[1]+5)
-    #new_phot.showStamps(boxsize=new_phot.param['backEnd'] + 2)
-    
-    ## show the most expanded configuration
-    param['srcNameShort'] = origName + '_expanded'
-    param['apRadius'] = srcRange[1]
-    param['backStart'] = backRange[1] - minAnnulusT
-    param['backEnd'] = backRange[1]
-    new_phot = phot(directParam=param)
-    new_phot.showStamps(boxsize=new_phot.param['backEnd'] + 5)
+    ## show the most compact and most expanded configurations
+    srcPlots = srcRange
+    backStartPlots = [np.max([srcRange[0],backRange[0]]),
+                      backRange[1] - minBackground]
+    backEndPlots = [backStartPlots[0] + minBackground,
+                    backRange[1]]
+    plotHeights = [backRange[1]+5,backRange[1] + 5]
+    for i, oneConfig in enumerate(['compact','expanded']):
+        param['srcNameShort'] = origName + '_' + oneConfig
+        param['apRadius'] = srcPlots[i]
+        param['backStart'] = backStartPlots[i]
+        param['backEnd'] = backEndPlots[i]
+        new_phot = phot(directParam=param)
+        new_phot.showStamps(boxsize=plotHeights[i])
     
     
     apertureSets = []
@@ -1857,11 +1855,11 @@ def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
         back_st_minimum = np.max([srcSize,backRange[0]])
         
         ## finish at the backRange max, but allow thickness
-        back_st_maximum = backRange[1] - minAnnulusT
+        back_st_maximum = backRange[1] - minBackground
         
         for back_st in np.arange(back_st_minimum,back_st_maximum,stepSizeBack):
-            ## start the outer background annulus, at least minAnnulusT away
-            back_end_minimum = back_st + minAnnulusT
+            ## start the outer background annulus, at least minBackground away
+            back_end_minimum = back_st + minBackground
             back_end_maximum = backRange[1]
             for back_end in np.arange(back_end_minimum,back_end_maximum,stepSize):
                 apertureSets.append([srcSize,back_st,back_end])
