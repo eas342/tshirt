@@ -1841,12 +1841,20 @@ def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
     plotHeights = [backRange[1]+5,backRange[1] + 5]
     for i, oneConfig in enumerate(['compact','expanded']):
         param['srcNameShort'] = origName + '_' + oneConfig
-        param['apRadius'] = srcPlots[i]
-        param['backStart'] = backStartPlots[i]
-        param['backEnd'] = backEndPlots[i]
-        new_phot = phot(directParam=param)
-        new_phot.showStamps(boxsize=plotHeights[i])
-    
+        if phot_obj.pipeType == 'photometry':
+            param['apRadius'] = srcPlots[i]
+            param['backStart'] = backStartPlots[i]
+            param['backEnd'] = backEndPlots[i]
+            new_phot = phot(directParam=param)
+            new_phot.showStamps(boxsize=plotHeights[i])
+        elif phot_obj.pipeType == 'spectroscopy':
+            param['apRadius'] = srcPlots[i]
+            param['backStart'] = backStartPlots[i]
+            param['backEnd'] = backEndPlots[i]
+            new_phot = phot(directParam=param)
+            new_phot.showStamps(boxsize=plotHeights[i])
+        else:
+            raise Exception("Unrecognized pipType")
     
     apertureSets = []
     t = Table(names=['src','back_st','back_end'])
