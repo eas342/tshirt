@@ -2350,8 +2350,11 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
     plotEachStep: bool
         Plot each step of the fitting?
     
-    Example Usage:
-    ----------
+    
+    Example
+    --------------
+    .. code-block:: python
+    
         import numpy as np
         from tshirt.pipeline import phot_pipeline
         import matplotlib.pyplot as plt
