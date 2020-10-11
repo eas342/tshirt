@@ -11,8 +11,10 @@ try:
 except ImportError:
     warnings.warn("Unable to import phot_pipeline. Some of the Mie scattering models may not work")
 import yaml
+from pkg_resources import resource_filename
 
-with open('parameters/mie_params/simplePoly.yaml') as yamlFile:
+mie_poly_file = resource_filename('tshirt','parameters/mie_params/simplePoly.yaml')
+with open(mie_poly_file) as yamlFile:
     coeff = yaml.safe_load(yamlFile)
 
 
