@@ -1229,6 +1229,8 @@ class spec(phot_pipeline.phot):
         showPlot: bool
             Show a plot with the spectrum?
         """
+        if os.path.exists(self.specFile) == False:
+            raise Exception("No spectrum file found. Run extraction first...")
         
         HDUList = fits.open(self.specFile)
         if specType == 'Optimal':
