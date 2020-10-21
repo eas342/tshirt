@@ -1795,160 +1795,6 @@ class batchPhot:
     
 
 
-def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
-                           minBackground=2,stepSizeSrc=None,stepSizeBack=None,
-                           shorten=False):
-    """
-    Calculate the Noise Statistics for a "Sweep" of Aperture Sizes
-    Loops through a series of source sizes and background sizes in a grid search
-    
-    Parameters
-    -----------
-    stepSize: float
-        The step size. It will be superseded by stepSize_bck or stepSizeSrc if used.
-    srcRange: two element list
-        The minimum and maximum src radii to explore
-    backRange: two element list
-        The minimum and maximum aperture radii to explore (both for the inner & outer)
-    minBackground: float
-        The minimum thickness for the background annulus or rectangle width
-    stepSizeSrc: float
-        (optional) Specify the step size for the source that will supersed the general
-        stepSize
-    stepSizeBack: float
-        (optional) Specify the step size for the background that will supersed the general
-        stepSize
-    shorten: bool
-        Shorten the time series? (This is passed to print_phot_statistics)
-    """
-    
-    if stepSizeSrc == None:
-        stepSizeSrc = stepSize
-    if stepSizeBack == None:
-        stepSizeBack = stepSize
-    
-    ## change the short name to avoid over-writing previous files
-    origParam = deepcopy(phot_obj.param)
-    origName = origParam['srcNameShort']
-    param = deepcopy(origParam)
-    
-    ## show the most compact and most expanded configurations
-    srcPlots = srcRange
-    backStartPlots = [np.max([srcRange[0],backRange[0]]),
-                      backRange[1] - minBackground]
-    backEndPlots = [backStartPlots[0] + minBackground,
-                    backRange[1]]
-    plotHeights = [backRange[1]+5,backRange[1] + 5]
-    for i, oneConfig in enumerate(['compact','expanded']):
-        param['srcNameShort'] = origName + '_' + oneConfig
-        if phot_obj.pipeType == 'photometry':
-            param['apRadius'] = srcPlots[i]
-            param['backStart'] = backStartPlots[i]
-            param['backEnd'] = backEndPlots[i]
-            new_phot = phot(directParam=param)
-            new_phot.showStamps(boxsize=plotHeights[i])
-        elif phot_obj.pipeType == 'spectroscopy':
-            param['apRadius'] = srcPlots[i]
-            param['backStart'] = backStartPlots[i]
-            param['backEnd'] = backEndPlots[i]
-            new_phot = phot(directParam=param)
-            new_phot.showStamps(boxsize=plotHeights[i])
-        else:
-            raise Exception("Unrecognized pipType")
-    
-    apertureSets = []
-    t = Table(names=['src','back_st','back_end'])
-    for srcSize in np.arange(srcRange[0],srcRange[1],stepSizeSrc):
-        ## start from the backRange min or the src, whichever is bigger
-        back_st_minimum = np.max([srcSize,backRange[0]])
-        
-        ## finish at the backRange max, but allow thickness
-        back_st_maximum = backRange[1] - minBackground
-        
-        for back_st in np.arange(back_st_minimum,back_st_maximum,stepSizeBack):
-            ## start the outer background annulus, at least minBackground away
-            back_end_minimum = back_st + minBackground
-            back_end_maximum = backRange[1]
-            for back_end in np.arange(back_end_minimum,back_end_maximum,stepSize):
-                apertureSets.append([srcSize,back_st,back_end])
-                t.add_row([srcSize,back_st,back_end])
-                #print("src: {}, back st: {}, back end: {}".format(srcSize,back_st,back_end))
-                
-    ## for the rest, it will save a common file name
-    param['srcNameShort'] = origName + '_aperture_sizing'
-    
-    stdevArr, theo_err, mad_arr = [], [], []
-    for i,apSet in enumerate(apertureSets):
-        print("src: {}, back st: {}, back end: {}".format(apSet[0],apSet[1],apSet[2]))
-        param['apRadius'] = apSet[0]
-        param['backStart'] = apSet[1]
-        param['backEnd'] = apSet[2]
-        
-        new_phot = phot(directParam=param)
-        new_phot.do_phot(useMultiprocessing=True)
-        noiseTable = new_phot.print_phot_statistics(refCorrect=True,returnOnly=True,shorten=shorten)
-        stdevArr.append(noiseTable['Stdev (%)'][0])
-        theo_err.append(noiseTable['Theo Err (%)'][0])
-        mad_arr.append(noiseTable['MAD (%)'][0])
-    t['stdev'] = stdevArr
-    t['theo_err'] = theo_err
-    t['mad_arr'] = mad_arr
-    
-    outTable_name = 'aperture_opt_{}_src_{}_{}_step_{}_back_{}_{}_step_{}.csv'.format(new_phot.dataFileDescrip,
-                                                                              srcRange[0],srcRange[1],stepSizeSrc,
-                                                                              backRange[0],backRange[1],
-                                                                              stepSizeBack)
-    outTable_path = os.path.join(new_phot.baseDir,'tser_data','phot_aperture_optimization',outTable_name)
-    t.write(outTable_path,overwrite=True)
-    
-    print('Writing table to {}'.format(outTable_path))
-    
-    ind = np.argmin(t['stdev'])
-    print("Min Stdev results:")
-    
-    print(t[ind])
-    
-    return t
-
-def plot_apsizes(apertureSweepFile,showPlot=True):
-    """
-    Plot the aperture sizes calculated from :any:`aperture_size_sweep`
-    
-    Parameters
-    ----------
-    apertureSweepFile: str
-        A .csv file created by aperture_size_sweep
-    showPlot: bool
-        Show the plot w/ matplotlib? otherwise, it saves to file
-    """
-    
-    dat = ascii.read(apertureSweepFile)
-    
-    fig, axArr2D = plt.subplots(3,3,sharey=True)
-    
-    ## share axes along columns
-    for oneColumn in [0,1,2]:
-        axTop = axArr2D[0,oneColumn]
-        axMid = axArr2D[1,oneColumn]
-        axBot = axArr2D[2,oneColumn]
-        axTop.get_shared_x_axes().join(axMid, axBot)
-    
-    labels = ['Source Radius','Back Start','Back End']
-    keys = ['src','back_st','back_end']
-    
-    statistics = ['stdev','theo_err','mad_arr']
-    for statInd,statistic in enumerate(statistics):
-        axArr1D = axArr2D[statInd]
-        for ind, ax in enumerate(axArr1D):
-            ax.semilogy(dat[keys[ind]],dat[statistic],'.')
-            ax.set_xlabel(labels[ind])
-            if ind==0:
-                ax.set_ylabel(statistic)
-    if showPlot == True:
-        fig.show()
-    else:
-        raise NotImplementedError
-
 def get_baseDir():
     if 'TSHIRT_DATA' in os.environ:
         baseDir = os.environ['TSHIRT_DATA']
@@ -2356,8 +2202,11 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
     plotEachStep: bool
         Plot each step of the fitting?
     
-    Example Usage:
-    ----------
+    
+    Example
+    --------------
+    .. code-block:: python
+    
         import numpy as np
         from tshirt.pipeline import phot_pipeline
         import matplotlib.pyplot as plt
