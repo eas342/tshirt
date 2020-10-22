@@ -278,9 +278,9 @@ def adjust_aperture_set(phot_obj,param,srcSize,backStart,backEnd,
         backLocList = [[backLoc_1_start,backLoc_1_end],
                        [backLoc_2_start,backLoc_2_end]]
         if param['dispDirection'] == 'x':
-            param['bkgRegionsX'] = backLocList
-        else:
             param['bkgRegionsY'] = backLocList
+        else:
+            param['bkgRegionsX'] = backLocList
         
         new_phot = spec(directParam=param)
         if showPlot == True:
@@ -367,11 +367,21 @@ def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
         new_phot = adjust_aperture_set(phot_obj,param,apSet[0],apSet[1],apSet[2],
                                        showPlot=False)
         
-        new_phot.do_phot(useMultiprocessing=True)
-        noiseTable = new_phot.print_phot_statistics(refCorrect=True,returnOnly=True,shorten=shorten)
+        if phot_obj.pipeType == 'photometry':
+            new_phot.do_phot(useMultiprocessing=True)
+            noiseTable = new_phot.print_phot_statistics(refCorrect=True,returnOnly=True,shorten=shorten)
+            
+        elif phot_obj.pipeType == 'spectroscopy':
+            new_phot.do_extraction(useMultiprocessing=True)
+            noiseTable = new_phot.print_noise_wavebin(shorten=shorten,nbins=1,recalculate=True)
+        
+        else:
+            raise Exception("Unrecognized pipeType")
         stdevArr.append(noiseTable['Stdev (%)'][0])
         theo_err.append(noiseTable['Theo Err (%)'][0])
         mad_arr.append(noiseTable['MAD (%)'][0])
+        
+        
     t['stdev'] = stdevArr
     t['theo_err'] = theo_err
     t['mad_arr'] = mad_arr
@@ -380,7 +390,14 @@ def aperture_size_sweep(phot_obj,stepSize=5,srcRange=[5,20],backRange=[5,28],
                                                                               srcRange[0],srcRange[1],stepSizeSrc,
                                                                               backRange[0],backRange[1],
                                                                               stepSizeBack)
-    outTable_path = os.path.join(new_phot.baseDir,'tser_data','phot_aperture_optimization',outTable_name)
+    if phot_obj.pipeType == 'photometry':
+        tableDir = 'phot_aperture_optimization'
+    elif phot_obj.pipeType == 'spectroscopy':
+        tableDir = 'spec_aperture_optimization'
+    else:
+        raise Exception("Unrecognized pipeType")
+    
+    outTable_path = os.path.join(new_phot.baseDir,'tser_data',tableDir,outTable_name)
     t.write(outTable_path,overwrite=True)
     
     print('Writing table to {}'.format(outTable_path))
