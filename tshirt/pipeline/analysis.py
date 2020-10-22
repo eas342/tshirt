@@ -12,6 +12,7 @@ from .phot_pipeline import robust_poly
 from .phot_pipeline import phot
 from .spec_pipeline import spec
 from copy import deepcopy
+import os
 
 def bin_examine():
     t = Table.read('tser_data/refcor_phot/refcor_phot_S02illum1miAll_GLrun104.fits')
