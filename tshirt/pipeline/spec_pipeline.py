@@ -1669,6 +1669,10 @@ class spec(phot_pipeline.phot):
         t['Stdev (%)'] = np.round(np.std(binGrid,axis=0) * 100.,4)
         t['Theo Err (%)'] = np.round(np.median(binGrid_err,axis=0) * 100.,4)
         
+        medianV = np.median(binGrid,axis=0)
+        absDeviation = np.abs(binGrid - medianV)
+        t['MAD (%)'] = np.round(np.median(absDeviation,axis=0) * 100.,4)
+        
         HDUList.close()
         return t
     
