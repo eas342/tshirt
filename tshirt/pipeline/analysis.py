@@ -3,6 +3,7 @@ import numpy as np
 from scipy.stats import binned_statistic
 import matplotlib.pyplot as plt
 from astropy.table import Table
+from astropy.io import fits, ascii
 from scipy import signal
 from scipy.interpolate import interp1d
 from scipy import ndimage
