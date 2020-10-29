@@ -15,7 +15,7 @@ Then proceed to the steps below.
    :code:`git clone https://github.com/eas342/tshirt`
 - Navigate to the :code:`tshirt` directory:
    :code:`cd tshirt`
-- Reinstall
+- Install
    :code:`pip install .`
 
 Setting up a :code:`TSHIRT_DATA` directory
