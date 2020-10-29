@@ -33,7 +33,7 @@ except ImportError as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
 
 from . import phot_pipeline
-from . import analysis
+from . import utils
 from . import instrument_specific
 
 path_to_example = "parameters/spec_params/example_spec_parameters.yaml"

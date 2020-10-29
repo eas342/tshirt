@@ -23,7 +23,6 @@ from copy import deepcopy
 import yaml
 import warnings
 from scipy.stats import binned_statistic
-from scipy.interpolate import UnivariateSpline, LSQUnivariateSpline
 from astropy.table import Table
 import multiprocessing
 from multiprocessing import Pool
@@ -38,7 +37,7 @@ try:
     from bokeh.models import WheelZoomTool
 except ImportError as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
-
+from .utils import robust_poly
 
 def run_one_phot_method(allInput):
     """
@@ -2162,155 +2161,5 @@ def seeing_summary():
     t['File'] = fileArr
     t['FWHM'] = medFWHMArr
     return t
-
-def robust_statistics(data,method='robust mean',nsig=10):
-    median_val = np.median(data)
-    mad = np.median(np.abs(data - median_val))
-    if method == 'median':
-        oneStatistic = median_val
-        err = mad / np.sqrt(np.sum(np.isfinite(data)))
-    elif method == 'robust mean':
-        goodp = np.abs(data - median_val) < (nsig * mad)
-        oneStatistic = np.mean(data[goodp])
-        err = mad / np.sqrt(np.sum(goodp))
-    else:
-        raise Exception("Unrecognized statistic {}".format(method))
-    
-    return oneStatistic, err
-
-def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None,
-                preScreen=False,plotEachStep=False):
-    """
-    Fit a function (with sigma rejection) to a curve
-    
-    Parameters
-    -----------
-    x: numpy array
-        Independent variable
-    y: numpy array
-        Dependent variable
-    polyord: int
-        order of the fit (number of terms). polyord=1 is a linear fit,
-        2 is a quadratic, etc.
-    sigreject: float
-        The 'sigma' rejection level in terms of median absolute deviations
-    useSpline: bool
-        Do a spline fit?
-    knots: int or None
-        How many knots to use if doing a spline fit
-    preScreen: bool
-        Pre-screen by removing outliers from the median (which might fail for large slopes)
-    plotEachStep: bool
-        Plot each step of the fitting?
-    
-    
-    Example
-    --------------
-    .. code-block:: python
-    
-        import numpy as np
-        from tshirt.pipeline import phot_pipeline
-        import matplotlib.pyplot as plt
-        
-        x = np.arange(30)
-        y = np.random.randn(30) + x
-        y[2] = 80 ## an outlier
-        polyfit = phot_pipeline.robust_poly(x,y,1)
-        ymodel = np.polyval(polyfit,x)
-        plt.plot(x,y,'o',label='input')
-        plt.plot(x,ymodel,label='fit')
-        plt.show()
-        
-    """
-    finitep = np.isfinite(y) & np.isfinite(x)
-    
-    if preScreen == True:
-        resid = np.abs(y - np.nanmedian(y))
-        madev = np.nanmedian(resid)
-        goodp = np.zeros_like(resid,dtype=np.bool)
-        goodp[finitep] = (np.abs(resid[finitep]) < (sigreject * madev))
-    else:
-        goodp = finitep ## Start with the finite points
-        
-    for iter in range(iteration):
-        if (useSpline == True) & (knots is not None):
-            pointsThreshold = len(knots) + polyord
-        else:
-            pointsThreshold = polyord
-        
-        if np.sum(goodp) <= pointsThreshold:
-            warntext = "Less than "+str(polyord)+"points accepted, returning flat line"
-            warnings.warn(warntext)
-            
-            if useSpline == True:
-                spl = UnivariateSpline([0,1,2],[0,0,0],k=1)
-            else:
-                coeff = np.zeros(polyord + 1)
-                coeff[0] = 1.0
-        else:
-            if useSpline == True:
-                
-                if knots is None:
-                    spl = UnivariateSpline(x[goodp], y[goodp], k=polyord, s=sSpline)
-                else:
-                    try:
-                        spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
-                    except ValueError as inst:
-                        knownFailures = ((str(inst) == 'Interior knots t must satisfy Schoenberg-Whitney conditions') | 
-                                         ("The input parameters have been rejected by fpchec." in str(inst)))
-                        if knownFailures:
-                            warnings.warn("Spline fitting failed because of Schoenberg-Whitney conditions. Trying to eliminate knots without sufficient data")
-                            
-                            if plotEachStep == True:
-                                plt.plot(x[goodp],y[goodp],'o',label='data')
-                                plt.plot(knots,np.ones_like(knots) * np.median(y[goodp]),'o',label='knots',markersize=10)
-                            
-                            keepKnots = np.zeros_like(knots,dtype=np.bool)
-                            nKnots = len(knots)
-                            for ind,oneKnot in enumerate(knots):
-                                if ind == 0:
-                                    if np.sum(x[goodp] < oneKnot) > 0:
-                                        keepKnots[ind] = True
-                                elif ind == nKnots - 1:
-                                    if np.sum(x[goodp] > oneKnot) > 0:
-                                        keepKnots[ind] = True
-                                else:
-                                    pointsTest = ((np.sum((x[goodp] > knots[ind-1]) & (x[goodp] < oneKnot)) > 0 ) &
-                                                  (np.sum((x[goodp] > oneKnot) & (x[goodp] < knots[ind+1])) > 0 ))
-                                    if pointsTest == True:
-                                        keepKnots[ind] = True
-                            if plotEachStep == True:
-                                plt.plot(knots[keepKnots],np.ones_like(knots[keepKnots]) * np.median(y[goodp]),'o',label='knots to keep')
-                                plt.show()
-                            
-                            knots = knots[keepKnots] 
-                            spl = LSQUnivariateSpline(x[goodp], y[goodp], knots, k=polyord)
-                            
-                        else:
-                            raise inst
-                ymod = spl(x)
-            else:
-                coeff = np.polyfit(x[goodp],y[goodp],polyord)
-                yPoly = np.poly1d(coeff)
-                ymod = yPoly(x)
-            
-            resid = np.abs(ymod - y)
-            madev = np.nanmedian(resid)
-            if madev > 0:
-                ## replacing the old line to avoid runtime errors
-                ## goodp = (np.abs(resid) < (sigreject * madev))
-                goodp = np.zeros_like(resid,dtype=np.bool)
-                goodp[finitep] = (np.abs(resid[finitep]) < (sigreject * madev))
-        
-        if plotEachStep == True:
-            plt.plot(x,y,'o')
-            plt.plot(x[goodp],y[goodp],'o')
-            plt.plot(x,ymod)
-            plt.show()
-    
-    if useSpline == True:
-        return spl
-    else:
-        return coeff
 
 
