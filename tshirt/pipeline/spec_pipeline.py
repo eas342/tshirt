@@ -1972,6 +1972,21 @@ comparisonFileNames = glob.glob(os.path.join(baseDir,'tser_data','spec','spec_o9
 
 def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=False,
                     normalize=False):
+    """
+    Compare multiple spectra
+    
+    Parameters
+    ----------
+    specType: str
+        Which spectrum extension to read? (eg. 'Optimal' vs 'Sum')
+    showPlot: bool
+        Render the matplotlib plot? If True, it is rendered as a matplotlib
+                    widget, not saved
+        If False, the plot is saved to file only
+    normalize: bool
+        Normalize all the spectra by dividing by the median first?
+    
+    """
     fig, ax = plt.subplots()
     for oneFile in fileNames:
         x, y, yerr = get_spectrum(oneFile,specType=specType)
