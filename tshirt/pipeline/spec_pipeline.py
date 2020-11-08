@@ -1981,8 +1981,7 @@ def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=Fa
         Which spectrum extension to read? (eg. 'Optimal' vs 'Sum')
     showPlot: bool
         Render the matplotlib plot? If True, it is rendered as a matplotlib
-                    widget, not saved
-        If False, the plot is saved to file only
+        widget, not saved. If False, the plot is saved to file only
     normalize: bool
         Normalize all the spectra by dividing by the median first?
     
