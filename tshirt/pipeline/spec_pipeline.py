@@ -1153,14 +1153,14 @@ class spec(phot_pipeline.phot):
             else:
                 doDiagnostics = False
             
-            offsetX, offsetInd = analysis.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=Noffset,
+            offsetX, offsetInd = utils.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=Noffset,
                                                           diagnostics=doDiagnostics,subPixel=True,
                                                           lowPassFreq=self.param['lowPassFreqCC'],
                                                           highPassFreq=self.param['hiPassFreqCC'])
             if doDiagnostics == True:
                 pdb.set_trace()
             
-            align2D[imgInd,:] = analysis.roll_pad(data2D[imgInd,:],offsetInd * self.param['specShiftMultiplier'])
+            align2D[imgInd,:] = utils.roll_pad(data2D[imgInd,:],offsetInd * self.param['specShiftMultiplier'])
             offsetIndArr[imgInd] = offsetInd * self.param['specShiftMultiplier']
         
         return align2D, offsetIndArr
@@ -1249,7 +1249,7 @@ class spec(phot_pipeline.phot):
             cleanY = np.zeros_like(y)
             goodPts = np.isfinite(y)
             cleanY[goodPts] = y[goodPts]
-            yFlat = analysis.flatten(x,cleanY,highPassFreq=0.05)
+            yFlat = utils.flatten(x,cleanY,highPassFreq=0.05)
             ySmooth = y - yFlat
             specFF = np.ones_like(y)
             dispPix = self.param['dispPixels']
