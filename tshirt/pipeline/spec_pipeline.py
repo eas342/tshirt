@@ -1460,7 +1460,7 @@ class spec(phot_pipeline.phot):
     
     def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,xLim=None,
                             recalculate=False,dispIndices=None,differential=False,
-                            interactive=False):
+                            interactive=False,unit='fraction'):
         """
         Plot a normalized lightcurve for wavelength-binned data one wavelength at a time with
         an offset between the lightcurves.
@@ -1501,6 +1501,8 @@ class spec(phot_pipeline.phot):
             where you can hover over data points to find out the file name for them. It saves
             the html plot in plots/spectra/interactive/. If False,
             it will create a regular matplotlib plot.
+        unit: str
+            Flux unit. 'fraction' or 'ppm'
         """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices,recalculate=recalculate)
@@ -1556,7 +1558,12 @@ class spec(phot_pipeline.phot):
         else:
             fig, ax = plt.subplots()
             for ind,oneDisp in enumerate(disp):
-                ax.errorbar(time - offset_time,binGrid[:,ind] - offset * ind,fmt='o')
+                if unit == 'fraction':
+                    y_plot = binGrid[:,ind] - offset * ind
+                else:
+                    y_plot = (binGrid[:,ind] - 1.0) * 1e6 - offset * ind * 1e6
+                
+                ax.errorbar(time - offset_time,y_plot,fmt='o')
             
             if yLim is not None:
                 ax.set_ylim(yLim[0],yLim[1])
@@ -1565,7 +1572,10 @@ class spec(phot_pipeline.phot):
                 ax.set_xlim(xLim[0],xLim[1])
             
             ax.set_xlabel('Time (JD - {})'.format(offset_time))
-            ax.set_ylabel('Normalized Flux')
+            if unit == 'fraction':
+                ax.set_ylabel('Normalized Flux')
+            else:
+                ax.set_ylabel('(Normalized Flux - 1.0) (ppm)')
             
             if savePlot == True:
                 outName = 'wavebin_tser_{}.pdf'.format(self.dataFileDescrip)
