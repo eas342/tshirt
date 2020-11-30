@@ -1,5 +1,6 @@
 from pipeline import phot_pipeline
 from pipeline import spec_pipeline
+from pipeline import analysis
 from astropy.io import fits, ascii
 import os
 import matplotlib.pyplot as plt
@@ -83,3 +84,11 @@ def compare_colrow_and_annulus_backsub(recalculate=False):
     axArr[1].set_ylabel("Raw - Back")
     axArr[2].set_ylabel("Backg Flux")
     fig.show()
+    
+def test_spec_apsweep():
+    """
+    Test the spectroscopic aperture sweep
+    """
+    spec = spec_pipeline.spec('parameters/spec_params/test_parameters/corot1_for_ap_sweep.yaml')
+    analysis.aperture_size_sweep(spec)
+    
