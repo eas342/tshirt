@@ -2,6 +2,7 @@
 from setuptools import setup#, find_packages
 
 with open("README.md", "r") as fh:
+    ## skip the HTML, which doesn't work on PyPI
     long_description = "".join(fh.readlines()[4:])
 
 setup(
