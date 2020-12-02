@@ -21,6 +21,7 @@ from astropy.table import Table
 from astropy.stats import LombScargle
 import multiprocessing
 from multiprocessing import Pool
+import tqdm
 try:
     import bokeh.plotting
     from bokeh.models import ColumnDataSource, HoverTool
@@ -242,7 +243,7 @@ class spec(phot_pipeline.phot):
             outputSpec = phot_pipeline.run_multiprocessing_phot(self,fileCountArray,method='spec_for_one_file')
         else:
             outputSpec = []
-            for ind in fileCountArray:
+            for ind in tqdm.tqdm(fileCountArray):
                 outputSpec.append(self.spec_for_one_file(ind))
         
         timeArr = []
@@ -791,8 +792,6 @@ class spec(phot_pipeline.phot):
         diagnoseCovariance: bool
             Diagnostic information for the covariance profile weighting
         """
-        if np.mod(ind,15) == 0:
-            print("On {} of {}".format(ind,len(self.fileL)))
         
         oneImgName = self.fileL[ind]
         img, head = self.getImg(oneImgName)
