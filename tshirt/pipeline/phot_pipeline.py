@@ -29,6 +29,8 @@ from multiprocessing import Pool
 import time
 import logging
 import urllib
+import tqdm
+
 maxCPUs = multiprocessing.cpu_count() // 3
 try:
     import bokeh.plotting
@@ -73,12 +75,14 @@ def run_multiprocessing_phot(photObj,fileIndices,method='phot_for_one_file'):
     allInput = []
     for oneInd in fileIndices:
         allInput.append([photObj,oneInd,method])
-    if len(fileIndices) < maxCPUs:
+    
+    n_files = len(fileIndices)
+    if n_files < maxCPUs:
         raise Exception("Fewer files to process than CPUs, this can confuse multiprocessing")
     
     p = Pool(maxCPUs)
+    outputDat = list(tqdm.tqdm(p.imap(run_one_phot_method,allInput),total=n_files))
     
-    outputDat = p.map(run_one_phot_method,allInput)
     p.close()
     return outputDat
 
@@ -857,8 +861,6 @@ class phot:
         return readNoise
     
     def phot_for_one_file(self,ind):
-        if np.mod(ind,15) == 0:
-            print("On "+str(ind)+' of '+str(len(self.fileL)))
         
         oneImg = self.fileL[ind]
         img, head = self.getImg(oneImg)
@@ -1060,7 +1062,7 @@ class phot:
             outputPhot = run_multiprocessing_phot(self,fileCountArray)
         else:
             outputPhot = []
-            for ind in fileCountArray:
+            for ind in tqdm.tqdm(fileCountArray):
                 outputPhot.append(self.phot_for_one_file(ind))
         
         ## unpack the results
