@@ -976,7 +976,7 @@ class spec(phot_pipeline.phot):
         return y / modelF
     
     def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal'],
-                      normalize=False,numSplineKnots=None,savePlot=False):
+                      normalize=False,numSplineKnots=None,showPlot=True):
         """
         Plot one example spectrum after extraction has been run
         
@@ -996,9 +996,10 @@ class spec(phot_pipeline.phot):
             Normalize and/or flatten spectrum using `self.norm_spec`
         numSplitKnots: int or None, optional
             Number of spline knots to pass to `self.norm_spec` for flattening
-        savePlot: bool
-            Save the plot? If True, saves an image
-            If False, it renders the image with plt.show()
+        showPlot: bool
+            Show the plot in widget?
+            If True, it renders the image with plt.show()
+            If False, saves an image
         """
         fig, ax = plt.subplots()
         
@@ -1010,18 +1011,25 @@ class spec(phot_pipeline.phot):
         ax.legend()
         ax.set_xlabel("{} pixel".format(self.param['dispDirection'].upper()))
         ax.set_ylabel("Counts (e$^-$)")
-        if savePlot == True:
+        if showPlot == True:
+            plt.show()
+        else:
             outName = '{}_ind_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
             outPath = os.path.join(self.baseDir,'plots','spectra','individual_spec',outName)
             fig.savefig(outPath,bbox_inches='tight')
-        else:
-            plt.show()
+        
         plt.close(fig)
         
-    def periodogram(self,src=0,ind=None,specType='Optimal',savePlot=False,
+    def periodogram(self,src=0,ind=None,specType='Optimal',showPlot=True,
                     transform=None,trim=False,logY=True,align=False):
         """
         Plot a periodogram of the spectrum to search for periodicities
+                    
+        Parameters
+        -----------
+        showPlot: bool
+            If True, a plot is rendered in matplotlib widget
+            If False, a plot is saved to file
         """
         
         if ind == None:
@@ -1094,13 +1102,13 @@ class spec(phot_pipeline.phot):
         
         #ax.set_xlim(100,1e4)
         
-        if savePlot == True:
+        if showPlot == True:
+            plt.show()
+        else:
             periodoName = '{}_spec_periodo_{}_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'],transform)
             outPath = os.path.join(self.baseDir,'plots','spectra','periodograms',periodoName)
             fig.savefig(outPath)
             plt.close(fig)
-        else:
-            plt.show()
     
     def get_spec(self,specType='Optimal',ind=None,src=0):
         """
@@ -1457,7 +1465,7 @@ class spec(phot_pipeline.phot):
     def get_offset_time(self,time):
         return np.floor(np.min(time))
     
-    def plot_wavebin_series(self,nbins=10,offset=0.005,savePlot=True,yLim=None,xLim=None,
+    def plot_wavebin_series(self,nbins=10,offset=0.005,showPlot=False,yLim=None,xLim=None,
                             recalculate=False,dispIndices=None,differential=False,
                             interactive=False,unit='fraction'):
         """
@@ -1470,13 +1478,14 @@ class spec(phot_pipeline.phot):
             The number of wavelength bins to use
         offset: float
             The normalized flux offset between wavelengths
-        savePlot: bool
-            Save the plot? 
-            This is superseded by the interactive keyword. If interactive is True,
-            savePlot is ignored and it saves
+        showPlot: bool
+            Show the plot widget?
+            The result also depends on the interactive keyword. If interactive is True,
+            showPlot is ignored and it saves
             an html file in plots/spectra/interactive/.
-            If True (and interactive is False), it is saved in 
-            plots/spectra/wavebin_tseries/. If False (and interactive is False),
+            If False (and interactive is False), it is saved in 
+            plots/spectra/wavebin_tseries/.
+            If True (and interactive is False),
             no plot is saved and instead the plot is displayed in the
             matplotlib framework.
         yLim: list of 2 elements or None
@@ -1576,14 +1585,14 @@ class spec(phot_pipeline.phot):
             else:
                 ax.set_ylabel('(Normalized Flux - 1.0) (ppm)')
             
-            if savePlot == True:
+            if showPlot == True:
+                fig.show()
+            else:
                 outName = 'wavebin_tser_{}.pdf'.format(self.dataFileDescrip)
                 outPath = os.path.join(self.baseDir,'plots','spectra','wavebin_tseries',outName)
                 fig.savefig(outPath)
                 plt.close(fig)
-            
-            else:
-                fig.show()
+
             
             HDUList.close()
     
@@ -1703,7 +1712,7 @@ class spec(phot_pipeline.phot):
         
         return t
     
-    def plot_broadband_series(self,src=0,savePlot=False,matchIraf=False):
+    def plot_broadband_series(self,src=0,showPlot=True,matchIraf=False):
         t = self.get_broadband_series(src=src)
         offset_time = self.get_offset_time(t['time'])
         
@@ -1723,12 +1732,13 @@ class spec(phot_pipeline.phot):
         
         ax.plot(x,t['Norm Flux'],marker)
         ax.set_ylabel("Normalized Flux")
-        if savePlot == True:
+        if showPlot == True:
+            fig.show()
+        else:
             bb_series_name = '{}_bb_series_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
             outName = os.path.join(self.baseDir,'plots','spectra','broadband_series',bb_series_name)
             fig.savefig(outName)
-        else:
-            fig.show()
+
     
     
     def showStarChoices(self,img=None,head=None,showBack=True,
@@ -1936,7 +1946,7 @@ class batch_spec(phot_pipeline.batchPhot):
         self.batch_run('plot_dynamic_spec',saveFits=True)
     
     def plot_all(self):
-        self.batch_run('plot_one_spec',savePlot=True)
+        self.batch_run('plot_one_spec',showPlot=False)
     
     def test_apertures(self):
         raise NotImplementedError('still working on apertures')
