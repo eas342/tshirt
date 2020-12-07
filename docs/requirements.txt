@@ -6,3 +6,4 @@ numpy
 scipy
 bokeh
 sphinx-rtd-theme
+tqdm
