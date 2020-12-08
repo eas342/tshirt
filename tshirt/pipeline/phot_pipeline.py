@@ -2083,6 +2083,9 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         ymod = np.polyval(yPoly,x)
         y = y / ymod
     
+    if yUnit == 'ppm':
+        y = y * 1e6
+        yerr = yerr * 1e6
     nPt = len(y)
     
     logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),20)
@@ -2131,7 +2134,9 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     ax.legend()
     ax.set_title("Allan Variance (Linear De-trend = {})".format(removeLinear))
     outName = 'all_var_{}_removelinear_{}.pdf'.format(customShortName,removeLinear)
-    outPath = os.path.join(self.baseDir,'plots','allan_variance',outName)
+    
+    baseDir = get_baseDir()
+    outPath = os.path.join(baseDir,'plots','allan_variance',outName)
     fig.savefig(outPath,
                 bbox_inches='tight')
     
