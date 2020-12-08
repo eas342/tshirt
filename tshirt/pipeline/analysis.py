@@ -14,6 +14,7 @@ from .phot_pipeline import phot
 from .spec_pipeline import spec
 from copy import deepcopy
 import os
+import tqdm
 
 def bin_examine():
     t = Table.read('tser_data/refcor_phot/refcor_phot_S02illum1miAll_GLrun104.fits')
@@ -248,4 +249,31 @@ def plot_apsizes(apertureSweepFile,showPlot=True):
         fig.show()
     else:
         raise NotImplementedError
+
+def backsub_list(specObj,outDirectory='tmp'):
+    """
+    Save all the background-subtracted images
+    
+    Parameters
+    -----------
+    specObj: a `any::tshirt.pipeline.spec_pipeline.spec` object
+    """
+    
+    for i in tqdm.tqdm(range(len(specObj.fileL))):
+        oneFile = specObj.fileL[i]
+        # read in
         
+        img, head = specObj.getImg(oneFile)
+        
+        # do backsub
+        subImg, bkgModel, subHead = specObj.do_backsub(img,head,i,saveFits=False,
+                                                       directions=specObj.param['bkgSubDirections'])
+        
+        ## save
+        baseName = os.path.splitext(os.path.basename(oneFile))[0]
+        outName = baseName + '_backsub.fits'
+        outPath = os.path.join(outDirectory,outName)
+        HDUList = fits.PrimaryHDU(subImg,subHead)
+        HDUList.writeto(outPath)
+    
+    
