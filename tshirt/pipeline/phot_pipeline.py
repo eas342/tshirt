@@ -736,8 +736,6 @@ class phot:
     
     def get_allcen_img(self,ind,showStamp=False):
         """ Gets the centroids for all sources in one image """
-        if np.mod(ind,15) == 0:
-            print("On {} of {}".format(ind,len(self.fileL)))
         img, head = self.getImg(self.fileL[ind])
         
         allX, allY = [], []
