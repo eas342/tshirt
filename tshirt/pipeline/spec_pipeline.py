@@ -393,7 +393,7 @@ class spec(phot_pipeline.phot):
             else:
                 dep_var = img[:,cross_Ind]
             polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
-                                                preScreen=True)
+                                                preScreen=self.param['backPreScreen'])
             dep_var_model = np.polyval(polyFit,ind_var)
             
             if oneDirection == 'X':

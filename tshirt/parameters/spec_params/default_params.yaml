@@ -29,6 +29,7 @@ itimeKeyword: INTTIME ## The FITS keyword describing integration time
 readNoise: 14 ## Read noise in electrons
 detectorGain: 1.8 ## Optionally specify the detector gain e-/DN
 dateFormat: Two Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+backPreScreen: False ## Pre-screen the background for outliers before trying to fit?
 splineSpecFitOrder: 3 ## order of the Spline to fit along the dispersion direction (for profile & badpix)
 splineSigRej: 2 ## number of sigma to reject when fitting the Splines along dispersion direction
 splinePreScreen: False ## pre-screen the points going into spline fitting?
