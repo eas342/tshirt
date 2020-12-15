@@ -259,11 +259,17 @@ class phot:
             else:
                 raise ValueError('Unrecognized background geometry')
     
+    def get_default_index(self):
+        """
+        Get the default index from the file list
+        """
+        return self.nImg // 2
+    
     def get_default_im(self,img=None,head=None):
         """ Get the default image for postage stamps or star identification maps"""
         ## Get the data
         if img is None:
-            img, head = self.getImg(self.fileL[self.nImg // 2])
+            img, head = self.getImg(self.fileL[self.get_default_index()])
         
         return img, head
     
@@ -279,7 +285,7 @@ class phot:
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
                         srcLabel=None,figSize=None,showPlot=False,
                         apColor='black',backColor='black',
-                        vmin=None,vmax=None):
+                        vmin=None,vmax=None,index=None):
         """
         Show the star choices for photometry
         
@@ -308,6 +314,8 @@ class phot:
             A value for the :code:`matplotlib.pyplot.plot.imshow` vmin parameter
         vmax: float or None
             A value for the :code:`matplotlib.pyplot.plot.imshow` vmax parameter
+        index: int or None
+            The index of the file name. If None, it uses the default
         
         """
         fig, ax = plt.subplots(figsize=figSize)
@@ -333,6 +341,9 @@ class phot:
             apsShow = deepcopy(self.srcApertures)
             apsShow.positions = showApPos
             
+            if index is None:
+                index = self.get_default_index()
+            self.adjust_apertures(index)
             
             apsShow.plot(ax=ax,color=apColor)
             if self.param['bkgSub'] == True:
@@ -375,8 +386,15 @@ class phot:
             plt.close(fig)
 
     def showStamps(self,img=None,head=None,custPos=None,custFWHM=None,
-                   vmin=None,vmax=None,showPlot=False,boxsize=None):
-        """Shows the fixed apertures on the image with postage stamps surrounding sources """ 
+                   vmin=None,vmax=None,showPlot=False,boxsize=None,index=None):
+        """
+        Shows the fixed apertures on the image with postage stamps surrounding sources
+        
+        Parameters
+        -----------
+        index: int
+            Index of the file list. This is needed if scaling apertures
+        """ 
         
         ##  Calculate approximately square numbers of X & Y positions in the grid
         numGridY = int(np.floor(np.sqrt(self.nsrc)))
@@ -389,6 +407,11 @@ class phot:
             boxsize = self.param['boxFindSize']
         
         showApPos = self.get_default_cen(custPos=custPos)
+        
+        if index is None:
+            index = self.get_default_index()
+        
+        self.adjust_apertures(index)
         
         for ind, onePos in enumerate(showApPos):
             if self.nsrc == 1:
@@ -420,10 +443,10 @@ class phot:
             ax.get_yaxis().set_visible(False)
             srcX, srcY = onePos[0] - xStamp[0],onePos[1] - yStamp[0]
             circ = plt.Circle((srcX,srcY),
-                              self.param['apRadius'],edgecolor='red',facecolor='none')
+                              self.srcApertures.r,edgecolor='red',facecolor='none')
             ax.add_patch(circ)
             if self.param['bkgSub'] == True:
-                for oneRad in [self.param['backStart'],self.param['backEnd']]:
+                for oneRad in [self.bkgApertures.r_in, self.bkgApertures.r_out]:
                     circ = plt.Circle((srcX + self.param['backOffset'][0],srcY + self.param['backOffset'][1]),
                                       oneRad,edgecolor='blue',facecolor='none')
                     ax.add_patch(circ)
@@ -482,7 +505,7 @@ class phot:
         """
         self.get_allimg_cen()
         if index == None:
-            index = self.nImg // 2
+            index = self.get_default_index()
         
         img, head = self.getImg(self.fileL[index])
         
@@ -492,9 +515,11 @@ class phot:
             cen = self.cenArr[index]
         
         if ptype == 'Stamps':
-            self.showStamps(custPos=cen,img=img,head=head,vmin=vmin,vmax=vmax,showPlot=showPlot,boxsize=boxsize)
+            self.showStamps(custPos=cen,img=img,head=head,vmin=vmin,vmax=vmax,showPlot=showPlot,
+                            boxsize=boxsize,index=index)
         elif ptype == 'Map':
-            self.showStarChoices(custPos=cen,img=img,head=head,showAps=True,showPlot=showPlot)
+            self.showStarChoices(custPos=cen,img=img,head=head,showAps=True,showPlot=showPlot,
+                            index=index)
         else:
             print('Unrecognized plot type')
             
@@ -858,7 +883,46 @@ class phot:
         
         return readNoise
     
+    def adjust_apertures(self,ind):
+        """
+        Adjust apertures, if scaling by FWHM
+        
+        Parameters
+        ----------
+        ind: int
+            the index of `self.fileList`.
+        
+        """
+        if self.param['scaleAperture'] == True:
+            medianFWHM = np.median(self.fwhmArr[ind])
+        
+            minFWHMallowed, maxFWHMallowed = self.param['apRange']
+            
+            if medianFWHM < minFWHMallowed:
+                warnings.warn("FWHM found was smaller than apRange ({}) px. Using {} for Image {}".format(minFWHMallowed,minFWHMallowed,self.fileL[ind]))
+                medianFWHM = minFWHMallowed
+            elif medianFWHM > maxFWHMallowed:
+                warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}".format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
+                medianFWHM = maxFWHMallowed
+            
+            if self.param['bkgGeometry'] == 'CircularAnnulus':
+                self.srcApertures.r = medianFWHM * self.param['apScale']
+                self.bkgApertures.r_in = (self.srcApertures.r + 
+                                          self.param['backStart'] - self.param['apRadius'])
+                self.bkgApertures.r_out = (self.bkgApertures.r_in +
+                                           self.param['backEnd'] - self.param['backStart'])
+            else:
+                warnings.warn('Background Aperture scaling not set up for non-annular geometry')
+    
     def phot_for_one_file(self,ind):
+        """
+        Calculate aperture photometry using `photutils`
+        
+        Parameters
+        ----------
+        ind: int
+            index of the file list on which to read in and do photometry
+        """
         
         oneImg = self.fileL[ind]
         img, head = self.getImg(oneImg)
@@ -867,27 +931,8 @@ class phot:
         
         self.srcApertures.positions = self.cenArr[ind]
         
-        if 'scaleAperture' in self.param:
-            if self.param['scaleAperture'] == True:
-                medianFWHM = np.median(self.fwhmArr[ind])
-                
-                minFWHMallowed, maxFWHMallowed = self.param['apRange']
-                bigRadius = 2. * self.param['backEnd']
-                if medianFWHM < minFWHMallowed:
-                    warnings.warn("FWHM found was smaller than apRange ({}) px. Using {} for Image {}".format(minFWHMallowed,minFWHMallowed,self.fileL[ind]))
-                    medianFWHM = minFWHMallowed
-                elif medianFWHM > maxFWHMallowed:
-                    warnings.warn("FWHM found was larger than apRange ({}) px. Using {} for Image {}".format(maxFWHMallowed,maxFWHMallowed,self.fileL[ind]))
-                    medianFWHM = maxFWHMallowed
-                
-                if self.param['bkgGeometry'] == 'CircularAnnulus':
-                    self.srcApertures.r = medianFWHM * self.param['apScale']
-                    self.bkgApertures.r_in = (self.srcApertures.r + 
-                                              self.param['backStart'] - self.param['apRadius'])
-                    self.bkgApertures.r_out = (self.bkgApertures.r_in +
-                                               self.param['backEnd'] - self.param['backStart'])
-                else:
-                    warnings.warn('Background Aperture scaling not set up for non-annular geometry')
+        if self.param['scaleAperture'] == True:
+            self.adjust_apertures(ind)
         
         readNoise = self.get_read_noise(head)
         
