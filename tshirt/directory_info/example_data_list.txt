@@ -1,3 +1,11 @@
+hst_spec_tseries/ibh717gjq_flt.fits
+hst_spec_tseries/ibh717gkq_flt.fits
+hst_spec_tseries/ibh717glq_flt.fits
+hst_spec_tseries/ibh717gmq_flt.fits
+hst_spec_tseries/ibh717gnq_flt.fits
+hst_spec_tseries/ibh717goq_flt.fits
+hst_spec_tseries/ibh717gpq_flt.fits
+hst_spec_tseries/ibh717gqq_flt.fits
 photometry/luci2.20200220.0200.fits
 photometry/luci2.20200220.0201.fits
 photometry/luci2.20200220.0202.fits
