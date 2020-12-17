@@ -14,6 +14,15 @@ setup(
     url="https://github.com/eas342/tshirt",
     description="A package to analyze time series data, especially for exoplanets",
     include_package_data=True,
+    install_requires=[
+        "numpy>=1.15",
+        "scipy==1.1.0",
+        "astropy>=2.0",
+        "tqdm>=4.46.0",
+        "photutils>=0.4.1",
+        "bokeh>=1.4.0",
+        "ccdproc>=1.2.0"
+    ],
     long_description=long_description,
     long_description_content_type='text/markdown'
 )
