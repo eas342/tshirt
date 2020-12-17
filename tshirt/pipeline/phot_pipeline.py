@@ -1855,7 +1855,7 @@ def get_tshirt_example_data():
     data_list_file = resource_filename('tshirt','directory_info/example_data_list.txt')
     with open(data_list_file) as dlf:
         fileList = dlf.read().splitlines()
-    onlineDir = 'https://raw.githubusercontent.com/eas342/tshirt/master/example_tshirt_data'
+    onlineDir = 'https://raw.githubusercontent.com/eas342/tshirt_example_data/main/'
     
     example_tshirt_dir = os.path.join(baseDir,'example_tshirt_data','example_data')
     for oneFile in fileList:
