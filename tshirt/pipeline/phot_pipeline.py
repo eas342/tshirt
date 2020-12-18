@@ -1843,7 +1843,10 @@ def get_baseDir():
     if 'TSHIRT_DATA' in os.environ:
         baseDir = os.environ['TSHIRT_DATA']
     else:
-        baseDir = '.'
+        baseDir = os.path.join(os.environ['HOME'],'tshirt_data')
+        if os.path.exists(baseDir) == False:
+            os.mkdir(baseDir)
+    
     return baseDir
 
 def get_tshirt_example_data():
