@@ -20,8 +20,7 @@ setup(
         "astropy>=2.0",
         "tqdm>=4.46.0",
         "photutils>=0.4.1",
-        "bokeh>=1.4.0",
-        "ccdproc>=1.2.0"
+        "bokeh>=1.4.0"
     ],
     long_description=long_description,
     long_description_content_type='text/markdown'
