@@ -16,7 +16,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "numpy>=1.15",
-        "scipy==1.1.0",
+        "scipy>=1.1.0",
         "astropy>=2.0",
         "tqdm>=4.46.0",
         "photutils>=0.4.1",
