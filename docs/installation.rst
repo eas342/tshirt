@@ -1,22 +1,16 @@
 Installation
 ==========================
 
-Currently, :code:`tshirt` should be installed from source using the following steps.
+Simple Installation
+~~~~~~~~~~~~~~~~~~~~
+:code:`tshirt` can be installed with pip like so:
+
+.. code-block:: python
+
+   pip install tshirt
 
 
-It is recommended that users should install the :code:`astroconda` package: https://astroconda.readthedocs.io/en/latest/
-Then proceed to the steps below.
 
-- Activate the astroconda environment
-   :code:`conda activate astroconda`
-- Navigate to the directory where you want to install :code:`tshirt`:
-   :code:`cd Code`
-- Clone the repository
-   :code:`git clone https://github.com/eas342/tshirt`
-- Navigate to the :code:`tshirt` directory:
-   :code:`cd tshirt`
-- Install
-   :code:`pip install .`
 
 Setting up a :code:`TSHIRT_DATA` directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,8 +33,9 @@ If you run a notebook/python session without setting up a :code:`TSHIRT_DATA` di
 
 
 
-Upgrading :code:`tshirt`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Upgrading :code:`tshirt` to the latest development version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 - Activate the astroconda environment in bash
