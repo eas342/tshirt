@@ -908,11 +908,11 @@ class phot:
             
             if self.param['bkgGeometry'] == 'CircularAnnulus':
                 self.srcApertures.r = medianFWHM * self.param['apScale']
-#                if self.param['scaleBackground'] == True:
-                self.bkgApertures.r_in = (self.srcApertures.r + 
-                                          self.param['backStart'] - self.param['apRadius'])
-                self.bkgApertures.r_out = (self.bkgApertures.r_in +
-                                           self.param['backEnd'] - self.param['backStart'])
+                if self.param['scaleBackground'] == True:
+                    self.bkgApertures.r_in = (self.srcApertures.r + 
+                                              self.param['backStart'] - self.param['apRadius'])
+                    self.bkgApertures.r_out = (self.bkgApertures.r_in +
+                                               self.param['backEnd'] - self.param['backStart'])
             else:
                 warnings.warn('Background Aperture scaling not set up for non-annular geometry')
     
