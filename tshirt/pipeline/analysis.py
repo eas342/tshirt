@@ -62,9 +62,15 @@ def adjust_aperture_set(phot_obj,param,srcSize,backStart,backEnd,
     """
     
     if phot_obj.pipeType == 'photometry':
-        param['apRadius'] = srcSize
+        
+        if phot_obj.param['scaleAperture'] == True:
+            param['apRadius'] = 1.0
+            param['apScale'] = srcSize
+        else:
+            param['apRadius'] = srcSize
         param['backStart'] = backStart
         param['backEnd'] = backEnd
+        
         
         new_phot = phot(directParam=param)
         

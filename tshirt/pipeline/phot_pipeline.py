@@ -895,6 +895,13 @@ class phot:
         
         """
         if self.param['scaleAperture'] == True:
+            if self.nImg >= maxCPUs:
+                useMultiprocessing = True
+            else:
+                useMultiprocessing = False
+            
+            self.get_allimg_cen(useMultiprocessing=useMultiprocessing)
+            
             medianFWHM = np.median(self.fwhmArr[ind])
         
             minFWHMallowed, maxFWHMallowed = self.param['apRange']
