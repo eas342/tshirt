@@ -128,6 +128,7 @@ class phot:
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
+                        'scaleBackground': False,
                         'nanTreatment': 'zero', 'backOffset': [0.0,0.0],
                         'srcName': 'WASP 62','srcNameShort': 'wasp62',
                          'refStarPos': [[50,50]],'procFiles': '*.fits',
@@ -907,6 +908,7 @@ class phot:
             
             if self.param['bkgGeometry'] == 'CircularAnnulus':
                 self.srcApertures.r = medianFWHM * self.param['apScale']
+#                if self.param['scaleBackground'] == True:
                 self.bkgApertures.r_in = (self.srcApertures.r + 
                                           self.param['backStart'] - self.param['apRadius'])
                 self.bkgApertures.r_out = (self.bkgApertures.r_in +
@@ -1346,7 +1348,7 @@ class phot:
         
     
     def print_phot_statistics(self,refCorrect=True,excludeSrc=None,shorten=False,
-                              returnOnly=False):
+                              returnOnly=False,removeLinear=True):
         """
         Print the calculated and theoretical noise as a table
                               
@@ -1366,11 +1368,14 @@ class phot:
             If True, a table is returned.
             If False, a table is printed and another is returned
         
+        removeLinear: bool
+            Remove a linear trend from the data first?
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
         photArr = photHDU.data
         head = photHDU.header
+        timeArr = HDUList['TIME'].data
         errArr = HDUList['PHOT ERR'].data
         
         t = Table()
@@ -1387,6 +1392,12 @@ class phot:
         if refCorrect == True:
             yCorrected, yCorrected_err = self.refSeries(photArr,errArr,
                                                         excludeSrc=excludeSrc)
+            
+            if removeLinear == True:
+                xNorm = (timeArr - np.min(timeArr))/(np.max(timeArr) - np.min(timeArr))
+                poly_fit = robust_poly(xNorm,yCorrected,1)
+                yCorrected = yCorrected / np.polyval(poly_fit,xNorm)
+            
             if shorten == True:
                 yCorrected = yCorrected[0:15]
             
