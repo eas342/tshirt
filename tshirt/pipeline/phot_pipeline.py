@@ -2207,6 +2207,18 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     
     plt.close(fig)
 
+def exists_and_equal(dict1,key1,val1):
+    """
+    Simple test to see if 
+    """
+    if key1 in dict1:
+        if dict1[key1] == val1:
+            return True
+        else:
+            return False
+    else:
+        return False
+
 def test_centroiding(useMultiprocessing=True):
     photObj = phot()
     photObj.fileL = photObj.fileL[0:30]; photObj.nImg = 30; photObj.param['doCentering'] = True

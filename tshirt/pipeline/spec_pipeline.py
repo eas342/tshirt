@@ -1401,9 +1401,9 @@ class spec(phot_pipeline.phot):
         
         if (os.path.exists(self.dyn_specFile(src)) == True):
             head_dyn = fits.getheader(self.dyn_specFile(src),ext=0)
-            if head_dyn['ALIGNED'] != align:
+            if phot_pipeline.exists_and_equal(head_dyn,'ALIGNED',align):
                 previousFile = False
-            elif head_dyn['SPECTYPE'] != specType:
+            elif phot_pipeline.exists_and_equal(head_dyn,'SPECTYPE',specType):
                 previousFile = False
             else:
                 previousFile = True
