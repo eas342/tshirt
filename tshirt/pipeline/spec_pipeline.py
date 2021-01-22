@@ -1356,6 +1356,40 @@ class spec(phot_pipeline.phot):
         
         HDUList.close()
     
+    def plot_noise_spectrum(self,src=0,showPlot=True,yLim=None):
+        """
+        Plot the Noise Spectrum from the Dynamic Spectrum
+        
+        Parameters
+        ----------
+        src: int
+            Index number for the source
+        showPlot: bool
+            Show a plot in backend?
+        yLim: list or None
+            Specify the y limits
+        """
+        fig, ax = plt.subplots()
+        HDUList = fits.open(self.dyn_specFile(src))
+        x = HDUList['DISP INDICES'].data
+        y = np.nanstd(HDUList['DYNAMIC SPEC'].data,axis=0)
+        theo_y = np.nanmedian(HDUList['DYN SPEC ERR'].data,axis=0)
+        ax.plot(x,y * 100.,label='Measured noise')
+        ax.plot(x,theo_y * 100.,label='Theoretical noise')
+        ax.set_xlabel("Disp Pixel")
+        ax.set_ylabel("Noise (%)")
+        if yLim is not None:
+            ax.set_ylim(yLim[0],yLim[1])
+        ax.legend()
+        
+        if showPlot == True:
+            fig.show()
+        else:
+            outName = 'noise_spec_{}.pdf'.format(self.dataFileDescrip)
+            outPath = os.path.join(self.baseDir,'plots','spectra','noise_spectrum',outName)
+            print("Writing noise spectrum to {}".format(outPath))
+            fig.savefig(outPath,overwrite=True)
+    
     def plot_spec_offsets(self,src=0):
         if os.path.exists(self.dyn_specFile(src)) == False:
             self.plot_dynamic_spec(src=src,saveFits=True)
@@ -1446,6 +1480,8 @@ class spec(phot_pipeline.phot):
         binGrid_err = np.zeros_like(binGrid)
         
         binned_disp = np.zeros(nbins)
+        
+        #db.set_trace()
         
         for ind, binStart, binEnd in zip(binIndices,binStarts,binEnds):
             theseWeights = weights[:,binStart:binEnd]

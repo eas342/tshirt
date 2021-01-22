@@ -22,6 +22,7 @@
 - plots/spectra/broadband_series/README.md
 - plots/spectra/dynamic_spectra/README.md
 - plots/spectra/comparison_spec/README.md
+- plots/spectra/noise_spectrum/README.md
 - plots/allan_variance/README.md
 - plots/photometry/interactive/README.md
 - tser_data/saved_weights/README.md
