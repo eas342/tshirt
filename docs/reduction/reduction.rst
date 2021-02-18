@@ -8,14 +8,31 @@ Typically the following steps are applied:
 - Bad Pixel Correction
 - Non-linearity correction
 
-``tshirt`` can apply these steps to common CCD data.
+:code:`tshirt` can apply these steps to common CCD data.
 
 
 
 How to Use for Reduction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Edit the :doc:`Reduction parameters<reduction_param>`. You can specify any number of directories for reducing data.
-Execute ``nohup python prep_images.py &`` to run the reduction in the background.
+
+Start by reading in the parameters and making calibration files.
+
+.. code-block:: python
+
+   from tshirt.pipeline import prep_images
+   pipeObj = prep_images.prep('parameters/path_to_file.yaml')
+   pipeObj.makeMasterCals()
+
+
+After the calibration files look good, apply them to the science data
+
+.. code-block:: python
+
+   pipeObj.procSciFiles()
+
+
+
 
 .. toctree::
    :maxdepth: 2
