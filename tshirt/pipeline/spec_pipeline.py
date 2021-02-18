@@ -1214,7 +1214,8 @@ class spec(phot_pipeline.phot):
         
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=False,
                           alignDiagnostics=False,extraFF=False,
-                          specType='Optimal',showPlot=False):
+                          specType='Optimal',showPlot=False,
+                          vmin=None,vmax=None):
         """
         Plots a dynamic spectrum of the data
         
@@ -1236,6 +1237,10 @@ class spec(phot_pipeline.phot):
             Spectrum type - 'Optimal' or 'Sum'
         showPlot: bool
             Show a plot with the spectrum?
+        vmin: float or None
+            Value minimum for dynamic spectrum image
+        vmax: float or None
+            Value maximum for dynamic spectrum image
         """
         if os.path.exists(self.specFile) == False:
             raise Exception("No spectrum file found. Run extraction first...")
@@ -1330,7 +1335,12 @@ class spec(phot_pipeline.phot):
         else:
             fig, ax = plt.subplots()
         
-        imShowData = ax.imshow(dynamicSpec,vmin=0.95,vmax=1.05)
+        if vmin is None:
+            vmin=0.95
+        if vmax is None:
+            vmax=1.05
+        
+        imShowData = ax.imshow(dynamicSpec,vmin=vmin,vmax=vmax)
         ax.invert_yaxis()
         ax.set_aspect('auto')
         ax.set_xlabel('Disp (pixels)')
@@ -1657,7 +1667,7 @@ class spec(phot_pipeline.phot):
             HDUList.close()
     
     
-    def get_wavebin_series(self,nbins=10,recalculate=False):
+    def get_wavebin_series(self,nbins=10,recalculate=False,specType='Optimal'):
         """
         Get a table of the the wavelength-binned time series
         
@@ -1671,6 +1681,11 @@ class spec(phot_pipeline.phot):
             Recalculate the dynamic spectrum?
             This is good to set as True when there is an update to
             the parameter file.
+        
+        specType: str, optional
+            The type of spectral extraction routine
+            Eg. "Sum" for sum extraction, "Optimal" for optimal extraction
+            This will be skipped over if recalculate=False and a file already exists
         
         Returns
         --------
@@ -1688,7 +1703,7 @@ class spec(phot_pipeline.phot):
         """
         sFile = self.wavebin_specFile(nbins=nbins)
         if (os.path.exists(sFile) == False) | (recalculate == True):
-            self.plot_wavebin_series(nbins=nbins,recalculate=recalculate)
+            self.plot_wavebin_series(nbins=nbins,recalculate=recalculate,specType=specType)
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
