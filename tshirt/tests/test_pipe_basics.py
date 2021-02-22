@@ -1,8 +1,9 @@
 import unittest
-from tshirt.pipeline import phot_pipeline
+from tshirt.pipeline import phot_pipeline, spec_pipeline
 from astropy.io import fits
+from pkg_resources import resource_filename
 
-class TestStringMethods(unittest.TestCase):
+class BasicPhot(unittest.TestCase):
 
     def test_initialization(self):
         phot = phot_pipeline.phot()
@@ -26,6 +27,19 @@ class TestStringMethods(unittest.TestCase):
 
 simpleDict = {'whale': 'big','ant': 'small'}
 head = fits.Header(simpleDict)
+
+
+class BasicSpec(unittest.TestCase):
+    
+    def test_initialization(self):
+        spec = spec_pipeline.spec()
+    
+    def test_basic_spec(self):
+        paramFile = 'parameters/spec_params/test_params/basic_hst_spec.yaml'
+        exampleParamPath = resource_filename('tshirt',paramFile)
+        spec = spec_pipeline.spec(exampleParamPath)
+        spec.do_extraction()
+        
 
 class ExistsAndValue(unittest.TestCase):
 
