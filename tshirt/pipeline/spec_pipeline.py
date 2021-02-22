@@ -125,6 +125,9 @@ class spec(phot_pipeline.phot):
         ## minimum number of pixels to do 
         self.minPixForCovarianceWeights = 3
         
+        ## set up the dispersion offsets (if any)
+        self.set_up_disp_offsets()
+        
         self.check_parameters()
         
         
@@ -151,7 +154,15 @@ class spec(phot_pipeline.phot):
         if self.param['readNoiseCorrelation'] == True:
             assertText = 'Ap width not big enough to use read noise covariance estimates'
             assert (self.param['apWidth'] > self.minPixForCovarianceWeights),assertText 
+        
+        if self.param['dispOffsets'] is not None:
+            assert(len(self.param['dispOffsets']) == self.nsrc,'Dispersion offsets needs to match number of sources')
     
+    def set_up_disp_offsets(self):
+        if self.param['dispOffsets'] is None:
+            self.dispOffsets = np.zeros(self.nsrc)
+        else:
+            self.dispOffsets = self.param['dispOffsets']
     
     def get_summation_direction(self):
         if self.param['dispDirection'] == 'x':
@@ -547,19 +558,32 @@ class spec(phot_pipeline.phot):
         """
         Find the spectroscopic profile using splines along the spectrum
         This assumes an inherently smooth continuum (like a stellar source)
-        """
         
-        dispStart = self.param['dispPixels'][0]
-        dispEnd = self.param['dispPixels'][1]
-        ind_var = np.arange(dispStart,dispEnd) ## independent variable
-        knots = np.linspace(dispStart,dispEnd,self.param['numSplineKnots'])[1:-1]
+        img: numpy array
+            The 2D Science image
+        head: astropy.io.fits header object
+            Header from the science file
+        ind: int
+            Index of the file list (which image is begin analyzed)
+        saveFits: bool (optional)
+            Save the profile to a fits file?
+        showEach: bool
+            Show each step of the profile fitting
+        masterProfile: bool
+            Is this a master profile fit?
+        """
         
         profile_img_list = []
         smooth_img_list = [] ## save the smooth version if running diagnostics
         
-        
-        
-        for oneSourcePos in self.param['starPositions']:
+        for srcInd,oneSourcePos in enumerate(self.param['starPositions']):
+            dispStart = self.param['dispPixels'][0] + self.dispOffsets[srcInd]
+            dispEnd = self.param['dispPixels'][1] + self.dispOffsets[srcInd]
+            
+            ind_var = np.arange(dispStart,dispEnd) ## independent variable
+            knots = np.linspace(dispStart,dispEnd,self.param['numSplineKnots'])[1:-1]
+            
+            
             profile_img = np.zeros_like(img)
             startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
             endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
@@ -963,10 +987,14 @@ class spec(phot_pipeline.phot):
         
         return extractDict
     
-    def norm_spec(self,x,y,numSplineKnots=None):
-        """ Normalize spec """
-        dispStart = self.param['dispPixels'][0]
-        dispEnd = self.param['dispPixels'][1]
+    def norm_spec(self,x,y,numSplineKnots=None,srcInd=0):
+        """ Normalize spec 
+        
+        Parameters
+        ----------
+        """
+        dispStart = self.param['dispPixels'][0] + self.dispOffsets[srcInd]
+        dispEnd = self.param['dispPixels'][1] + self.dispOffsets[srcInd]
         if numSplineKnots is None:
             numSplineKnots = self.param['numSplineKnots']
         

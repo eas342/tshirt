@@ -6,6 +6,7 @@ nightName: UT2017_09_08
 dispDirection: x ## dispersion direction 'x' or 'y'
 starPositions: ## positions of the stars in the spatial direction. The first one is the target
    - 104
+dispOffsets: null ## dispersion offset positions of the stars for multi-object spectroscopy
 refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
 bkgSubDirections: ['Y','X'] ## The direction and sequence of background subtractions to do
 bkgRegionsX: ## a list of background regions in the X direction
