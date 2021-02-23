@@ -156,7 +156,7 @@ class spec(phot_pipeline.phot):
             assert (self.param['apWidth'] > self.minPixForCovarianceWeights),assertText 
         
         if self.param['dispOffsets'] is not None:
-            assert(len(self.param['dispOffsets']) == self.nsrc,'Dispersion offsets needs to match number of sources')
+            assert len(self.param['dispOffsets']) == self.nsrc,'Dispersion offsets needs to match number of sources'
     
     def set_up_disp_offsets(self):
         if self.param['dispOffsets'] is None:
@@ -577,8 +577,8 @@ class spec(phot_pipeline.phot):
         smooth_img_list = [] ## save the smooth version if running diagnostics
         
         for srcInd,oneSourcePos in enumerate(self.param['starPositions']):
-            dispStart = self.param['dispPixels'][0] + self.dispOffsets[srcInd]
-            dispEnd = self.param['dispPixels'][1] + self.dispOffsets[srcInd]
+            dispStart = int(self.param['dispPixels'][0] + self.dispOffsets[srcInd])
+            dispEnd = int(self.param['dispPixels'][1] + self.dispOffsets[srcInd])
             
             ind_var = np.arange(dispStart,dispEnd) ## independent variable
             knots = np.linspace(dispStart,dispEnd,self.param['numSplineKnots'])[1:-1]
@@ -1168,10 +1168,10 @@ class spec(phot_pipeline.phot):
         x, y, yerr = get_spectrum(self.specFile,specType=specType,ind=ind,src=src)
         return x, y, yerr
     
-    def align_spec(self,data2D,refInd=None,diagnostics=False):
+    def align_spec(self,data2D,refInd=None,diagnostics=False,srcInd=0):
         align2D = np.zeros_like(data2D)
         nImg = data2D.shape[0]
-        dispPix = self.param['dispPixels']
+        dispPix = int(np.array(self.param['dispPixels']) + self.dispOffsets[srcInd])
         Noffset = self.param['nOffsetCC']
         
         if refInd == None:
@@ -1293,7 +1293,7 @@ class spec(phot_pipeline.phot):
             yFlat = utils.flatten(x,cleanY,highPassFreq=0.05)
             ySmooth = y - yFlat
             specFF = np.ones_like(y)
-            dispPix = self.param['dispPixels']
+            dispPix = int(self.param['dispPixels'] + self.dispOffsets[src])
             
             disp1, disp2 = dispPix[0] + 10, dispPix[1] - 10
             specFF[disp1:disp2] = y[disp1:disp2] / ySmooth[disp1:disp2]
@@ -1373,7 +1373,7 @@ class spec(phot_pipeline.phot):
         ax.set_aspect('auto')
         ax.set_xlabel('Disp (pixels)')
         ax.set_ylabel('Time (Image #)')
-        dispPix = self.param['dispPixels']
+        dispPix = self.param['dispPixels'] + self.dispOffsets[src]
         ax.set_xlim(dispPix[0],dispPix[1])
         fig.colorbar(imShowData,label='Normalized Flux')
         if specAtTop == True:
@@ -1505,7 +1505,7 @@ class spec(phot_pipeline.phot):
         disp = HDUList['DISP INDICES'].data
         
         if dispIndices == None:
-            dispSt, dispEnd = self.param['dispPixels']
+            dispSt, dispEnd = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[src],dtype=np.int)
         else:
             dispSt, dispEnd = dispIndices
         
@@ -1895,13 +1895,14 @@ class spec(phot_pipeline.phot):
         rad, txtOffset = 50, 20
         
         showApPos = self.param['starPositions']
-        dispPos = self.param['dispPixels']
-        dispLength = dispPos[1] - dispPos[0]
+
         apWidth = self.param['apWidth']
         
         outName = 'spec_aps_{}.pdf'.format(self.dataFileDescrip)
         
         for ind, onePos in enumerate(showApPos):
+            dispPos = self.param['dispPixels'] + self.dispOffsets[srcInd]
+            dispLength = dispPos[1] - dispPos[0]
             
             if self.param['dispDirection'] == 'x':
                 xPos = dispPos[0]
