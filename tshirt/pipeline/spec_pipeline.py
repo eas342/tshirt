@@ -977,7 +977,7 @@ class spec(phot_pipeline.phot):
         return y / modelF
     
     def plot_one_spec(self,src=0,ind=None,specTypes=['Sum','Optimal'],
-                      normalize=False,numSplineKnots=None,showPlot=True):
+                      normalize=False,numSplineKnots=None,showPlot=True,waveCal=False):
         """
         Plot one example spectrum after extraction has been run
         
@@ -1001,6 +1001,8 @@ class spec(phot_pipeline.phot):
             Show the plot in widget?
             If True, it renders the image with plt.show()
             If False, saves an image
+        waveCal: bool
+            Wavelength calibrate the X axis? If False, gives dispersion pixels
         """
         fig, ax = plt.subplots()
         
@@ -1008,9 +1010,18 @@ class spec(phot_pipeline.phot):
             x, y, yerr = self.get_spec(specType=oneSpecType,ind=ind,src=src)
             if normalize==True:
                 y = self.norm_spec(x,y,numSplineKnots=numSplineKnots)
-            ax.plot(x,y,label=oneSpecType)
+            if waveCal == True:
+                plot_x = self.wavecal(x)
+            else:
+                plot_x = x
+            
+            ax.plot(plot_x,y,label=oneSpecType)
         ax.legend()
-        ax.set_xlabel("{} pixel".format(self.param['dispDirection'].upper()))
+        if waveCal == True:
+            ax.set_xlabel("Wavelength ($\mu$m)")
+        else:
+            ax.set_xlabel("{} pixel".format(self.param['dispDirection'].upper()))
+        
         ax.set_ylabel("Counts (e$^-$)")
         if showPlot == True:
             plt.show()
@@ -1998,6 +2009,9 @@ class spec(phot_pipeline.phot):
                 head = fits.getheader(self.specFile,extname='ORIG HEADER')
             wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'],
                                                                          **kwargs)
+        elif waveCalMethod == 'simGRISMC':
+            wavelengths = instrument_specific.jwst_inst_funcs.ts_grismc_sim(dispIndices,**kwargs)
+        
         elif waveCalMethod == 'wfc3Dispersion':
             wavelengths = instrument_specific.hst_inst_funcs.hstwfc3_wavecal(dispIndices,**kwargs)
             

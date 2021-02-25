@@ -29,4 +29,16 @@ def ts_wavecal(pixels,tserSim=False,
     wavelengths = (pixels - undevPx) * disp + undevWav
     
     return wavelengths
+
+def ts_grismc_sim(pixels):
+    """
+    Simple analytic wavelength calibration for Simulated GRISMC data
+    """
+    disp = 0.0010035 ## microns per pixel (toward positive X in raw detector pixels, used in pynrc)
+    undevWav = 4.0 ## undeviated wavelength
+    undevPx = 1638.33
+    
+    wavelengths = (pixels - undevPx) * disp + undevWav
+    
+    return wavelengths
     
