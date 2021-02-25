@@ -12,6 +12,8 @@ import numpy as np
 import pdb
 import warnings
 from scipy.interpolate import interp1d
+import tqdm
+
 
 defaultParamFile = 'parameters/reduction_parameters/example_reduction_parameters.yaml'
 class prep():
@@ -172,7 +174,8 @@ class prep():
         else:
             hbadPx, badPx = None, None
         
-        for ind,oneFile in enumerate(fileL):
+        for ind in tqdm.tqdm(np.arange(len(fileL))):
+            oneFile = fileL[ind]
             head, dataCCD = self.getData(oneFile)
             
             sciHead = fits.getheader(oneFile,ext=self.pipePrefs['sciExtension'])
