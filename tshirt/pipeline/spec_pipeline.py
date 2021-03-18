@@ -1901,7 +1901,7 @@ class spec(phot_pipeline.phot):
         outName = 'spec_aps_{}.pdf'.format(self.dataFileDescrip)
         
         for ind, onePos in enumerate(showApPos):
-            dispPos = self.param['dispPixels'] + self.dispOffsets[srcInd]
+            dispPos = np.array(self.param['dispPixels']) + self.dispOffsets[ind]
             dispLength = dispPos[1] - dispPos[0]
             
             if self.param['dispDirection'] == 'x':
