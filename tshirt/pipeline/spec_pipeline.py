@@ -381,13 +381,21 @@ class spec(phot_pipeline.phot):
         """
         
         if oneDirection == 'X':
-            subtractionIndexArray = np.arange(img.shape[1])
-            cross_subtractionIndexArray = np.arange(img.shape[0])
+            subtractionIndexArrayLength = img.shape[1]
+            cross_subtractionIndexArrayLength = img.shape[0]
         elif oneDirection == 'Y':
-            subtractionIndexArray = np.arange(img.shape[0])
-            cross_subtractionIndexArray = np.arange(img.shape[1])
+            
+            subtractionIndexArrayLength = img.shape[0]
+            cross_subtractionIndexArray = img.shape[1]
         else:
             raise Exception("Unrecognized subtraction direction")
+        
+        if self.param['mosBacksub'] == True:
+            cross_subtractionIndexArray = np.arange(self.param['dispPixels'][0],
+                                                    self.param['dispPixels'][1])
+        else:
+            cross_subtractionIndexArray = np.arange(cross_subtractionIndexArrayLength)
+        subtractionIndexArray = np.arange(subtractionIndexArrayLength)
         
         ## set up which points to do background fitting for
         pts = np.zeros(len(subtractionIndexArray),dtype=np.bool)
