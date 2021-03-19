@@ -885,7 +885,7 @@ class spec(phot_pipeline.phot):
             if saveFits == True:
                 primHDU_prof2Dh = fits.PrimaryHDU(holey_profile)
                 holey_profile_name = '{}_holey_profile_{}.fits'.format(prefixName,oneSrc)
-                holey_profile_path = os.path.join(self.baseDir,'diagnostics','profile_fit',hole_profile_name)
+                holey_profile_path = os.path.join(self.baseDir,'diagnostics','profile_fit',holey_profile_name)
                 primHDU_prof2Dh.writeto(holey_profile_path,overwrite=True)
                 
                 corrHDU = fits.PrimaryHDU(correct2D)
