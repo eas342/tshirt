@@ -158,6 +158,13 @@ class spec(phot_pipeline.phot):
         if self.param['dispOffsets'] is not None:
             assert len(self.param['dispOffsets']) == self.nsrc,'Dispersion offsets needs to match number of sources'
     
+        if self.param['mosBacksub'] == True:
+            assertText = 'MOS Backsub currently only allows one subtraction direction'
+            assert len(self.param['bkgSubDirections']) <= 1,assertText
+            if len(self.param['bkgSubDirections']) == 1:
+                assertText = 'MOS Backsub currently only allows cross-dispersion subtraction'
+                assert self.param['dispDirection'].lower() != self.param['bkgSubDirections'][0].lower(),assertText
+    
     def set_up_disp_offsets(self):
         if self.param['dispOffsets'] is None:
             self.dispOffsets = np.zeros(self.nsrc)
@@ -386,45 +393,80 @@ class spec(phot_pipeline.phot):
         elif oneDirection == 'Y':
             
             subtractionIndexArrayLength = img.shape[0]
-            cross_subtractionIndexArray = img.shape[1]
+            cross_subtractionIndexArrayLength = img.shape[1]
         else:
             raise Exception("Unrecognized subtraction direction")
         
         if self.param['mosBacksub'] == True:
-            cross_subtractionIndexArray = np.arange(self.param['dispPixels'][0],
-                                                    self.param['dispPixels'][1])
+            n_subtractions = self.nsrc ## separate backsub for each source
         else:
-            cross_subtractionIndexArray = np.arange(cross_subtractionIndexArrayLength)
-        subtractionIndexArray = np.arange(subtractionIndexArrayLength)
-        
-        ## set up which points to do background fitting for
-        pts = np.zeros(len(subtractionIndexArray),dtype=np.bool)
-        for oneRegion in self.param['bkgRegions{}'.format(oneDirection)]:
-            pts[oneRegion[0]:oneRegion[1]] = True
+            n_subtractions = 1 ## one backsub for the whole image
         
         fitOrder = self.param['bkgOrder{}'.format(oneDirection)]
         ## make a background model
         bkgModel = np.zeros_like(img)
-        for cross_Ind in cross_subtractionIndexArray:
-            ind_var = subtractionIndexArray ## independent variable
-            if oneDirection == 'X':
-                dep_var = img[cross_Ind,:]
-            else:
-                dep_var = img[:,cross_Ind]
-            polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
-                                                preScreen=self.param['backPreScreen'])
-            dep_var_model = np.polyval(polyFit,ind_var)
+        
+        ## loop through the number of subtractions
+        for sub_counter in np.arange(n_subtractions):
             
-            if oneDirection == 'X':
-                bkgModel[cross_Ind,:] = dep_var_model
-            else:
-                bkgModel[:,cross_Ind] = dep_var_model
+            if self.param['mosBacksub'] == True:
+                srcInd = sub_counter ## source index
+                ## Here it's assumed that the subtraction is in the cross-dispersion direction
+                cross_subtractionIndexArray = np.arange(self.param['dispPixels'][0],
+                                                        self.param['dispPixels'][1])
+                                                        
+                cross_subtractionIndexArray = cross_subtractionIndexArray + self.param['dispOffsets'][srcInd]
                 
-            if showEach == True:
-                plt.plot(ind_var,dep_var,label='data')
-                plt.plot(ind_var[pts],dep_var[pts],'o',color='red',label='pts fit')
-                plt.plot(ind_var,dep_var_model,label='model')
-                plt.show()
+                
+                subtractionIndexArray = np.arange(subtractionIndexArrayLength)
+                
+                ## only subtract points near the source
+                absoluteRegions = (np.array(self.param['bkgRegions{}'.format(oneDirection)]) + 
+                                   self.param['starPositions'][srcInd])
+                lowestPoint = np.min(absoluteRegions)
+                highestPoint = np.max(absoluteRegions)
+                
+                ptsToSubtract = ((subtractionIndexArray >= lowestPoint) & 
+                                    (subtractionIndexArray <= highestPoint))
+                
+            else:
+                cross_subtractionIndexArray = np.arange(cross_subtractionIndexArrayLength)
+                subtractionIndexArray = np.arange(subtractionIndexArrayLength)
+                ## subtract the whole row/column
+                ptsToSubtract = np.ones(len(subtractionIndexArray),dtype=np.bool)
+            
+            ## set up which points to do background fitting for
+            pts = np.zeros(len(subtractionIndexArray),dtype=np.bool)
+            for oneRegion in self.param['bkgRegions{}'.format(oneDirection)]:
+                if self.param['mosBacksub'] == True:
+                    startSub = int(self.param['starPositions'][srcInd] + oneRegion[0])
+                    endSub = int(self.param['starPositions'][srcInd] + oneRegion[1])
+                else:
+                    startSub, endSub = int(oneRegion[0]),int(oneRegion[1])
+                
+                pts[startSub:endSub] = True
+            
+            
+            for cross_Ind in cross_subtractionIndexArray:
+                ind_var = subtractionIndexArray ## independent variable
+                if oneDirection == 'X':
+                    dep_var = img[cross_Ind,:]
+                else:
+                    dep_var = img[:,cross_Ind]
+                polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
+                                                    preScreen=self.param['backPreScreen'])
+                dep_var_model = np.polyval(polyFit,ind_var)
+                
+                if oneDirection == 'X':
+                    bkgModel[cross_Ind,ind_var[ptsToSubtract]] = dep_var_model[ptsToSubtract]
+                else:
+                    bkgModel[ind_var[ptsToSubtract],cross_Ind] = dep_var_model[ptsToSubtract]
+                
+                if showEach == True:
+                    plt.plot(ind_var,dep_var,label='data')
+                    plt.plot(ind_var[pts],dep_var[pts],'o',color='red',label='pts fit')
+                    plt.plot(ind_var,dep_var_model,label='model')
+                    plt.show()
         
         outHead = deepcopy(head)
         if oneDirection == 'X':
