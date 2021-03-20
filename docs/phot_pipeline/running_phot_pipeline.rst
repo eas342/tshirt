@@ -2,7 +2,7 @@ Running the Time Series Aperture Photometry
 --------------------------------------------
 Run the following commands in either an iPython session or in a python script:
 
-::
+.. code-block:: python
 
    phot = phot_pipeline.phot(paramFile='parameters/phot_params/example_phot_parameters.yaml')
    phot.showStarChoices()
