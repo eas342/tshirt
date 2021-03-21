@@ -37,3 +37,18 @@ The same as background regions X.
 dispPixels
 ~~~~~~~~~~~
 The absolute pixel region over which to do spectral extractions. When :code:`mosBacksub` is True, the absolute pixels are used for the first source and then the :code:`dispOffsets` parameter shifts it for all other sources.
+
+
+numSplineKnots
+~~~~~~~~~~~~~~
+This is a critical parameter in finding the spectroscopic profile. If it is too large, the profile, normalization and variance-weighted fit can be driven to huge numbers. You can check the profile fitting by running. The following
+
+.. code-block:: python
+
+    img, head = spec.get_default_im()
+    imgSub, bkgModel, subHead = spec.do_backsub(img,head,directions=spec.param['bkgSubDirections'])
+    profileList, smooth_img_list = spec.find_profile(imgSub,subHead,showEach=True)
+    
+This will show you one profile fit at a time with the spline knots shown. You can step through each cross-dispersion pixel by pressing "c". When you are done, press "q" to quick the python debugger (pdb).
+ 
+
