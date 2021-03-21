@@ -41,7 +41,7 @@ The absolute pixel region over which to do spectral extractions. When :code:`mos
 
 numSplineKnots
 ~~~~~~~~~~~~~~
-This is a critical parameter in finding the spectroscopic profile. If it is too large, the profile, normalization and variance-weighted fit can be driven to huge numbers. You can check the profile fitting by running. The following
+This is a critical parameter in finding the spectroscopic profile. If it is too large, the profile, normalization and variance-weighted fit can be driven to huge numbers. If it is too small, the profile fit will not capture the shape of the spectrum and my chop it off at its peak. You can check the profile fitting by running. The following
 
 .. code-block:: python
 
