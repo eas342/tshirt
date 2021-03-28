@@ -1423,7 +1423,7 @@ class spec(phot_pipeline.phot):
         ax.set_aspect('auto')
         ax.set_xlabel('Disp (pixels)')
         ax.set_ylabel('Time (Image #)')
-        dispPix = self.param['dispPixels'] + self.dispOffsets[src]
+        dispPix = np.array(self.param['dispPixels']) + self.dispOffsets[src]
         ax.set_xlim(dispPix[0],dispPix[1])
         fig.colorbar(imShowData,label='Normalized Flux')
         if specAtTop == True:
