@@ -42,7 +42,7 @@ lowPassFreqCC: 0.99 ## Below this frequency, all information is included for cro
 hiPassFreqCC: 0.015 ## Above this frequency, all information is included for cross-corr alignment analysis
 nOffsetCC: 20 ## maximum number of pixels for cross-correlation during alignment stage
 specShiftMultiplier: 1.0 ## this is a multiplier to shift the spectra an extra fraction
-waveCalMethod: null ## the wavelength calibration method (None/null, NIRCamTS)
+waveCalMethod: null ## the wavelength calibration method (None/null, NIRCamTS, simGRISMC, wfc3Dispersion)
 waveCalOffset: 0.0 ## offset to the wavelength calibration, subtracted afterwards
 readNoiseCorrelation: False ## Treat the read noise as correlated across spatial pixels?
 readNoiseCorrVal: 0.01 ## The value of reaad noise correlation (if handling read Noise correlation)
