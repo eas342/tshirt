@@ -8,6 +8,10 @@ class BasicPhot(unittest.TestCase):
     def test_initialization(self):
         phot = phot_pipeline.phot()
     
+    def test_plot_starChoices(self):
+        phot = phot_pipeline.phot()
+        phot.showStarChoices(showPlot=False,showAps=True)
+    
     # def test_simple
     #
     # def test_upper(self):
@@ -54,6 +58,7 @@ class ExistsAndValue(unittest.TestCase):
     def test_if_not_in(self):
         self.assertFalse(phot_pipeline.exists_and_equal(simpleDict,'microbe','small'))
         self.assertFalse(phot_pipeline.exists_and_equal(head,'microbe','small'))
+
 
 if __name__ == '__main__':
     unittest.main()
