@@ -346,13 +346,20 @@ class phot:
                 index = self.get_default_index()
             self.adjust_apertures(index)
             
-            apsShow.plot(ax=ax,color=apColor)
+            if photutils.__version__ >= "0.7":
+                apsShow.plot(axes=ax,color=apColor)
+            else:
+                apsShow.plot(ax=ax,color=apColor)
             if self.param['bkgSub'] == True:
                 backApsShow = deepcopy(self.bkgApertures)
                 backApsShow.positions = showApPos
                 backApsShow.positions[:,0] = backApsShow.positions[:,0] + self.param['backOffset'][0]
                 backApsShow.positions[:,1] = backApsShow.positions[:,1] + self.param['backOffset'][1]
-                backApsShow.plot(ax=ax,color=backColor)
+            
+                if photutils.__version__ >= "0.7":
+                    backApsShow.plot(axes=ax,color=backColor)
+                else:
+                    backApsShow.plot(ax=ax,color=backColor)
             outName = 'ap_labels_{}.pdf'.format(self.dataFileDescrip)
             
         else:
@@ -1018,7 +1025,11 @@ class phot:
         
         ax.imshow(img,vmin=vmin,vmax=vmax)
         if aps is not None:
-            aps.plot(ax=ax)
+            if photutils.__version__ >= "0.7":
+                aps.plot(axes=ax)
+            else:
+                aps.plot(ax=ax)
+            
         ax.set_title(name)
         fig.show()
         print('Press c and enter to continue')
