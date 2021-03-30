@@ -881,6 +881,8 @@ class phot:
                     int_time = 0
                 
                 t0 = t0 + (head['TFRAME'] + int_time) * (head['ON_NINT']) * u.second
+            elif self.param['timingMethod'] == 'intCounter':
+                t0 = t0 + (head['ON_NINT']) * 1.0 * u.min ## placeholder to spread out time
         
         return t0
     
