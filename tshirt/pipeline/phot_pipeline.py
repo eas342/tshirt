@@ -144,7 +144,8 @@ class phot:
                          'bkgMethod': 'mean','diagnosticMode': False,
                          'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X'],
                          'readFromTshirtExamples': False,
-                         'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0}
+                         'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0,
+                         'DATE-OBS': None}
         
         
         for oneKey in defaultParams.keys():
@@ -854,6 +855,9 @@ class phot:
             warnings.warn('DATE-OBS not found in header. Using DATE instead')
             month1, day1, year1 = head['DATE'].split("/")
             useDate = "-".join([year1,month1,day1])
+        elif 'DATE-OBS' in self.param:
+            warnings.warn('Using DATE-OBS from parameter file.')
+            useDate = self.param['DATE-OBS']
         else:
             warnings.warn('Date headers not found in header. Making it nan')
             useDate = np.nan
