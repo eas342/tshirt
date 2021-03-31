@@ -1811,7 +1811,7 @@ class spec(phot_pipeline.phot):
         return t1, t2
     
     def print_noise_wavebin(self,nbins=10,shorten=False,recalculate=False,align=False,
-                            specType='Optimal'):
+                            specType='Optimal',npoints=15):
         """ 
         Get a table of noise measurements for all wavelength bins
         
@@ -1822,7 +1822,8 @@ class spec(phot_pipeline.phot):
         shorten: bool
             Use a short segment of the full time series?
             This could be useful for avoiding bad data or a deep transit
-        
+        npoints: int
+            Number of points to include in the calculation (if shorten is True)
         recalculate: bool
             Recalculate the wavebin series and dynamic spectrum?
         specType: str
@@ -1853,7 +1854,7 @@ class spec(phot_pipeline.phot):
         t['Wave (mid)'] = np.round(self.wavecal(t['Disp Mid']),3)
         t['Wave (end)'] = np.round(self.wavecal(disp['Bin End']),3)
         if shorten == True:
-            binGrid = binGrid[0:15,:]
+            binGrid = binGrid[0:npoints,:]
         t['Stdev (%)'] = np.round(np.std(binGrid,axis=0) * 100.,4)
         t['Theo Err (%)'] = np.round(np.median(binGrid_err,axis=0) * 100.,4)
         
