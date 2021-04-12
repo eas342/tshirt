@@ -39,7 +39,7 @@ try:
     from bokeh.models import WheelZoomTool
 except ImportError as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
-from .utils import robust_poly
+from .utils import robust_poly, robust_statistics
 
 def run_one_phot_method(allInput):
     """
