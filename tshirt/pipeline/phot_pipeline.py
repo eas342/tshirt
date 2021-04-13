@@ -936,6 +936,19 @@ class phot:
             else:
                 warnings.warn('Background Aperture scaling not set up for non-annular geometry')
     
+    def get_ap_area(self,aperture):
+        """
+        A function go get the area of apertures
+        This accommodates different versions of photutils
+        """
+        if photutils.__version__ > '0.6':
+            ## photutils changed area from a method to an attribute after this version
+            area = aperture.area
+        else:
+            ## older photutils
+            area = aperture.area()
+        return area
+    
     def phot_for_one_file(self,ind):
         """
         Calculate aperture photometry using `photutils`
@@ -978,14 +991,9 @@ class phot:
             
             if self.param['bkgMethod'] == 'mean':
                 bkgPhot = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
-                if photutils.__version__ > '0.6':
-                    ## photutils changed area from a method to an attribute after this version
-                    bkgArea = self.bkgApertures.area
-                    srcArea = self.srcApertures.area
-                else:
-                    ## older photutils
-                    bkgArea = self.bkgApertures.area()
-                    srcArea = self.srcApertures.area()
+                bkgArea = self.get_ap_area(self.bkgApertures)
+                srcArea = self.get_ap_area(self.srcApertures)
+                
                 
                 bkgVals = bkgPhot['aperture_sum'] / bkgArea * srcArea
                 bkgValsErr = bkgPhot['aperture_sum_err'] / bkgArea * srcArea
@@ -1002,8 +1010,8 @@ class phot:
                     bkgIntensity.append(oneIntensity)
                     bkgIntensityErr.append(oneErr)
                 
-                bkgVals = np.array(bkgIntensity)  * self.srcApertures.area()
-                bkgValsErr = np.array(bkgIntensityErr) * self.srcApertures.area()
+                bkgVals = np.array(bkgIntensity)  * self.get_ap_area(self.srcApertures)
+                bkgValsErr = np.array(bkgIntensityErr) * self.get_ap_area(self.srcApertures)
             
                 srcPhot = rawPhot['aperture_sum'] - bkgVals
             elif self.param['bkgMethod'] == 'colrow':
@@ -1106,7 +1114,8 @@ class phot:
         
         ## use the error in the mean background as an estimate for error
         bkgPhotTotal = aperture_photometry(img,self.bkgApertures,error=err,method=self.param['subpixelMethod'])
-        bkgValsErr = bkgPhotTotal['aperture_sum_err'] / self.bkgApertures.area() * self.srcApertures.area()
+        bkgValsErr = (bkgPhotTotal['aperture_sum_err'] / self.get_ap_area(self.bkgApertures)
+                     * self.get_ap_area(self.srcApertures))
         
         
         return np.array(srcPhot),np.array(bkgPhot),bkgValsErr
