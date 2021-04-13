@@ -13,8 +13,7 @@ class BasicPhot(unittest.TestCase):
         self.phot = phot_pipeline.phot(examParamPath)
     
     def test_plot_starChoices(self):
-        phot = phot_pipeline.phot()
-        phot.showStarChoices(showPlot=False,showAps=True)
+        self.phot.showStarChoices(showPlot=False,showAps=True)
     
     def test_phot_extract_single_core(self):
         self.phot.do_phot(useMultiprocessing=True)
