@@ -22,12 +22,13 @@ class BasicPhot(unittest.TestCase):
     def test_phot_extract_single_core(self):
         self.phot.do_phot(useMultiprocessing=False)
         
-    def test_phot_w_median_backsub(self):
+    def test_phot_w_other_backsub(self):
         """
         Test if photometry works with median background subtraction
         """
         param = deepcopy(self.phot.param)
-        param['bkgMethod'] = 'median'
+        for oneMethod in ['median','rowcol','robust mean']:
+            param['bkgMethod'] = oneMethod
         phot = phot_pipeline.phot(directParam=param)
         phot.do_phot()
         
