@@ -2,6 +2,7 @@ import unittest
 from tshirt.pipeline import phot_pipeline, spec_pipeline
 from astropy.io import fits
 from pkg_resources import resource_filename
+from copy import deepcopy
 
 class BasicPhot(unittest.TestCase):
 
@@ -20,6 +21,16 @@ class BasicPhot(unittest.TestCase):
         
     def test_phot_extract_single_core(self):
         self.phot.do_phot(useMultiprocessing=False)
+        
+    def test_phot_w_median_backsub(self):
+        """
+        Test if photometry works with median background subtraction
+        """
+        param = deepcopy(self.phot.param)
+        param['bkgMethod'] = 'median'
+        phot = phot_pipeline.phot(directParam=param)
+        phot.do_phot()
+        
     # def test_simple
     #
     # def test_upper(self):
