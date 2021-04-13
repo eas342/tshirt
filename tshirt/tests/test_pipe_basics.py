@@ -5,13 +5,21 @@ from pkg_resources import resource_filename
 
 class BasicPhot(unittest.TestCase):
 
-    def test_initialization(self):
-        phot = phot_pipeline.phot()
+    def setUp(self):
+        """Set up test fixtures, if any."""
+        testPhotParams = 'parameters/phot_params/test_params/phot_param_k2_22_annulus.yaml'
+        examParamPath = phot_pipeline.resource_filename('tshirt',testPhotParams)
+        self.phot = phot_pipeline.phot(examParamPath)
     
     def test_plot_starChoices(self):
         phot = phot_pipeline.phot()
         phot.showStarChoices(showPlot=False,showAps=True)
     
+    def test_phot_extract_single_core(self):
+        self.phot.do_phot(useMultiprocessing=True)
+        
+    def test_phot_extract_single_core(self):
+        self.phot.do_phot(useMultiprocessing=False)
     # def test_simple
     #
     # def test_upper(self):
