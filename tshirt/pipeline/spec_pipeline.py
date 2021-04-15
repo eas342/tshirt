@@ -1232,7 +1232,7 @@ class spec(phot_pipeline.phot):
     def align_spec(self,data2D,refInd=None,diagnostics=False,srcInd=0):
         align2D = np.zeros_like(data2D)
         nImg = data2D.shape[0]
-        dispPix = int(np.array(self.param['dispPixels']) + self.dispOffsets[srcInd])
+        dispPix = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[srcInd],dtype=int)
         Noffset = self.param['nOffsetCC']
         
         if refInd == None:
