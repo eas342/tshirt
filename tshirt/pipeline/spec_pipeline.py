@@ -1364,7 +1364,8 @@ class spec(phot_pipeline.phot):
             extSpec = extSpec / specFF2D
         
         if align == True:
-            useSpec, specOffsets = self.align_spec(extSpec,diagnostics=alignDiagnostics)
+            useSpec, specOffsets = self.align_spec(extSpec,diagnostics=alignDiagnostics,
+                                                   srcInd=src)
         else:
             useSpec = extSpec
             specOffsets = np.zeros(nImg)
