@@ -1510,6 +1510,17 @@ class spec(phot_pipeline.phot):
     def wavebin_specFile(self,nbins=10):
         return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
     
+    
+    def align_dynamic_spectra(self,**kwargs):
+        specHead = fits.getheader(self.specFile)
+        nDispPixels = self.param['dispPixels'][1] - self.param['dispPixels'][0] + 1
+        combined_dyn = np.zeros(self.nsrc,specHead['NIMG'],nDispPixels)
+        for oneSrc in np.arange(nsrc):
+            dispSt, dispEnd = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[oneSrc],
+                                       dtype=np.int)
+            self.plot_dynamic_spec(src=oneSrc,**kwargs)
+            #HDUList = fits.open(spe)
+    
     def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None,
                             recalculate=False,align=False):
         """
