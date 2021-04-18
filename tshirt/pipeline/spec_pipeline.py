@@ -1511,15 +1511,72 @@ class spec(phot_pipeline.phot):
         return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
     
     
-    def align_dynamic_spectra(self,**kwargs):
+    def align_dynamic_spectra(self,alignStars=True,starAlignDiagnostics=False,
+                              **kwargs):
+        """
+        Align the dynamic spectra for multi-object spectroscopy?
+        This method uses the mosOffsets to get the gross alignments of the 
+            dynamic spectra.
+        
+        alignStars: bool
+            Cross-correlate to find the individual star's offsets?
+        starAlignDiagnostics: bool
+            Show the diagnostics for aligning average aspectra
+        """
         specHead = fits.getheader(self.specFile)
-        nDispPixels = self.param['dispPixels'][1] - self.param['dispPixels'][0] + 1
-        combined_dyn = np.zeros(self.nsrc,specHead['NIMG'],nDispPixels)
-        for oneSrc in np.arange(nsrc):
+        nDispPixels = self.param['dispPixels'][1] - self.param['dispPixels'][0]
+        combined_dyn = np.zeros([self.nsrc,specHead['NIMG'],nDispPixels])
+        combined_dyn_err = np.zeros_like(combined_dyn)
+        
+        avgSpecs = np.zeros([self.nsrc,nDispPixels])
+        for oneSrc in np.arange(self.nsrc):
             dispSt, dispEnd = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[oneSrc],
                                        dtype=np.int)
             self.plot_dynamic_spec(src=oneSrc,**kwargs)
-            #HDUList = fits.open(spe)
+            HDUList = fits.open(self.dyn_specFile(oneSrc))
+            combined_dyn[oneSrc,:,:] = HDUList['DYNAMIC SPEC'].data[:,dispSt:dispEnd]
+            combined_dyn_err[oneSrc,:,:] = HDUList['DYN SPEC ERR'].data[:,dispSt:dispEnd]
+            
+            avgSpecs[oneSrc,:] = HDUList['AVG SPEC'].data[dispSt:dispEnd]
+            
+            #plt.plot(avgSpecs[oneSrc,:]/np.nanmax(avgSpecs[oneSrc,:]))
+            if oneSrc == 0:
+                outHDUList = fits.HDUList(HDUList)
+                #outHDUList['DISP INDICES'].data = HDUList['DISP INDICES'].data[dispSt:dispEnd]
+        
+        if alignStars == True:
+            refSpec = avgSpecs[self.nsrc // 2,:]
+            waveIndices = np.arange(dispEnd - dispSt)
+            Noffset = self.param['nOffsetCC']
+            starOffsets = np.zeros(self.nsrc)
+            for oneSrc in np.arange(self.nsrc):
+                thisSpec = avgSpecs[oneSrc,:]
+                    
+                offsetX, offsetInd = utils.crosscor_offset(waveIndices,refSpec,thisSpec,Noffset=Noffset,
+                                                           diagnostics=starAlignDiagnostics,
+                                                           subPixel=True,
+                                                           lowPassFreq=self.param['lowPassFreqCC'],
+                                                           highPassFreq=self.param['hiPassFreqCC'])
+                if starAlignDiagnostics == True:
+                    pdb.set_trace()
+                
+                for oneImg in np.arange(specHead['NIMG']):
+                    tmp = utils.roll_pad(combined_dyn[oneSrc,oneImg,:],
+                                         offsetInd * self.param['specShiftMultiplier'])
+                    combined_dyn[oneSrc,oneImg,:] = tmp
+                starOffsets[oneSrc] = offsetInd * self.param['specShiftMultiplier']            
+        else:
+            starOffsets = np.zeros_like(self.nsrc)
+        
+        
+        outHDUList['DYNAMIC SPEC'].data = combined_dyn
+        outHDUList['DYN SPEC ERR'].data = combined_dyn_err
+        
+        print("Output written to {}".format(self.dyn_specFile('comb')))
+        outHDUList.writeto(self.dyn_specFile('comb'),overwrite=True)
+        HDUList.close()
+        
+        #plt.show()
     
     def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None,
                             recalculate=False,align=False):
