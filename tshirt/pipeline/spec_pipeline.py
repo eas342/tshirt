@@ -1411,10 +1411,20 @@ class spec(phot_pipeline.phot):
             avgErrHDU = fits.ImageHDU(avgSpec_err)
             avgErrHDU.name = 'AVG SPEC ERR'
             
+
+                
+            
             ## Expect a card-too-long warning
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", message= "Card is too long, comment will be truncated")
-                outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU])           
+                outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU])
+                if align == True:
+                    if specType == 'Optimal':
+                        alignedHDU = fits.ImageHDU(useSpec,HDUList['OPTIMAL SPEC'].header)
+                    else:
+                        alignedHDU = fits.ImageHDU(useSpec,HDUList['SUM SPEC'].header)
+                    ## Save the aligned spectra
+                    outHDUList.append(alignedHDU)
                 outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
         
         if specAtTop == True:
@@ -1562,7 +1572,7 @@ class spec(phot_pipeline.phot):
                 
                 for oneImg in np.arange(specHead['NIMG']):
                     tmp = utils.roll_pad(combined_dyn[oneSrc,oneImg,:],
-                                         offsetInd * self.param['specShiftMultiplier'])
+                                         offsetInd * self.param['specShiftMultiplier'] * 10.)
                     combined_dyn[oneSrc,oneImg,:] = tmp
                 starOffsets[oneSrc] = offsetInd * self.param['specShiftMultiplier']            
         else:
@@ -1577,6 +1587,23 @@ class spec(phot_pipeline.phot):
         HDUList.close()
         
         #plt.show()
+    
+    def refcorrect_dynamic_spectra(self):
+        HDUList = fits.open(self.dyn_specFile('comb'))
+        outHDU = fits.HDUList(HDUList)
+        head = HDUList['DYNAMIC SPEC'].header
+        dyn_specRatio = np.zeros([self.nsrc-1,head['NIMG'],head['NAXIS1']])
+        try:
+            mainSrc = HDUList['DYNAMIC SPEC'].data[0]
+            for srcInd in np.arange(self.nsrc-1):
+                dyn_specRatio[srcInd] = mainSrc / HDUList['DYNAMIC SPEC'].data[srcInd+1]
+        except RuntimeWarning:
+             pass
+        
+        outHDU[0].data = dyn_specRatio
+        outHDU[0].name = 'DYNAMIC SPECTRATIO'
+        print("writing output to {}".format(self.dyn_specFile('ratio')))
+        outHDU.writeto(self.dyn_specFile('ratio'),overwrite=True)
     
     def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None,
                             recalculate=False,align=False):
