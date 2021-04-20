@@ -120,7 +120,10 @@ class spec(phot_pipeline.phot):
         self.get_summation_direction()
         
         ## a little delta to add to add to profile so that you don't get log(negative)
-        self.floor_delta = self.param['readNoise'] * 2. 
+        if self.param['splineFloor'] is None:
+            self.floor_delta = self.param['readNoise'] * 2. 
+        else:
+            self.floor_delta = self.param['splineFloor']
         
         ## minimum number of pixels to do 
         self.minPixForCovarianceWeights = 3

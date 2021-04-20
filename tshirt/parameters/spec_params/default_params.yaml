@@ -35,6 +35,7 @@ backPreScreen: False ## Pre-screen the background for outliers before trying to 
 splineSpecFitOrder: 3 ## order of the Spline to fit along the dispersion direction (for profile & badpix)
 splineSigRej: 2 ## number of sigma to reject when fitting the Splines along dispersion direction
 splinePreScreen: False ## pre-screen the points going into spline fitting?
+splineFloor: null ## set a floor for spline fitting in logarithmic space or None to use 2X the read noise.
 sigForBadPx: 300 ## number of sigma difference from smoothed profile where to mark bad pixels
 numSplineKnots: 20 ## number of spline Knots when fitting the Splines along the dispersion direction
 nanTreatment: 'leave' ## How to treat NaNs in image? 'zero' will set to 0, 'leave' will leave at NaN
