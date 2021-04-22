@@ -1525,6 +1525,7 @@ class spec(phot_pipeline.phot):
     
     
     def align_dynamic_spectra(self,alignStars=True,starAlignDiagnostics=False,
+                              skipIndividualDynamic=False,
                               **kwargs):
         """
         Align the dynamic spectra for multi-object spectroscopy?
@@ -1535,6 +1536,9 @@ class spec(phot_pipeline.phot):
             Cross-correlate to find the individual star's offsets?
         starAlignDiagnostics: bool
             Show the diagnostics for aligning average aspectra
+        skipIndividualDynamic: bool
+            Skip the individual dynamic spectra. Use this when trying to run
+                quickly many times and use the saved versions only.
         """
         specHead = fits.getheader(self.specFile)
         nDispPixels = self.param['dispPixels'][1] - self.param['dispPixels'][0]
@@ -1545,7 +1549,8 @@ class spec(phot_pipeline.phot):
         for oneSrc in np.arange(self.nsrc):
             dispSt, dispEnd = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[oneSrc],
                                        dtype=np.int)
-            self.plot_dynamic_spec(src=oneSrc,**kwargs)
+            if skipIndividualDynamic == False:
+                self.plot_dynamic_spec(src=oneSrc,**kwargs)
             HDUList = fits.open(self.dyn_specFile(oneSrc))
             combined_dyn[oneSrc,:,:] = HDUList['DYNAMIC SPEC'].data[:,dispSt:dispEnd]
             combined_dyn_err[oneSrc,:,:] = HDUList['DYN SPEC ERR'].data[:,dispSt:dispEnd]
@@ -1575,7 +1580,7 @@ class spec(phot_pipeline.phot):
                 
                 for oneImg in np.arange(specHead['NIMG']):
                     tmp = utils.roll_pad(combined_dyn[oneSrc,oneImg,:],
-                                         offsetInd * self.param['specShiftMultiplier'] * 10.)
+                                         offsetInd * self.param['specShiftMultiplier'])
                     combined_dyn[oneSrc,oneImg,:] = tmp
                 starOffsets[oneSrc] = offsetInd * self.param['specShiftMultiplier']            
         else:
