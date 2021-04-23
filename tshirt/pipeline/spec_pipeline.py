@@ -1520,8 +1520,18 @@ class spec(phot_pipeline.phot):
         fig.savefig(outPath)
         plt.close(fig)
     
-    def wavebin_specFile(self,nbins=10):
-        return "{}_wavebin_{}.fits".format(self.wavebin_file_prefix,nbins)
+    def wavebin_specFile(self,nbins=10,srcInd=0):
+        """
+        The name of the wavelength-binned time series file
+        
+        Parameters
+        -----------
+        nbins: int
+            The number of wavelength bins
+        srcInd: int
+            The index for the source. For a single source the index is 0.
+        """
+        return "{}_wavebin_{}_src_{}.fits".format(self.wavebin_file_prefix,nbins,srcInd)
     
     
     def align_dynamic_spectra(self,alignStars=True,starAlignDiagnostics=False,
@@ -1715,7 +1725,7 @@ class spec(phot_pipeline.phot):
         dispHDU = fits.BinTableHDU(dispTable)
         dispHDU.name = "DISP INDICES"
         outHDUList = fits.HDUList([outHDU,errHDU,timeHDU,offsetHDU,dispHDU])
-        outHDUList.writeto(self.wavebin_specFile(nbins),overwrite=True)
+        outHDUList.writeto(self.wavebin_specFile(nbins,src),overwrite=True)
         
         HDUList.close()
     
@@ -1776,11 +1786,11 @@ class spec(phot_pipeline.phot):
         src: int
             Index number for which spectrum to look at (used for Multi-object spectroscopy)
         """
-        if (os.path.exists(self.wavebin_specFile(nbins=nbins)) == False) | (recalculate == True):
+        if (os.path.exists(self.wavebin_specFile(nbins=nbins,srcInd=src)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices,recalculate=recalculate,
                                      specType=specType,align=align,src=src)
         
-        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins,srcInd=src))
         time = HDUList['TIME'].data
         offset_time = self.get_offset_time(time)
         
@@ -1853,7 +1863,7 @@ class spec(phot_pipeline.phot):
             if showPlot == True:
                 fig.show()
             else:
-                outName = 'wavebin_tser_{}.pdf'.format(self.dataFileDescrip)
+                outName = 'wavebin_tser_{}_src_{}.pdf'.format(self.dataFileDescrip,src)
                 outPath = os.path.join(self.baseDir,'plots','spectra','wavebin_tseries',outName)
                 fig.savefig(outPath)
                 plt.close(fig)
@@ -1862,7 +1872,7 @@ class spec(phot_pipeline.phot):
             HDUList.close()
     
     
-    def get_wavebin_series(self,nbins=10,recalculate=False,specType='Optimal'):
+    def get_wavebin_series(self,nbins=10,recalculate=False,specType='Optimal',srcInd=0):
         """
         Get a table of the the wavelength-binned time series
         
@@ -1882,6 +1892,9 @@ class spec(phot_pipeline.phot):
             Eg. "Sum" for sum extraction, "Optimal" for optimal extraction
             This will be skipped over if recalculate=False and a file already exists
         
+        srcInd: int, optional
+            The index of the source. For single objects it is 0.
+        
         Returns
         --------
         t1: astropy table
@@ -1896,10 +1909,10 @@ class spec(phot_pipeline.phot):
         >>> spec = spec_pipeline.spec()
         >>> t1, t2 = spec.get_wavebin_series()
         """
-        sFile = self.wavebin_specFile(nbins=nbins)
+        sFile = self.wavebin_specFile(nbins=nbins,srcInd=srcInd)
         if (os.path.exists(sFile) == False) | (recalculate == True):
             self.plot_wavebin_series(nbins=nbins,recalculate=recalculate,specType=specType)
-        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        HDUList = fits.open(sFile)
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
         binGrid_err = HDUList['BINNED ERR'].data
@@ -1917,7 +1930,7 @@ class spec(phot_pipeline.phot):
         return t1, t2
     
     def print_noise_wavebin(self,nbins=10,shorten=False,recalculate=False,align=False,
-                            specType='Optimal',npoints=15):
+                            specType='Optimal',npoints=15,srcInd=0):
         """ 
         Get a table of noise measurements for all wavelength bins
         
@@ -1936,6 +1949,8 @@ class spec(phot_pipeline.phot):
             Type of extraction 'Optimal' vs 'Sum'
         align: bool
             Automatically align all the spectra? This is passed to plot_dynamic_spec
+        srcInd: int
+            Index for the source. For a single object, the index is 0.
         
         Returns
         ---------
@@ -1943,11 +1958,11 @@ class spec(phot_pipeline.phot):
             A table of wavelength bins, with theoretical noise
             and measured standard deviation across time
         """
-        sFile = self.wavebin_specFile(nbins=nbins)
+        sFile = self.wavebin_specFile(nbins=nbins,srcInd=srcInd)
         if (os.path.exists(sFile) == False) | (recalculate==True):
             self.plot_wavebin_series(nbins=nbins,recalculate=recalculate,specType=specType,
                                      align=align)
-        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        HDUList = fits.open(sFile)
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
         binGrid_err = HDUList['BINNED ERR'].data
@@ -2138,11 +2153,26 @@ class spec(phot_pipeline.phot):
         else:
             plt.close(fig)
     
-    def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3,binMin=10,binMax=250):
+    def adjacent_bin_ratio(self,nbins=10,bin1=2,bin2=3,binMin=10,binMax=250,srcInd=0):
         """
         Examine the time series for adjacent bins
+        
+        Parameters
+        ----------
+        nbins: int
+            Number of bins
+        bin1: int
+            Index of the first bin
+        bin2: int
+            Index of the second bin
+        binMin: int
+            start bin for allan variance
+        binMax: int
+            end bin for allan variance
+        srcInd: int
+            Index for the source. For a single source, the index is 0.
         """
-        HDUList = fits.open(self.wavebin_specFile(nbins=nbins))
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins,srcInd=srcInd))
         
         time = HDUList['TIME'].data
         offset_time = self.get_offset_time(time)
