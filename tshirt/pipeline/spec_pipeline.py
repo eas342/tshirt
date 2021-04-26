@@ -268,6 +268,7 @@ class spec(phot_pipeline.phot):
                 outputSpec.append(self.spec_for_one_file(ind))
         
         timeArr = []
+        airmass = []
         dispPixelArr = outputSpec[0]['disp indices']
         nDisp = len(dispPixelArr)
         optSpec = np.zeros([self.nsrc,self.nImg,nDisp])
@@ -288,6 +289,7 @@ class spec(phot_pipeline.phot):
             backSpec[:,ind,:] = specDict['back spec']
             if 'ref row' in specDict:
                 refRows[ind,:] = specDict['ref row']
+            airmass.append(specDict['airmass'])
                 
         
         hdu = fits.PrimaryHDU(optSpec)
@@ -318,7 +320,7 @@ class spec(phot_pipeline.phot):
         hduDispIndices.header['AXIS1'] = ('disp index', 'dispersion index (pixels)')
         hduDispIndices.name = 'Disp Indices'
         
-        hduFileNames = self.make_filename_hdu()
+        hduFileNames = self.make_filename_hdu(airmass=airmass)
         
         ## Get an example original header
         exImg, exHeader = self.get_default_im()
@@ -875,6 +877,11 @@ class spec(phot_pipeline.phot):
         img, head = self.getImg(oneImgName)
         t0 = self.get_date(head)
         
+        if 'AIRMASS' in head:
+            airmass = head['AIRMASS']
+        else:
+            airmass = 'none'
+        
         imgSub, bkgModel, subHead = self.do_backsub(img,head,ind,saveFits=saveFits,
                                                     directions=self.param['bkgSubDirections'])
         readNoise = self.get_read_noise(head)
@@ -1033,6 +1040,7 @@ class spec(phot_pipeline.phot):
         extractDict['sum spec'] = sumSpectra
         extractDict['sum spec err'] = sumSpectra_err
         extractDict['back spec'] = backSpectra
+        extractDict['airmass'] = airmass
         
         if self.param['saveRefRow'] == True:
             refRow = np.mean(img[0:4,:],axis=0)

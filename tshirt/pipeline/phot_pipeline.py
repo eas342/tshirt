@@ -533,12 +533,15 @@ class phot:
             print('Unrecognized plot type')
             
     
-    def make_filename_hdu(self):
+    def make_filename_hdu(self,airmass=None):
         """
         Makes a Header data unit (binary FITS table) for filenames
         """
         fileLTable = Table()
         fileLTable['File Path'] = self.fileL
+        if airmass is not None:
+            fileLTable['Airmass'] = airmass
+        
         hduFileNames = fits.BinTableHDU(fileLTable)
         hduFileNames.name = "FILENAMES"
         
