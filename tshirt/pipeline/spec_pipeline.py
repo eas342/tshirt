@@ -1614,15 +1614,23 @@ class spec(phot_pipeline.phot):
         
         #plt.show()
     
-    def refcorrect_dynamic_spectra(self):
+    def refcorrect_dynamic_spectra(self,mainSrcIndex=0):
+        """
+        Divide the (aligned) dynamic spectra of one source by another for MOS
+        
+        Parameters
+        ----------
+        mainSrcIndex: int
+            The main source that will be divided by references
+        """
         HDUList = fits.open(self.dyn_specFile('comb'))
         outHDU = fits.HDUList(HDUList)
         head = HDUList['DYNAMIC SPEC'].header
-        dyn_specRatio = np.zeros([self.nsrc-1,head['NIMG'],head['NAXIS1']])
+        dyn_specRatio = np.zeros([self.nsrc,head['NIMG'],head['NAXIS1']])
         try:
-            mainSrc = HDUList['DYNAMIC SPEC'].data[0]
-            for srcInd in np.arange(self.nsrc-1):
-                dyn_specRatio[srcInd] = mainSrc / HDUList['DYNAMIC SPEC'].data[srcInd+1]
+            mainSrc = HDUList['DYNAMIC SPEC'].data[mainSrcIndex]
+            for srcInd in np.arange(self.nsrc):
+                dyn_specRatio[srcInd] = mainSrc / HDUList['DYNAMIC SPEC'].data[srcInd]
         except RuntimeWarning:
              pass
         
@@ -1632,7 +1640,7 @@ class spec(phot_pipeline.phot):
         outHDU.writeto(self.dyn_specFile('ratio'),overwrite=True)
     
     def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None,
-                            recalculate=False,align=False):
+                            recalculate=False,align=False,refCorrect=False):
         """
         Bin wavelengths together and generate a time series from the dynamic spectrum
         
@@ -1650,6 +1658,8 @@ class spec(phot_pipeline.phot):
             Re-caalculate the dynamic spectrum?
         align: bool
             Automatically align all the spectra? This is passed to plot_dynamic_spec
+        refCorrect: bool
+            Use the reference corrected photometry?
         """
         
         ## Check if there is a previous dynamic spec file with same parameters
@@ -1669,10 +1679,16 @@ class spec(phot_pipeline.phot):
             print('Remaking dynamic spectrum...')
             self.plot_dynamic_spec(src=src,saveFits=True,align=align,specType=specType)
         
-        HDUList = fits.open(self.dyn_specFile(src))
-        dynSpec = HDUList['DYNAMIC SPEC'].data
+        if refCorrect == True:
+            HDUList = fits.open(self.dyn_specFile('ratio'))
+            dynSpec = HDUList['DYNAMIC SPECTRATIO'].data[src]
         
-        dynSpec_err = HDUList['DYN SPEC ERR'].data
+            dynSpec_err = HDUList['DYN SPEC ERR'].data[src]
+        else:
+            HDUList = fits.open(self.dyn_specFile(src))
+            dynSpec = HDUList['DYNAMIC SPEC'].data
+        
+            dynSpec_err = HDUList['DYN SPEC ERR'].data
         goodp = np.isfinite(dynSpec_err) & (dynSpec_err != 0)
         
         time = HDUList['TIME'].data
@@ -1743,7 +1759,7 @@ class spec(phot_pipeline.phot):
     def plot_wavebin_series(self,nbins=10,offset=0.005,showPlot=False,yLim=None,xLim=None,
                             recalculate=False,dispIndices=None,differential=False,
                             interactive=False,unit='fraction',align=False,specType='Optimal',
-                            src=0):
+                            src=0,refCorrect=False):
         """
         Plot a normalized lightcurve for wavelength-binned data one wavelength at a time with
         an offset between the lightcurves.
@@ -1793,10 +1809,12 @@ class spec(phot_pipeline.phot):
             Automatically align all the spectra? This is passed to plot_dynamic_spec
         src: int
             Index number for which spectrum to look at (used for Multi-object spectroscopy)
+        refCorrect: bool
+            Correct by reference stars for MOS?
         """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins,srcInd=src)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices,recalculate=recalculate,
-                                     specType=specType,align=align,src=src)
+                                     specType=specType,align=align,src=src,refCorrect=refCorrect)
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins,srcInd=src))
         time = HDUList['TIME'].data
