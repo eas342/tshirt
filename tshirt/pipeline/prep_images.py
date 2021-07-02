@@ -42,7 +42,8 @@ class prep():
                          'sciExtension': None, ## extension for science data
                          'sciExcludeList': None, ## list of files to exclude for science data
                          'fixWindow': False, ## fix the window between bias, flat & science?
-                         'fixPix': False ## fix the bad pixels with interpolation?
+                         'fixPix': False, ## fix the bad pixels with interpolation?
+                         'combinerFunc': 'average' ## how to combine calibration files?
                      } 
         
         for oneKey in defaultParams.keys():
@@ -95,7 +96,14 @@ class prep():
             combiner = Combiner(ccdList)
             
             combiner.sigma_clipping(low_thresh=2, high_thresh=5, func=np.ma.median)
-            combined_avg = combiner.average_combine()
+            combinerFunc = self.pipePrefs['combinerFunc']
+            if combinerFunc == 'average':
+                combined_avg = combiner.average_combine()
+            elif combinerFunc == 'median':
+                combined_avg = combiner.median_combine()
+            else:
+                raise Exception("Unrecognized combiner function {}".format(self.combiner_func))
+            
             
             comb_gained = gain_correct(combined_avg,self.get_gain(head) * u.electron/u.adu)
             
