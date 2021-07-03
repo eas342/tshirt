@@ -1,0 +1,36 @@
+procFiles: sim_data/drift_phot/*.fits ## files on which to do Phot
+excludeList: null
+srcName: Drifting Gaussian
+srcNameShort: driftGauss
+nightName: UT2015_05_05
+refStarPos: ## positions of the stars in [x,y]. The first one is the target
+   - [15, 15]
+refPhotCentering: null ## photometry fits file where to obtain centroid shifts to apply from 1 star/source
+copyCentroidFile: null ## photometry or centroid fits file where to obtain centroids to avoid re-calculating
+srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
+bkgSub: True ## Do background subtraction?
+bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
+bkgMethod: mean ## Method for background estimate (mean, median, robust mean)
+apRadius: 2. ## Source aperture radius
+#apHeight: 40 ## Source aperture height (only for rectangular aperture)
+#apWidth: 1502 ## Source aperture width (only for rectangular aperture)
+#nanTreatment: 'zero' ## How to treat NaNs in image? 'zero' will set to 0. 'value' will set to nanReplaceValue
+backStart: 2. ## Background annulus start radius
+backEnd: 4. ## Background annulus end radius
+backOffset: [0.,0.] ## Background offset (from source centroid)
+boxFindSize: 6 ## the half-width of the box used for source centroiding
+scaleAperture: False ## Scale the aperture with the FWHM?
+isCube: False ## Is the data a cube (3D)?
+cubePlane: 0 ## The plane to choose if data is in cubes
+doCentering: True ## Center the aperturess with Gaussian?
+FITSextension: 0 ## FITS extension of science frames
+HEADextension: 0 ## FITS extension of the header info (for exposure and timing)
+isSlope: False ## Is the FITS image a slope image that should be multiplied by the int time?
+subpixelMethod: exact ## Method for subpixel positions in aperture photometry. "exact" will calculate exactly while "center" will use whole pixels (faster to run)
+readNoise: 0.001 ## Read noise in electrons
+detectorGain: 1.0 ## Optionally specify the detector gain e-/DN
+dateFormat: One Part ## Format of date. "Two Part" is split over DATE-OBS and TIME-OBS, whereas "One Part" is all in DATE-OBS
+saturationVal: null ## put in a value so that if the source aperture has more than satNPix points, it's counted as NaN. If None, ignored.
+satNPix: 5 ## number of pixels above saturation to declare as Nan
+readFromTshirtExamples: True ## read the data from T-shirt examples within the package? Use only for examples.
+driftFile: sim_data/drift_phot/drift.csv ## drift file

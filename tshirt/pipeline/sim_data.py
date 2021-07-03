@@ -64,6 +64,7 @@ def sim_phot_w_large_shift():
                           'sim_data','drift_phot')
     
     np.random.seed(0)
+    fileNames = []
     for ind in np.arange(nImg):
         z = make_gauss_star(dimen=dimen,cen=[xcen[ind],ycen[ind]],flux=100.0)
         noise = np.random.randn(dimen,dimen) * 1.0
@@ -73,8 +74,16 @@ def sim_phot_w_large_shift():
         primHDU.header['DATE-OBS'] = (time_obs[ind].fits, "Int Start Time")
         
         outName = 'sim_phot_{:03d}.fits'.format(ind)
+        fileNames.append(outName)
         primHDU.writeto(os.path.join(outDir,outName),overwrite=True)
     
-    
-    pass
+    dr_dat = Table()
+    dr_dat['Index'] = np.arange(nImg)
+    dr_dat['File'] = fileNames
+    dr_dat['dx'] = xcen - np.mean(xcen) + np.random.randn(nImg) * 1.
+    dr_dat['dy'] = ycen - np.mean(ycen) + np.random.randn(nImg) * 1.
+    dr_dat['x truth'] = xcen
+    dr_dat['y truth'] = ycen
+    dr_path = os.path.join(outDir,'drift.csv')
+    dr_dat.write(dr_path,overwrite=True)
     
