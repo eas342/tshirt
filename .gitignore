@@ -4,6 +4,7 @@
 *.pdf
 *.png
 *.ipynb_checkpoints*
+.pytest_cache/
 MANIFEST
 tshirt/plots/photometry/interactive/*.html
 tshirt/plots/spectra/interactive/*.html
