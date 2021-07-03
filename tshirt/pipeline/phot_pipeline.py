@@ -145,7 +145,9 @@ class phot:
                          'bkgOrderX': 1, 'bkgOrderY': 1,'backsub_directions': ['Y','X'],
                          'readFromTshirtExamples': False,
                          'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0,
-                         'DATE-OBS': None}
+                         'DATE-OBS': None,
+                         'driftFile': None
+                         }
         
         
         for oneKey in defaultParams.keys():
@@ -173,6 +175,7 @@ class phot:
         self.set_up_apertures(positions)
         
         self.check_parameters()
+        self.get_drift_dat()
         
     
     def get_parameters(self,paramFile,directParam=None):
@@ -275,14 +278,54 @@ class phot:
         
         return img, head
     
-    def get_default_cen(self,custPos=None):
-        """ Get the default centroids for postage stamps or star identification maps"""
+    def get_default_cen(self,custPos=None,ind=0):
+        """ 
+        Get the default centroids for postage stamps or star identification maps
+        
+        Parameters
+        ----------
+        custPos: numpy array
+            Array of custom positions for the apertures. Otherwise it uses the guess position
+        ind: int
+            Image index. This is used to guess the position if a drift file is given
+        """
         if custPos is None:
-            showApPos = deepcopy(self.srcApertures.positions)
+            initialPos = deepcopy(self.srcApertures.positions)
+            showApPos = np.zeros_like(initialPos)
+            showApPos[:,0] = initialPos[:,0] + float(self.drift_dat['dx'][ind])
+            showApPos[:,1] = initialPos[:,1] + float(self.drift_dat['dy'][ind])
+            
         else:
             showApPos = custPos
         
         return showApPos
+    
+    def get_drift_dat(self):
+        drift_dat_0 = Table()
+        drift_dat_0 = Table()
+        drift_dat_0['Index'] = np.arange(self.nImg)
+        #drift_dat_0['File'] = self.fileL
+        drift_dat_0['dx'] = np.zeros(self.nImg)
+        drift_dat_0['dy'] = np.zeros(self.nImg)
+        
+        if self.param['driftFile'] == None:
+            self.drift_dat = drift_dat_0
+            drift_file_found = False
+        else:
+            if self.param['readFromTshirtExamples'] == True:
+                ## Find the files from the package data examples
+                ## This is only when running example pipeline runs or tests
+                drift_file_path = os.path.join(self.baseDir,'example_tshirt_data',self.param['driftFile'])
+            else:
+                drift_file_path = self.param['driftFile']
+            
+            if os.path.exists(drift_file_path) == False:
+                drift_file_found = False
+                warnings.warn("No Drift file found at {}".format(drift_file_path))
+            else:
+                drift_file_found = True
+                self.drift_dat = ascii.read(drift_file_path)
+        return drift_file_found
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
                         srcLabel=None,figSize=None,showPlot=False,
@@ -322,7 +365,13 @@ class phot:
         """
         fig, ax = plt.subplots(figsize=figSize)
         
-        img, head = self.get_default_im(img=img,head=None)
+        if index is None:
+            index = self.get_default_index()
+        
+        if img == None:
+            img, head = self.getImg(self.fileL[index])
+        else:
+            img_other, head = self.get_default_im(img=img,head=None)
         
         if vmin is None:
             useVmin = np.nanpercentile(img,1)
@@ -337,14 +386,15 @@ class phot:
         imData = ax.imshow(img,cmap='viridis',vmin=useVmin,vmax=useVmax,interpolation='nearest')
         ax.invert_yaxis()
         rad, txtOffset = 50, 20
+        
 
-        showApPos = self.get_default_cen(custPos=custPos)
+        
+        showApPos = self.get_default_cen(custPos=custPos,ind=index)
         if showAps == True:
             apsShow = deepcopy(self.srcApertures)
             apsShow.positions = showApPos
             
-            if index is None:
-                index = self.get_default_index()
+            
             self.adjust_apertures(index)
             
             if photutils.__version__ >= "0.7":
@@ -778,7 +828,9 @@ class phot:
         allX, allY = [], []
         allfwhmX, allfwhmY = [], []
         
-        for ind, onePos in enumerate(self.srcApertures.positions):
+        positions = self.get_default_cen(ind=ind)
+        
+        for srcInd, onePos in enumerate(positions):
             xcen, ycen, fwhmX, fwhmY = self.get_centroid(img,onePos[0],onePos[1])
             allX.append(xcen)
             allY.append(ycen)
@@ -1339,7 +1391,7 @@ class phot:
         else:
             for oneSrc in range(self.nsrc):
                 yFlux = photArr[:,oneSrc]
-                yNorm = yFlux / np.median(yFlux)
+                yNorm = yFlux / np.nanmedian(yFlux)
                 if oneSrc == 0:
                     pLabel = 'Src'
                 else:
