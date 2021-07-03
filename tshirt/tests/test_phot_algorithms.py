@@ -26,16 +26,16 @@ class driftPhot(unittest.TestCase):
     
     def test_no_default_drift(self):
         phot = phot_pipeline.phot()
-        self.assertTrue(np.allclose(self.phot.drift_dat['dx'],0.0))
-        self.assertTrue(np.allclose(self.phot.drift_dat['dy'],0.0))
+        self.assertTrue(np.allclose(phot.drift_dat['dx'],0.0))
+        self.assertTrue(np.allclose(phot.drift_dat['dy'],0.0))
     
     def test_centering(self):
         self.phot.get_allimg_cen(recenter=True,useMultiprocessing=True)
         pos = self.phot.cenArr
         xArr = pos[:,0,0]
         yArr = pos[:,0,1]
-        self.assertTrue(np.max(np.abs(xArr - self.drift_tab['x'])) < 2.)
-        self.assertTrue(np.max(np.abs(yArr - self.drift_tab['y'])) < 2.)
+        self.assertTrue(np.max(np.abs(xArr - self.drift_tab['x truth'])) < 2.)
+        self.assertTrue(np.max(np.abs(yArr - self.drift_tab['y truth'])) < 2.)
         
     
     def test_phot_result(self):
