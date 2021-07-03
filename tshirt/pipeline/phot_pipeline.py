@@ -368,7 +368,7 @@ class phot:
         if index is None:
             index = self.get_default_index()
         
-        if img == None:
+        if img is None:
             img, head = self.getImg(self.fileL[index])
         else:
             img_other, head = self.get_default_im(img=img,head=None)
