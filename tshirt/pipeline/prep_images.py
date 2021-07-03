@@ -43,7 +43,8 @@ class prep():
                          'sciExcludeList': None, ## list of files to exclude for science data
                          'fixWindow': False, ## fix the window between bias, flat & science?
                          'fixPix': False, ## fix the bad pixels with interpolation?
-                         'combinerFunc': 'average' ## how to combine calibration files?
+                         'combinerFunc': 'average', ## how to combine calibration files?
+                         'normFlat': False ## normalize the flat field images by the median? Useful for sky flats
                      } 
         
         for oneKey in defaultParams.keys():
@@ -88,9 +89,14 @@ class prep():
             if self.testMode == True:
                 fileL = fileL[0:4]
             
+            if (oneCal == 'doFlat') & (self.pipePrefs['normFlat'] == True):
+                normalize = True
+            else:
+                normalize = False
+
             ccdList = []
             for oneFile in fileL:
-                head, dataCCD = self.getData(oneFile)
+                head, dataCCD = self.getData(oneFile,normalize=normalize)
                 ccdList.append(dataCCD)
             
             combiner = Combiner(ccdList)
@@ -266,8 +272,14 @@ class prep():
             return False
     
     
-    def getData(self,fileName):
-        """ Gets the data and converts to CCDData type"""
+    def getData(self,fileName,normalize=False):
+        """ Gets the data and converts to CCDData type
+    
+        Parameters
+        ----------
+        normalize: bool
+            Normalize by the median? Useful for sky flats
+        """
         HDUList = fits.open(fileName)
         if self.pipePrefs['sciExtension'] is None:
             sciExtension = 0
@@ -284,8 +296,11 @@ class prep():
         data = HDUList[sciExtension].data
         head = HDUList[0].header
         HDUList.close()
-        
-        if 'GAINCOR' in head:
+
+        if normalize == True:
+            data = data / np.nanmedian(data)
+            outUnit = u.dimensionless_unscaled
+        elif 'GAINCOR' in head:
             if head['GAINCOR'] == 'T':
                 outUnit = u.electron
             else:
