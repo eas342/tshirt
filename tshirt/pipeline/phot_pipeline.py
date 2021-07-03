@@ -302,7 +302,6 @@ class phot:
     
     def get_drift_dat(self):
         drift_dat_0 = Table()
-        drift_dat_0 = Table()
         drift_dat_0['Index'] = np.arange(self.nImg)
         #drift_dat_0['File'] = self.fileL
         drift_dat_0['dx'] = np.zeros(self.nImg)
@@ -326,6 +325,37 @@ class phot:
                 drift_file_found = True
                 self.drift_dat = ascii.read(drift_file_path)
         return drift_file_found
+    
+    def make_drift_file(self,srcInd=0,refIndex=0):
+        """
+        Use the centroids in photometry to generate a drift file of X/Y offsets
+        
+        Parameters
+        ----------
+        srcInd: int
+            The source index used for drifts
+        refIndex: int
+            Which file index corresponds to 0.0 drift
+        """
+        HDUList = fits.open(self.photFile)
+        cenData = HDUList['CENTROIDS'].data
+        photHead = HDUList['PHOTOMETRY'].header
+        
+        nImg = photHead['NIMG']
+        drift_dat = Table()
+        drift_dat['Index'] = np.arange(nImg)
+        x = cenData[:,srcInd,0]
+        drift_dat['dx'] = x - x[refIndex]
+        y = cenData[:,srcInd,1]
+        drift_dat['dy'] = y - y[refIndex]
+        drift_dat['File'] = HDUList['FILENAMES'].data['File Path']
+        outPath = os.path.join(self.baseDir,'centroids','drift_'+self.dataFileDescrip+'.ecsv')
+        drift_dat.meta['Zero Index'] = refIndex
+        drift_dat.meta['Source Used'] = srcInd
+        drift_dat.meta['Zero File'] = str(drift_dat['File'][refIndex])
+        print("Saving Drift file to {}".format(outPath))
+        drift_dat.write(outPath,overwrite=True,format='ascii.ecsv')
+    
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
                         srcLabel=None,figSize=None,showPlot=False,
