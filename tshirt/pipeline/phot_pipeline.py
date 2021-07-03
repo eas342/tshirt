@@ -1751,9 +1751,31 @@ class phot:
         
         return t, yCorr, yCorr_err
         
-    def interactive_refSeries(self,excludeSrc=None):
-        t, yCorr, yCorr_err = self.get_refSeries(excludeSrc=excludeSrc)
-        outName = "refseries_{}.html".format(self.dataFileDescrip)
+    def interactive_refSeries(self,excludeSrc=None,
+                              refCorrect=True,srcInd=0):
+        """
+        Plot a bokeh interactive plot of the photometry
+        This lets you see which images are outliers
+        
+        Parameters
+        ----------
+        refCorrect: bool
+            Reference correct the time series?
+        excludeSrc: list or None
+            Which sources to exclude from reference series
+        srcInd: int
+            Which source index to plot if refCorrect is False
+        """
+        if refCorrect == True:
+            t, yCorr, yCorr_err = self.get_refSeries(excludeSrc=excludeSrc)
+            outName = "refseries_{}.html".format(self.dataFileDescrip)
+            
+        else:
+            t1, t2 = self.get_tSeries()
+            t = t1['Time (JD)']
+            yCorr = t1['Flux {}'.format(srcInd)]
+            yCorr_err = t2['Error {}'.format(srcInd)]
+            outName = "abseries_{}.html".format(self.dataFileDescrip)
         
         outFile = os.path.join(self.baseDir,'plots','photometry','interactive',outName)
         
