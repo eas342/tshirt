@@ -2236,7 +2236,7 @@ def do_binning(x,y,nBin=20):
 def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    binMin=50,binMax=2000,customShortName=None,
                    logPlot=True,clip=False,xUnit='min',
-                   yUnit='ppm'):
+                   yUnit='ppm',showPlot=False):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -2266,6 +2266,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         Name of units for X axis of input series
     yUnit: str
         Name of units for Y axis to be binned
+    showPlot: bool
+        Render the plot with matplotlib? If False, it is saved instead.
     """
 
     if clip == True:
@@ -2334,11 +2336,14 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     
     baseDir = get_baseDir()
     outPath = os.path.join(baseDir,'plots','allan_variance',outName)
-    fig.savefig(outPath,
-                bbox_inches='tight')
+    if showPlot == True:
+        fig.show()
+    else:
+        fig.savefig(outPath,
+                    bbox_inches='tight')
     
     
-    plt.close(fig)
+        plt.close(fig)
 
 def exists_and_equal(dict1,key1,val1):
     """
