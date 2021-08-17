@@ -16,7 +16,7 @@ copyCentroidFile: null ## photometry or centroid fits file where to obtain centr
 srcGeometry: Circular ## Source aperture geometry, Circular or Rectangular
 bkgSub: True ## Do background subtraction?
 bkgGeometry: CircularAnnulus ## Background geometry, Circular Annulus or Rectangular
-bkgMethod: mean ## Method for background estimate (mean, median, robust mean)
+bkgMethod: mean ## Method for background estimate (mean, median, robust mean, colrow)
 apRadius: 9. ## Source aperture radius
 #apHeight: 40 ## Source aperture height (only for rectangular aperture)
 #apWidth: 1502 ## Source aperture width (only for rectangular aperture)
