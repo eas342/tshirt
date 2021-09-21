@@ -30,7 +30,7 @@ class driftPhot(unittest.TestCase):
         self.assertTrue(np.allclose(phot.drift_dat['dy'],0.0))
     
     def test_centering(self):
-        self.phot.get_allimg_cen(recenter=True,useMultiprocessing=True)
+        self.phot.get_allimg_cen(recenter=True,useMultiprocessing=False)
         pos = self.phot.cenArr
         xArr = pos[:,0,0]
         yArr = pos[:,0,1]
