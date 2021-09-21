@@ -13,8 +13,13 @@ from matplotlib import gridspec
 import glob
 from photutils import CircularAperture, CircularAnnulus
 from photutils import RectangularAperture
-from photutils import centroid_2dg, aperture_photometry
+from photutils import aperture_photometry
 import photutils
+if photutils.__version__ > "1.0":
+    from . import fit_2dgauss
+    from photutils.centroids import centroid_2dg
+else:
+    from photutils import centroid_2dg
 import numpy as np
 from astropy.time import Time
 import astropy.units as u
@@ -907,10 +912,17 @@ class phot:
     def get_fwhm(self,subimg,xCen,yCen):
         """ Get the FWHM of the source in a subarray surrounding it 
         """
-        GaussModel = photutils.fit_2dgaussian(subimg)
+        if photutils.__version__ >= "1.0":
+            GaussFit = fit_2dgauss.centroid_2dg_w_sigmas(subimg)
+            x_stddev = GaussFit[2]
+            y_stddev = GaussFit[3]
+        else:
+            GaussModel = photutils.fit_2dgaussian(subimg)
+            x_stddev = GaussModel.x_stddev.value
+            y_stddev = GaussModel.y_stddev.value
         
-        fwhmX = GaussModel.x_stddev.value * 2.35482005
-        fwhmY = GaussModel.y_stddev.value * 2.35482005
+        fwhmX = x_stddev * 2.35482005
+        fwhmY = y_stddev * 2.35482005
         return fwhmX, fwhmY
     
     def add_filenames_to_header(self,hdu):
