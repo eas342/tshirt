@@ -365,7 +365,8 @@ class phot:
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
                         srcLabel=None,figSize=None,showPlot=False,
                         apColor='black',backColor='black',
-                        vmin=None,vmax=None,index=None):
+                        vmin=None,vmax=None,index=None,
+                        labelColor='white'):
         """
         Show the star choices for photometry
         
@@ -396,7 +397,8 @@ class phot:
             A value for the :code:`matplotlib.pyplot.plot.imshow` vmax parameter
         index: int or None
             The index of the file name. If None, it uses the default
-        
+        labelColor: str
+            Color for the text label for sources
         """
         fig, ax = plt.subplots(figsize=figSize)
         
@@ -463,7 +465,7 @@ class phot:
                     name=srcLabel
             else:
                 name=str(ind)
-            ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color='white')
+            ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color=labelColor)
         
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
