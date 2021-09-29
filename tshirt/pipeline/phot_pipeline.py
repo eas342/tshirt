@@ -366,7 +366,9 @@ class phot:
                         srcLabel=None,figSize=None,showPlot=False,
                         apColor='black',backColor='black',
                         vmin=None,vmax=None,index=None,
-                        labelColor='white'):
+                        labelColor='white',
+                        xLim=None,yLim=None,
+                        txtOffset=20):
         """
         Show the star choices for photometry
         
@@ -399,6 +401,12 @@ class phot:
             The index of the file name. If None, it uses the default
         labelColor: str
             Color for the text label for sources
+        xLim: None or two element list
+            Specify the minimum and maximum X for the plot. For example xLim=[40,60]
+        yLim: None or two element list
+            Specify the minimum and maximum Y for the plot. For example yLim=[40,60]
+        txtOffset: float
+            The X and Y offset to place the text label for a source
         """
         fig, ax = plt.subplots(figsize=figSize)
         
@@ -422,9 +430,8 @@ class phot:
         
         imData = ax.imshow(img,cmap='viridis',vmin=useVmin,vmax=useVmax,interpolation='nearest')
         ax.invert_yaxis()
-        rad, txtOffset = 50, 20
+        rad = 50 ## the radius for the matplotlib scatter to show source centers
         
-
         
         showApPos = self.get_default_cen(custPos=custPos,ind=index)
         if showAps == True:
@@ -472,6 +479,9 @@ class phot:
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(imData,label='Counts',cax=cax)
+        
+        ax.set_xlim(xLim)
+        ax.set_ylim(yLim)
         
         if showPlot == True:
             fig.show()
