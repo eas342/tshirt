@@ -82,14 +82,24 @@ def centroid_2dg_w_sigmas(data, error=None, mask=None):
     # the moment estimation in data_properties. Moments from negative data
     # values can yield undefined Gaussian parameters, e.g., x/y_stddev.
     props = data_properties(data - np.min(data), mask=mask)
-
+    
+    if hasattr(props,'semimajor_sigma'):
+        x_stddev = props.semimajor_sigma.value
+    else:
+        x_stddev = props.semimajor_axis_sigma.value
+    
+    if hasattr(props,'semiminor_sigma'):
+        y_stddev = props.semiminor_sigma.value
+    else:
+        y_stddev = props.semiminor_axis_sigma.value
+    
     constant_init = 0.  # subtracted data minimum above
     g_init = (Const2D(constant_init)
               + Gaussian2D(amplitude=np.ptp(data),
                            x_mean=props.xcentroid,
                            y_mean=props.ycentroid,
-                           x_stddev=props.semimajor_sigma.value,
-                           y_stddev=props.semiminor_sigma.value,
+                           x_stddev=x_stddev,
+                           y_stddev=y_stddev,
                            theta=props.orientation.value))
     fitter = LevMarLSQFitter()
     y, x = np.indices(data.shape)
