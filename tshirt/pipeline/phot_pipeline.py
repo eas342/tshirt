@@ -1654,7 +1654,7 @@ class phot:
         if excludeSrc == None:
             maskOut = (srcArray == 0)
         else:
-            maskOut = np.zeros(self.nsrc,dtype=np.bool)
+            maskOut = np.zeros(self.nsrc,dtype=bool)
             maskOut[0] = True
             for oneSrc in excludeSrc:
                 if (oneSrc < 0) | (oneSrc >= self.nsrc):

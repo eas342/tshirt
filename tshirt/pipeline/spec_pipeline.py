@@ -438,10 +438,10 @@ class spec(phot_pipeline.phot):
                 cross_subtractionIndexArray = np.arange(cross_subtractionIndexArrayLength)
                 subtractionIndexArray = np.arange(subtractionIndexArrayLength)
                 ## subtract the whole row/column
-                ptsToSubtract = np.ones(len(subtractionIndexArray),dtype=np.bool)
+                ptsToSubtract = np.ones(len(subtractionIndexArray),dtype=bool)
             
             ## set up which points to do background fitting for
-            pts = np.zeros(len(subtractionIndexArray),dtype=np.bool)
+            pts = np.zeros(len(subtractionIndexArray),dtype=bool)
             for oneRegion in self.param['bkgRegions{}'.format(oneDirection)]:
                 if self.param['mosBacksub'] == True:
                     startSub = int(self.param['starPositions'][srcInd] + oneRegion[0])
@@ -654,7 +654,7 @@ class spec(phot_pipeline.phot):
                 
                 ## this is a very long way to calculate a log that avoids runtime warnings
                 fitY = np.zeros_like(dep_var) * np.nan
-                positivep = np.zeros_like(dep_var,dtype=np.bool)
+                positivep = np.zeros_like(dep_var,dtype=bool)
                 finitep = np.isfinite(dep_var)
                 positivep[finitep] = (dep_var[finitep] > 0. - self.floor_delta)
                 fitY[positivep] = np.log10(dep_var[positivep] + self.floor_delta)

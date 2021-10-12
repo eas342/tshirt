@@ -78,7 +78,7 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
     if preScreen == True:
         resid = np.abs(y - np.nanmedian(y))
         madev = np.nanmedian(resid)
-        goodp = np.zeros_like(resid,dtype=np.bool)
+        goodp = np.zeros_like(resid,dtype=bool)
         goodp[finitep] = (np.abs(resid[finitep]) < (sigreject * madev))
     else:
         goodp = finitep ## Start with the finite points
@@ -116,7 +116,7 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
                                 plt.plot(x[goodp],y[goodp],'o',label='data')
                                 plt.plot(knots,np.ones_like(knots) * np.median(y[goodp]),'o',label='knots',markersize=10)
                             
-                            keepKnots = np.zeros_like(knots,dtype=np.bool)
+                            keepKnots = np.zeros_like(knots,dtype=bool)
                             nKnots = len(knots)
                             for ind,oneKnot in enumerate(knots):
                                 if ind == 0:
@@ -150,7 +150,7 @@ def robust_poly(x,y,polyord,sigreject=3.0,iteration=3,useSpline=False,knots=None
             if madev > 0:
                 ## replacing the old line to avoid runtime errors
                 ## goodp = (np.abs(resid) < (sigreject * madev))
-                goodp = np.zeros_like(resid,dtype=np.bool)
+                goodp = np.zeros_like(resid,dtype=bool)
                 goodp[finitep] = (np.abs(resid[finitep]) < (sigreject * madev))
         
         if plotEachStep == True:
