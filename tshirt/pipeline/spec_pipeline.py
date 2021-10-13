@@ -95,7 +95,7 @@ class spec(phot_pipeline.phot):
         
         self.nsrc = len(self.param['starPositions'])
         
-        self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
+        self.srcNames = np.array(np.arange(self.nsrc),dtype=str)
         self.srcNames[0] = 'src'
         
         ## Set up file names for output

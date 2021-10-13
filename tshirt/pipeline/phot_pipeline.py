@@ -174,7 +174,7 @@ class phot:
         self.fileL = self.get_fileList()
         self.nImg = len(self.fileL)
         
-        self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
+        self.srcNames = np.array(np.arange(self.nsrc),dtype=str)
         self.srcNames[0] = 'src'
         
         self.set_up_apertures(positions)
@@ -2078,7 +2078,7 @@ class prevPhot(phot):
         #self.xCoors = self.srcApertures.positions[:,0]
         #self.yCoors = self.srcApertures.positions[:,1]
         #self.bkgApertures = CircularAnnulus(positions,r_in=self.param['backStart'],r_out=self.param['backEnd'])
-        self.srcNames = np.array(np.arange(self.nsrc),dtype=np.str)
+        self.srcNames = np.array(np.arange(self.nsrc),dtype=str)
         self.srcNames[0] = 'src'
         
         self.dataFileDescrip = os.path.splitext(os.path.basename(self.photFile))[0]
