@@ -525,8 +525,9 @@ class phot:
             else:
                 ax = axArr.ravel()[ind]
             
-            yStamp = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=np.int)
-            xStamp = np.array(onePos[0] + np.array([-1,1]) * boxsize,dtype=np.int)
+            yStamp_proposed = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=np.int)
+            xStamp_proposed = np.array(onePos[0] + np.array([-1,1]) * boxsize,dtype=np.int)
+            xStamp, yStamp = ensure_coordinates_are_within_bounds(xStamp_proposed,yStamp_proposed,img)
             
             stamp = img[yStamp[0]:yStamp[1],xStamp[0]:xStamp[1]]
             
@@ -548,6 +549,7 @@ class phot:
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
             srcX, srcY = onePos[0] - xStamp[0],onePos[1] - yStamp[0]
+            
             circ = plt.Circle((srcX,srcY),
                               self.srcApertures.r,edgecolor='red',facecolor='none')
             ax.add_patch(circ)
@@ -2216,6 +2218,24 @@ def allTser(refCorrect=False,showBestFit=False):
         outPath = os.path.join(self.baseDir,'plots','photometry','tser_allstar','all_kic1255.pdf')
     fig.savefig(outPath)
 
+def ensure_coordinates_are_within_bounds(xCoord,yCoord,img):
+    """
+    Check if x and y coordinates are inside an image
+    If they are are, spit them back.
+    Otherwise, give the coordinates at the closest x/y edge
+    
+    Parameters
+    ----------
+    """
+    assert len(img.shape) == 2, "Should have a 2D image"
+    
+    xmin, ymin = 0, 0
+    xmax = img.shape[1] - 1
+    ymax = img.shape[0] - 1
+    out_x = np.minimum(np.maximum(xCoord,0),xmax)
+    out_y = np.minimum(np.maximum(yCoord,0),ymax)
+
+    return out_x,out_y
 
 def do_binning(x,y,nBin=20):
     """
