@@ -13,6 +13,12 @@ A library of parameter files is available at https://github.com/eas342/tshirt/tr
 Notes on Parameters
 ====================
 
+The following gives some more information on the parameters in the spectroscopic pipeline.
+
+apWidth
+~~~~~~~
+The full width of the extraction box used for the source. It is going to be centered on :code:`starPositions` with :code:`apWidth`/2 above and :code:`apWidth`/2 below the :code:`starPositions` value. The equivalent IRAF :code:`apall` "lower" and "upper" values would both be :code:`apwidth`/2 each.
+
 mosBacksub
 ~~~~~~~~~~~
 
