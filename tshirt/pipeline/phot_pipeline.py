@@ -1556,7 +1556,7 @@ class phot:
             t['Theo Err (%)'] = np.round(np.nanmedian(errArr,axis=0) / medFlux * 100.,4)
             tiledFlux = np.tile(medFlux,[nImg,1])
             mad = np.nanmedian(np.abs(photArr - tiledFlux),axis=0) / medFlux
-            t['Mad (%)'] = np.round(mad * 100.,4)
+            t['MAD (%)'] = np.round(mad * 100.,4)
         
         if returnOnly:
             pass
