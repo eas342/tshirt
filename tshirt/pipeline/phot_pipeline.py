@@ -199,11 +199,9 @@ class phot:
         structure_file = resource_filename('tshirt','directory_info/directory_list.yaml')
         dirList = read_yaml(structure_file)
         for oneFile in dirList:
-            fullPath = os.path.join(baseDir,os.path.split(oneFile)[0])
+            fullPath = os.path.join(baseDir,oneFile)
+            ensure_directories_are_in_place(fullPath)
             
-            if os.path.exists(fullPath) == False:
-                print("Creating {} for tshirt file output".format(fullPath))
-                os.makedirs(fullPath)
         self.baseDir = baseDir
     
     def get_fileList(self):
@@ -2026,6 +2024,17 @@ def get_baseDir():
     
     return baseDir
 
+def ensure_directories_are_in_place(filePath):
+    """
+    Takes a name of a file and makes sure the directories are there to save the file
+    """
+    dirPath = os.path.split(filePath)[0]
+    
+    if dirPath != "":
+        if os.path.exists(dirPath) == False:
+            print("Creating {} for file output".format(dirPath))
+            os.makedirs(dirPath)
+
 def get_tshirt_example_data():
     """
     Download all example tshirt data. This is needed to run tests and
@@ -2041,8 +2050,10 @@ def get_tshirt_example_data():
     for oneFile in fileList:
         onlinePath = onlineDir + str(oneFile) + '?raw=true'
         #print('Online Path: {}'.format(onlinePath))
-                
+        
         outPath = os.path.join(example_tshirt_dir,oneFile)
+        ensure_directories_are_in_place(outPath)
+        
         if os.path.exists(outPath) == False:
             logging.info("Attempting to download {}".format(onlinePath))
             
