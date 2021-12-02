@@ -6,6 +6,7 @@ from copy import deepcopy
 from tshirt.pipeline import sim_data
 import os
 import numpy as np
+from tshirt.pipeline.phot_pipeline import get_baseDir
 
 class driftPhot(unittest.TestCase):
 
@@ -18,7 +19,7 @@ class driftPhot(unittest.TestCase):
             sim_data.sim_phot_w_large_shift()
             self.phot = phot_pipeline.phot(testParamPath)
         
-        drift_file = os.path.join(os.environ["TSHIRT_DATA"],
+        drift_file = os.path.join(get_baseDir(),
                                   'example_tshirt_data',
                                   'sim_data','drift_phot',
                                   'drift.csv')

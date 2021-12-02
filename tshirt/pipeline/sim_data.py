@@ -24,7 +24,7 @@ import time
 import logging
 import urllib
 import tqdm
-
+from .phot_pipeline import get_baseDir
 
 def gauss_2d(x,y,x0,y0,sigx=1.0,sigy=1.0,norm=1.0):
     """
@@ -59,7 +59,7 @@ def sim_phot_w_large_shift():
     time_start = Time('2020-05-04T00:00:00.0',format='fits')
     time_obs = time_start + np.arange(nImg) * 10.0 * u.second
     
-    outDir = os.path.join(os.environ["TSHIRT_DATA"],
+    outDir = os.path.join(get_baseDir(),
                           'example_tshirt_data',
                           'sim_data','drift_phot')
     
