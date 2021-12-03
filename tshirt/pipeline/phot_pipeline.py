@@ -45,6 +45,8 @@ try:
 except ImportError as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
 from .utils import robust_poly, robust_statistics
+from .utils import get_baseDir
+from .instrument_specific import rowamp_sub
 
 def run_one_phot_method(allInput):
     """
@@ -1125,6 +1127,8 @@ class phot:
                 srcPhot = rawPhot['aperture_sum'] - bkgVals
             elif self.param['bkgMethod'] == 'colrow':
                 srcPhot, bkgVals, bkgValsErr = self.poly_sub_phot(img,head,err,ind)
+            elif self.param['bkgMethod'] == 'rowAmp':
+                srcPhot, bkgVals, bkgValsErr = self.rowamp_sub_phot(img,head,err,ind)
             else:
                 raise Exception("Unrecognized background method {}".format(self.param['bkgMethod']))
         else:
@@ -1228,6 +1232,30 @@ class phot:
         
         
         return np.array(srcPhot),np.array(bkgPhot),bkgValsErr
+    
+    def rowamp_sub_phot(self,img,head,err,ind):
+        """
+        Do a row-by-row, amplifier-by-amplifier background subtraction
+        
+        This is instead of using the mean or another statistic of the background aperture
+        """
+        
+        saveD = self.param['diagnosticMode']
+        backsub_img, backg_img = rowamp_sub.do_backsub(img,self,
+                                                       saveDiagnostics=saveD)
+        
+        srcPhot_t = aperture_photometry(backsub_img,
+                                        self.srcApertures,error=err,
+                                        method=self.param['subpixelMethod'])
+        
+        bkgPhot_t = aperture_photometry(backg_img,
+                                        self.srcApertures,error=err,
+                                        method=self.param['subpixelMethod'])
+        srcPhot = srcPhot_t['aperture_sum']
+        bkgPhot = bkgPhot_t['aperture_sum']
+        bkgValsErr = bkgPhot_t['aperture_sum_err']
+        
+        return np.array(srcPhot),np.array(bkgPhot),np.array(bkgValsErr)
     
     def return_self(self):
         return self
@@ -2011,18 +2039,7 @@ class batchPhot:
         Return a photometry object so other methods and attributes can be explored
         """
         return phot(directParam=self.paramDicts[ind])
-    
 
-
-def get_baseDir():
-    if 'TSHIRT_DATA' in os.environ:
-        baseDir = os.environ['TSHIRT_DATA']
-    else:
-        baseDir = os.path.join(os.environ['HOME'],'tshirt_data')
-        if os.path.exists(baseDir) == False:
-            os.mkdir(baseDir)
-    
-    return baseDir
 
 def ensure_directories_are_in_place(filePath):
     """

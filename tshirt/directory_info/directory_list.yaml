@@ -3,6 +3,7 @@
 - diagnostics/phot_poly_backsub/README.md
 - diagnostics/trimmed_flat/README.md
 - diagnostics/spec_backsub/README.md
+- diagnostics/rowamp_sub/README.md
 - plots/directory_placeholder.dat
 - plots/individual_fits/directory_placeholder.dat
 - plots/model_parameter_explorations/directory_placeholder.dat

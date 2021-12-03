@@ -1,12 +1,13 @@
 import unittest
 from tshirt.pipeline import phot_pipeline, spec_pipeline
+from tshirt.pipeline.instrument_specific import rowamp_sub
 from astropy.io import fits,ascii
 from pkg_resources import resource_filename
 from copy import deepcopy
 from tshirt.pipeline import sim_data
 import os
 import numpy as np
-from tshirt.pipeline.phot_pipeline import get_baseDir
+from tshirt.pipeline.utils import get_baseDir
 
 class driftPhot(unittest.TestCase):
 
@@ -45,6 +46,27 @@ class driftPhot(unittest.TestCase):
         t1 = self.phot.print_phot_statistics(returnOnly=True)
         ## make sure error is 
         self.assertTrue(t1['Stdev (%)'][0] < 20.)
-        
+
+class rowAmpBacksub(unittest.TestCase):
+
+    def setUp(self):
+        """Set up test fixtures, if any."""
+        testPhotParams = 'parameters/phot_params/test_params/test_rowamp_sub.yaml'
+        testParamPath = phot_pipeline.resource_filename('tshirt',testPhotParams)
+        self.phot = phot_pipeline.phot(testParamPath)
+    
+    def test_backsub(self):
+        img, head = self.phot.get_default_im()
+        outimg, outmodel = rowamp_sub.do_backsub(img,self.phot,saveDiagnostics=True)
+        diag_dir = os.path.join(get_baseDir(),'diagnostics','rowamp_sub')
+        out_path = os.path.join(diag_dir,"{}_subtracted.fits".format(self.phot.dataFileDescrip))
+        self.assertTrue(os.path.exists(out_path))
+    
+    def test_phot_result(self):
+        self.phot.do_phot(useMultiprocessing=False)
+        ## make sure the phot looks good
+        #self.assertTrue(t1['Stdev (%)'][0] < 20.)
+
 if __name__ == '__main__':
     unittest.main()
+    
