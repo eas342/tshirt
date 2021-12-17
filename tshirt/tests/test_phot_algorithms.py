@@ -57,9 +57,19 @@ class rowAmpBacksub(unittest.TestCase):
     
     def test_backsub(self):
         img, head = self.phot.get_default_im()
-        outimg, outmodel = rowamp_sub.do_backsub(img,self.phot,saveDiagnostics=True)
+        outimg, outmodel = rowamp_sub.do_backsub(img,self.phot,saveDiagnostics=True,evenOdd=False)
         diag_dir = os.path.join(get_baseDir(),'diagnostics','rowamp_sub')
         out_path = os.path.join(diag_dir,"{}_subtracted.fits".format(self.phot.dataFileDescrip))
+        self.assertTrue(os.path.exists(out_path))
+    
+    def test_backsub_with_even_odd(self):
+        param = deepcopy(self.phot.param)
+        param['srcNameShort'] = 'test_rowamp_even_odd'
+        newPhot = phot_pipeline.phot(directParam=param)
+        img, head = newPhot.get_default_im()
+        outimg, outmodel = rowamp_sub.do_backsub(img,newPhot,saveDiagnostics=True,evenOdd=True)
+        diag_dir = os.path.join(get_baseDir(),'diagnostics','rowamp_sub')
+        out_path = os.path.join(diag_dir,"{}_subtracted.fits".format(newPhot.dataFileDescrip))
         self.assertTrue(os.path.exists(out_path))
     
     def test_phot_result(self):

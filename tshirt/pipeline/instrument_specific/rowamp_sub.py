@@ -6,7 +6,22 @@ import os
 import pdb
 from copy import deepcopy
 
-def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False):
+def do_even_odd(thisAmp):
+    """
+    Do an even-odd correction for a given amplifier
+    If only one amplifier is used, it can be the whole image
+    """
+    even_odd_model = np.zeros_like(thisAmp)
+    
+    even_offset = np.nanmedian(thisAmp[:,0::2])
+    even_odd_model[:,0::2] = even_offset
+    odd_offset = np.nanmedian(thisAmp[:,1::2])
+    even_odd_model[:,1::2] = odd_offset
+    
+    return thisAmp - even_odd_model, even_odd_model
+
+def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
+               evenOdd=True):
     """
     Do background subtraction amplifier-by-amplifier, row-by-row around the sources
     
@@ -20,6 +35,9 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False):
     
     amplifiers: int
         How many outputamplifiers are used? 4 for NIRCam stripe mode and 1 is for 1 output amplifier
+    
+    evenOdd: bool
+        Remove the even and odd offsets before doing row-by-row medians?
     
     saveDiagnostics: bool
         Save diagnostic files?
@@ -56,19 +74,31 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False):
         ampWidth = 512
         ## loop through
         for amp in np.arange(4):
+            if evenOdd == True:
+                thisAmp, even_odd_model = do_even_odd(masked_img[:,ampStarts[amp]:ampEnds[amp]])
+            else:
+                thisAmp = masked_img[:,ampStarts[amp]:ampEnds[amp]]
+                even_odd_model = np.zeros_like(thisAmp)
+            
             ## find the median background along a row
-            medVals = np.nanmedian(masked_img[:,ampStarts[amp]:ampEnds[amp]],axis=1)
+            medVals = np.nanmedian(thisAmp,axis=1)
             ## tile this to make a constant model
             tiled_med = np.tile(medVals, [ampWidth,1]).T
             ## put the results in the model image
-            modelimg[:,ampStarts[amp]:ampEnds[amp]] = tiled_med
+            modelimg[:,ampStarts[amp]:ampEnds[amp]] = tiled_med + even_odd_model
         
     elif amplifiers == 1:
-        medVals = np.nanmedian(masked_img,axis=1)
+        if evenOdd == True:
+            thisAmp = do_even_odd(masked_img)
+        else:
+            thisAmp = masked_img
+            even_odd_model = np.zeros_like(thisAmp)
+        
+        medVals = np.nanmedian(thisAmp,axis=1)
         ## tile this to make a constant model
         tiled_med = np.tile(medVals, [img.shape[1],1]).T
         ## put the results in the model image
-        modelimg = tiled_med
+        modelimg = tiled_med + even_odd_model
     else:
         raise Exception("{} amplifiers not implemented".format(amplifiers))
     
