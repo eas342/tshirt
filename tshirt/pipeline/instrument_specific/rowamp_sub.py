@@ -1,7 +1,13 @@
 import numpy as np
 from astropy.io import fits, ascii
 import matplotlib.pyplot as plt
-from ..utils import get_baseDir
+import warnings
+try:
+    from ..utils import get_baseDir
+except ImportError as err1:
+    warnings.warn("Could not import baseDir. Will save diagnostics to . ")
+    def get_baseDir():
+        return "."
 import os
 import pdb
 from copy import deepcopy
@@ -21,7 +27,7 @@ def do_even_odd(thisAmp):
     return thisAmp - even_odd_model, even_odd_model
 
 def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
-               evenOdd=True):
+               evenOdd=True,activePixMask=None,backgMask=None):
     """
     Do background subtraction amplifier-by-amplifier, row-by-row around the sources
     
@@ -41,12 +47,24 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
     
     saveDiagnostics: bool
         Save diagnostic files?
+               
+    activePixMask: numpy 2D array or None
+        Mask of reference pixels to ignore (optionally). Pixels that are False
+               will be ignored in the background estimation, and pixels that are 
+               true will be kept in the background estimation. If refpixMask is None
+               no extra points will be masked
+    
+    backgMask: numpy 2D array or None
+        Mask for the background. Pixels that are False will be ignored in
+               row-by-row background estimation. Pixels that are true will
+               be kept for the background estimation.
     """
     
-    ## make a mask
-    if photObj is None:
-        useMask = np.ones_like(img,dtype=bool)
-    else:
+    ## Start by including all pixels
+    useMask = np.ones_like(img,dtype=bool)
+    
+    ## make a mask with Tshirt object
+    if photObj is not None:
         y, x = np.mgrid[0:img.shape[0],0:img.shape[1]]
         
         xcen = photObj.srcApertures.positions[:,0]
@@ -57,7 +75,20 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
             r = np.sqrt((x - xcen)**2 + (y - ycen)**2)
             srcPts = r < photObj.param['backStart']
             useMask[srcPts] = False
+    if backgMask is not None:
+        useMask = useMask & backgMask
+        
     
+    
+    
+    
+    ## only include active pixels
+    if activePixMask is None:
+        activeMask = np.ones_like(img,dtype=bool)
+    else:
+        activeMask = activePixMask
+    
+    useMask = useMask & activeMask
     
     ## let nanmedian do the work of masking
     maskedPts = (useMask == False)
@@ -89,7 +120,7 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
         
     elif amplifiers == 1:
         if evenOdd == True:
-            thisAmp = do_even_odd(masked_img)
+            thisAmp,even_odd_model = do_even_odd(masked_img)
         else:
             thisAmp = masked_img
             even_odd_model = np.zeros_like(thisAmp)

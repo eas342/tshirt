@@ -3,6 +3,7 @@ from tshirt.pipeline import phot_pipeline, spec_pipeline
 from tshirt.pipeline.instrument_specific import rowamp_sub
 from astropy.io import fits,ascii
 from pkg_resources import resource_filename
+import matplotlib.pyplot as plt
 from copy import deepcopy
 from tshirt.pipeline import sim_data
 import os
@@ -76,6 +77,68 @@ class rowAmpBacksub(unittest.TestCase):
         self.phot.do_phot(useMultiprocessing=False)
         ## make sure the phot looks good
         #self.assertTrue(t1['Stdev (%)'][0] < 20.)
+    
+    def sim_data(self):
+        """
+        Simulate row-to-row variability, a mask and a source
+        """
+        dimenx=32
+        dimeny=256
+        cen = [16,128]
+        
+        x_1d = np.arange(dimenx)
+        y_1d = np.arange(dimeny)
+        x, y = np.meshgrid(x_1d, y_1d) # get 2D variables instead of 1D
+        
+        gauss2d = sim_data.gauss_2d(x,y,cen[0],cen[1],
+                                    sigx=2.0,sigy=2.0,
+                                    norm=1e3)
+        
+        r = np.sqrt((cen[0] - x)**2 + (cen[1]- y)**2)
+        
+        ## mask all points well away from the source
+        bkgmask = (r > 10.)
+        
+        np.random.seed(0)
+        simnoise_1d = np.random.randn(dimeny)
+        simnoise_2d = np.tile(simnoise_1d,[dimenx,1]).T
+        
+        simdata = simnoise_2d + gauss2d
+        
+        
+        outDict = {}
+        outDict['simdata'] = simdata
+        outDict['bkgmask'] = bkgmask
+        outDict['gauss2d'] = gauss2d
+        
+        return outDict
+    
+    def show_images(self,imgDict=None):
+        """
+        Show the simulation, if asked.
+        """
+        
+        if imgDict == None:
+            imgDict = self.sim_data()
+        keys = imgDict.keys()
+        fig, axArr = plt.subplots(1,len(keys))
+        for ind,oneImg in enumerate(keys):
+            axArr[ind].imshow(imgDict[oneImg])
+            axArr[ind].set_title(oneImg)
+        
+        fig.show()
+    
+    def test_masked_roeba(self,showImg=False):
+        simDict = self.sim_data()
+        outimg, modelimg = rowamp_sub.do_backsub(simDict['simdata'],
+                                                 amplifiers=1,
+                                                 backgMask=simDict['bkgmask'])
+        simDict['model'] = modelimg
+        simDict['outimg'] = outimg
+        simDict['resid'] = simDict['gauss2d'] - simDict['outimg']
+        if showImg == True:
+            self.show_images(simDict)
+        self.assertTrue(np.allclose(simDict['gauss2d'],simDict['outimg']))
 
 if __name__ == '__main__':
     unittest.main()
