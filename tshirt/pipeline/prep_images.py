@@ -1,9 +1,11 @@
 import glob
+import warnings
 try:
     from ccdproc import Combiner, CCDData, ccd_process, gain_correct
     import ccdproc
 except ImportError as err1:
-    print("Could not import ccdproc, so image processing may not work")
+    print("Could not import ccdproc, so some CCD-like processing may not work.")
+
 import yaml
 import os
 from astropy.io import fits
