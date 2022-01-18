@@ -92,7 +92,7 @@ class rowAmpBacksub(unittest.TestCase):
         
         gauss2d = sim_data.gauss_2d(x,y,cen[0],cen[1],
                                     sigx=2.0,sigy=2.0,
-                                    norm=1e3)
+                                    norm=1e2)
         
         r = np.sqrt((cen[0] - x)**2 + (cen[1]- y)**2)
         
@@ -138,6 +138,7 @@ class rowAmpBacksub(unittest.TestCase):
         simDict['resid'] = simDict['gauss2d'] - simDict['outimg']
         if showImg == True:
             self.show_images(simDict)
+            self.simDict = simDict
         self.assertTrue(np.allclose(simDict['gauss2d'],simDict['outimg']))
 
 if __name__ == '__main__':
