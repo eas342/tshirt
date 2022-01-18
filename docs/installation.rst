@@ -38,8 +38,10 @@ Upgrading :code:`tshirt` to the latest development version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-- Activate the astroconda environment in bash
-   :code:`conda activate astroconda`
+- Activate the environment where you use tshirt
+   :code:`conda activate tshirt`
+- If you do not yet have the source code
+   :code:`git clone https://github.com/eas342/tshirt.git`
 - Navigate to the :code:`tshirt` directory:
    :code:`cd tshirt`
 - Pull the latest code from github
