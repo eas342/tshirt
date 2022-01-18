@@ -24,6 +24,7 @@ The raw code is accessible at https://github.com/eas342/tshirt
    reduction/reduction
    phot_pipeline/phot_pipeline
    spec_pipeline/spec_pipeline
+   specific_modules/specific_modules.rst
    
 .. toctree::
    :maxdepth: 2
