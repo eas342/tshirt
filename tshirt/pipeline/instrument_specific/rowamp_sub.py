@@ -27,7 +27,8 @@ def do_even_odd(thisAmp):
     return thisAmp - even_odd_model, even_odd_model
 
 def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
-               evenOdd=True,activePixMask=None,backgMask=None):
+               evenOdd=True,activePixMask=None,backgMask=None,
+               grismr=False):
     """
     Do background subtraction amplifier-by-amplifier, row-by-row around the sources
     
@@ -58,7 +59,17 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
         Mask for the background. Pixels that are False will be ignored in
                row-by-row background estimation. Pixels that are true will
                be kept for the background estimation.
+               
+    grismr: bool
+        Is this NIRCam GRISMR data? Special treatment is needed for NIRCam
+               GRISMR, where the spectra run through multiple amplifiers
     """
+    
+    ## Npix Threshold
+    ## this many pixels must be in a row in order to do an median
+    ## otherwise, it attempts to interpolate from other amplifiers
+    ## this only applies when noutputs=4
+    Npix_threshold = 3
     
     ## Start by including all pixels
     useMask = np.ones_like(img,dtype=bool)
@@ -98,7 +109,14 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
     outimg = np.zeros_like(img)
     modelimg = np.zeros_like(img)
     
+    
     if amplifiers == 4:
+        ## mask to keep track of which amplifiers have enough pixels to use
+        ## in NIRCam GRISMR spectroscopy, the spectra cut across rows
+        ## so these amplifiers' 1/f noise has to interpolated from other 
+        ## amps
+        amp_check_mask = np.ones(amplifiers,dtype=bool)
+        
         ## list where the amplifiers are
         ampStarts = [0,512,1024,1536]
         ampEnds = [512,1024,1536,2048]
@@ -111,12 +129,36 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
                 thisAmp = masked_img[:,ampStarts[amp]:ampEnds[amp]]
                 even_odd_model = np.zeros_like(thisAmp)
             
-            ## find the median background along a row
-            medVals = np.nanmedian(thisAmp,axis=1)
-            ## tile this to make a constant model
-            tiled_med = np.tile(medVals, [ampWidth,1]).T
+            
+            ## check if the mask leaves too few pixels in this amplifier
+            ## in that case
+            bad_rows = np.sum(np.sum(np.isfinite(thisAmp),axis=1) <= Npix_threshold)
+            if bad_rows == 0:
+                medVals = np.nanmedian(thisAmp,axis=1)
+                ## tile this to make a constant model
+                tiled_med = np.tile(medVals, [ampWidth,1]).T
+                amp_check_mask[amp] = True
+            else:
+                amp_check_mask[amp] = False
+                tiled_med = np.zeros_like(thisAmp)
+
             ## put the results in the model image
             modelimg[:,ampStarts[amp]:ampEnds[amp]] = tiled_med + even_odd_model
+        
+        ## If there is at least 1 good amp and 1 bad amp,
+        ## the good amp can be used to
+        ## estimate the 1/f noise in "bad" amps where some rows have
+        ## no background pixels that can used
+        ngood_amps = np.sum(amp_check_mask)
+        ## only do this if we have >=1 good and >=1 bad amp
+        if (ngood_amps >= 1) & (ngood_amps < amplifiers):
+            rowModel = np.nanmean(modelimg,axis=1)
+            tiled_avg = np.tile(rowModel,[ampWidth,1]).T
+            for amp in np.arange(4):
+                if amp_check_mask[amp] == False:
+                    thisAmpModel = modelimg[:,ampStarts[amp]:ampEnds[amp]]
+                    modelimg[:,ampStarts[amp]:ampEnds[amp]] = thisAmpModel + tiled_avg
+        
         
     elif amplifiers == 1:
         if evenOdd == True:
