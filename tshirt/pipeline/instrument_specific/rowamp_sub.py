@@ -107,8 +107,8 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
     masked_img[maskedPts] = np.nan
     
     outimg = np.zeros_like(img)
-    modelimg = np.zeros_like(img)
-    
+    slowread_model = np.zeros_like(img)
+    fastread_model = np.zeros_like(img)
     
     if amplifiers == 4:
         ## mask to keep track of which amplifiers have enough pixels to use
@@ -121,13 +121,18 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
         ampStarts = [0,512,1024,1536]
         ampEnds = [512,1024,1536,2048]
         ampWidth = 512
-        ## loop through
+        
+        ## loop through amps
+        
         for amp in np.arange(4):
             if evenOdd == True:
                 thisAmp, even_odd_model = do_even_odd(masked_img[:,ampStarts[amp]:ampEnds[amp]])
+                slowread_model[:,ampStarts[amp]:ampEnds[amp]] = even_odd_model
             else:
                 thisAmp = masked_img[:,ampStarts[amp]:ampEnds[amp]]
-                even_odd_model = np.zeros_like(thisAmp)
+                ## even if not doing an even/odd correction, still do an overall median
+                slowread_model[:,ampStarts[amp]:ampEnds[amp]] = np.nanmedian(thisAmp)
+                thisAmp = thisAmp - slowread_model[:,ampStarts[amp]:ampEnds[amp]]
             
             
             ## check if the mask leaves too few pixels in this amplifier
@@ -135,15 +140,14 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
             bad_rows = np.sum(np.sum(np.isfinite(thisAmp),axis=1) <= Npix_threshold)
             if bad_rows == 0:
                 medVals = np.nanmedian(thisAmp,axis=1)
-                ## tile this to make a constant model
-                tiled_med = np.tile(medVals, [ampWidth,1]).T
+                ## tile this to make a model across the fast-read direction
+                fastread_model[:,ampStarts[amp]:ampEnds[amp]] = np.tile(medVals, [ampWidth,1]).T
                 amp_check_mask[amp] = True
             else:
                 amp_check_mask[amp] = False
-                tiled_med = np.zeros_like(thisAmp)
+                fastread_model[:,ampStarts[amp]:ampEnds[amp]] = 0.0
+            
 
-            ## put the results in the model image
-            modelimg[:,ampStarts[amp]:ampEnds[amp]] = tiled_med + even_odd_model
         
         ## If there is at least 1 good amp and 1 bad amp,
         ## the good amp can be used to
@@ -152,28 +156,34 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
         ngood_amps = np.sum(amp_check_mask)
         ## only do this if we have >=1 good and >=1 bad amp
         if (ngood_amps >= 1) & (ngood_amps < amplifiers):
-            rowModel = np.nanmean(modelimg,axis=1)
+            rowModel = np.nanmean(fastread_model,axis=1)
             tiled_avg = np.tile(rowModel,[ampWidth,1]).T
             for amp in np.arange(4):
                 if amp_check_mask[amp] == False:
-                    thisAmpModel = modelimg[:,ampStarts[amp]:ampEnds[amp]]
-                    modelimg[:,ampStarts[amp]:ampEnds[amp]] = thisAmpModel + tiled_avg
+                    fastread_model[:,ampStarts[amp]:ampEnds[amp]] = tiled_avg
         
+
         
     elif amplifiers == 1:
         if evenOdd == True:
             thisAmp,even_odd_model = do_even_odd(masked_img)
+            slowread_model = even_odd_model
         else:
-            thisAmp = masked_img
-            even_odd_model = np.zeros_like(thisAmp)
+            
+            slowread_model[:,:] = np.median(thisAmp)
+            thisAmp = masked_img - slowread_model
         
         medVals = np.nanmedian(thisAmp,axis=1)
         ## tile this to make a constant model
         tiled_med = np.tile(medVals, [img.shape[1],1]).T
         ## put the results in the model image
-        modelimg = tiled_med + even_odd_model
+        fastread_model[:,:] = tiled_med
+        
     else:
         raise Exception("{} amplifiers not implemented".format(amplifiers))
+    
+    ## put the results in the model image
+    modelimg = slowread_model + fastread_model
     
     outimg = img - modelimg
     if saveDiagnostics == True:
