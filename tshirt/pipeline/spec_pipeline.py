@@ -1640,7 +1640,8 @@ class spec(phot_pipeline.phot):
         outHDU.writeto(self.dyn_specFile('ratio'),overwrite=True)
     
     def make_wavebin_series(self,specType='Optimal',src=0,nbins=10,dispIndices=None,
-                            recalculate=False,align=False,refCorrect=False):
+                            recalculate=False,align=False,refCorrect=False,
+                            binStarts=None,binEnds=None):
         """
         Bin wavelengths together and generate a time series from the dynamic spectrum
         
@@ -1660,6 +1661,11 @@ class spec(phot_pipeline.phot):
             Automatically align all the spectra? This is passed to plot_dynamic_spec
         refCorrect: bool
             Use the reference corrected photometry?
+        binStarts: numpy array or None
+            Specify starting points for the bins. If None, binStarts are calculated automatically
+        binEnds: numpy array or None
+            Specify starting points for the bins w/ Python, so the last point is binEnds - 1.
+            If None, binEnds are calculated automatically.
         """
         
         ## Check if there is a previous dynamic spec file with same parameters
@@ -1709,8 +1715,10 @@ class spec(phot_pipeline.phot):
             dispSt, dispEnd = dispIndices
         
         binEdges = np.array(np.linspace(dispSt,dispEnd,nbins+1),dtype=np.int)
-        binStarts = binEdges[0:-1]
-        binEnds = binEdges[1:]
+        if binStarts is None:
+            binStarts = binEdges[0:-1]
+        if binEnds is None:
+            binEnds = binEdges[1:]
         binIndices = np.arange(len(binStarts))
         
         binGrid = np.zeros([nTime,nbins])
