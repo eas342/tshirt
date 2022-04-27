@@ -1756,7 +1756,14 @@ class spec(phot_pipeline.phot):
         
         dispHDU = fits.BinTableHDU(dispTable)
         dispHDU.name = "DISP INDICES"
-        outHDUList = fits.HDUList([outHDU,errHDU,timeHDU,offsetHDU,dispHDU])
+        
+        waveTable = Table()
+        for oneColumn in dispTable.colnames:
+            waveTable[oneColumn] = self.wavecal(dispTable[oneColumn])
+        waveHDU = fits.BinTableHDU(waveTable)
+        waveHDU.name = 'WAVELENGTHS'
+        
+        outHDUList = fits.HDUList([outHDU,errHDU,timeHDU,offsetHDU,dispHDU,waveHDU])
         outHDUList.writeto(self.wavebin_specFile(nbins,src),overwrite=True)
         
         HDUList.close()
