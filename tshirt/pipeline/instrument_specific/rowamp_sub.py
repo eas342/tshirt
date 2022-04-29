@@ -193,8 +193,10 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
             outPrefix = photObj.dataFileDescrip
         
         diag_dir = os.path.join(get_baseDir(),'diagnostics','rowamp_sub')
-        descrips = ['orig','mask','model','subtracted']
-        diag_imgs = [img,masked_img,modelimg,outimg]
+        descrips = ['orig','mask','slowread_model','slowread_sub',
+                    'fastread_model','model','subtracted']
+        diag_imgs = [img,masked_img,slowread_model,img-slowread_model,
+                     fastread_model,modelimg,outimg]
         for outInd,outDescrip in enumerate(descrips):
             out_path = os.path.join(diag_dir,"{}_{}.fits".format(outPrefix,outDescrip))
             outHDU = fits.PrimaryHDU(diag_imgs[outInd])
