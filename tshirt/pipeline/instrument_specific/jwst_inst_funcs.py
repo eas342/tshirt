@@ -30,6 +30,20 @@ def ts_wavecal(pixels,tserSim=False,
     
     return wavelengths
 
+def ts_wavecal_quick_nonlin(pixels,obsFilter='F322W2'):
+    """
+    Simple inefficient polynomial
+    """
+    
+    if obsFilter == 'F322W2':
+        x = pixels
+        wavelengths = 2.39610143 + 9.5273e-4 * x + 1.5e-8 * x**2 + -2.89e-12 * x**3
+    else:
+        raise Exception("Filter {} not available".format(obsFilter))
+    
+    return wavelengths
+    
+
 def ts_grismc_sim(pixels):
     """
     Simple analytic wavelength calibration for Simulated GRISMC data

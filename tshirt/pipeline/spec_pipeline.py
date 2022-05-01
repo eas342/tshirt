@@ -2266,6 +2266,11 @@ class spec(phot_pipeline.phot):
                 head = fits.getheader(self.specFile,extname='ORIG HEADER')
             wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal(dispIndices,obsFilter=head['FILTER'],
                                                                          **kwargs)
+        elif waveCalMethod == 'NIRCamTSquickPoly':
+            if head == None:
+                head = fits.getheader(self.specFile,extname='ORIG HEADER')
+            wavelengths = instrument_specific.jwst_inst_funcs.ts_wavecal_quick_nonlin(dispIndices,obsFilter=head['FILTER'],
+                                                                         **kwargs)
         elif waveCalMethod == 'simGRISMC':
             wavelengths = instrument_specific.jwst_inst_funcs.ts_grismc_sim(dispIndices,**kwargs)
         
