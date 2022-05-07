@@ -1315,7 +1315,8 @@ class spec(phot_pipeline.phot):
     def plot_dynamic_spec(self,src=0,saveFits=True,specAtTop=True,align=False,
                           alignDiagnostics=False,extraFF=False,
                           specType='Optimal',showPlot=False,
-                          vmin=None,vmax=None):
+                          vmin=None,vmax=None,flipX=False,
+                          waveCal=False):
         """
         Plots a dynamic spectrum of the data
         
@@ -1341,6 +1342,10 @@ class spec(phot_pipeline.phot):
             Value minimum for dynamic spectrum image
         vmax: float or None
             Value maximum for dynamic spectrum image
+        flipX: bool
+            Flip the X axis?
+        waveCal: bool
+            Calibrate the dispersion to wavelength?
         """
         if os.path.exists(self.specFile) == False:
             raise Exception("No spectrum file found. Run extraction first...")
@@ -1441,7 +1446,12 @@ class spec(phot_pipeline.phot):
         if specAtTop == True:
             fig, axArr = plt.subplots(2, sharex=True,gridspec_kw={'height_ratios': [1, 3]})
             axTop = axArr[0]
-            axTop.plot(waveIndices,avgSpec)
+            if waveCal == True:
+                x_spec = self.wavecal(waveIndices)
+            else:
+                x_spec = waveIndices
+            
+            axTop.plot(x_spec,avgSpec)
             ax = axArr[1]
         else:
             fig, ax = plt.subplots()
@@ -1451,13 +1461,32 @@ class spec(phot_pipeline.phot):
         if vmax is None:
             vmax=1.05
         
-        imShowData = ax.imshow(dynamicSpec,vmin=vmin,vmax=vmax)
-        ax.invert_yaxis()
+        if waveCal == True:
+            all_waves = self.wavecal(waveIndices)
+            extent = [all_waves[0],all_waves[-1],0,dynamicSpec.shape[1]]
+        else:
+            extent = None
+        
+        imShowData = ax.imshow(dynamicSpec,vmin=vmin,vmax=vmax,origin='lower',
+                               extent=extent)
         ax.set_aspect('auto')
-        ax.set_xlabel('Disp (pixels)')
+        if waveCal == True:
+            ax.set_xlabel('Wavelength ($\mu$m)')
+        else:
+            ax.set_xlabel('Disp (pixels)')
+        
         ax.set_ylabel('Time (Image #)')
         dispPix = np.array(self.param['dispPixels']) + self.dispOffsets[src]
-        ax.set_xlim(dispPix[0],dispPix[1])
+        if waveCal == True:
+            disp_X = self.wavecal(dispPix)
+        else:
+            disp_X = dispPix
+        
+        if flipX == True:
+            ax.set_xlim(disp_X[1],disp_X[0])
+        else:
+            ax.set_xlim(disp_X[0],disp_X[1])
+        
         fig.colorbar(imShowData,label='Normalized Flux')
         if specAtTop == True:
             ## Fix the axes to be the same
