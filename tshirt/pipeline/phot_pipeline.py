@@ -1518,7 +1518,8 @@ class phot:
         
     
     def print_phot_statistics(self,refCorrect=True,excludeSrc=None,shorten=False,
-                              returnOnly=False,removeLinear=True):
+                              returnOnly=False,removeLinear=True,
+                              startInd=0,endInd=15):
         """
         Print the calculated and theoretical noise as a table
                               
@@ -1540,6 +1541,14 @@ class phot:
         
         removeLinear: bool
             Remove a linear trend from the data first?
+                              
+        startInd: int
+            If shorten is True, only uses a subset of the data starting with StartInd
+        
+        endInd: int
+            If shorten is True, only uses a subset of the data ending with endInd
+        
+        
         """
         HDUList = fits.open(self.photFile)
         photHDU = HDUList['PHOTOMETRY']
@@ -1554,7 +1563,7 @@ class phot:
             refCorrect = False
         
         if shorten == True:
-            photArr = photArr[0:15,:]
+            photArr = photArr[startInd:endInd,:]
             nImg = 15
         else:
             nImg = self.nImg
