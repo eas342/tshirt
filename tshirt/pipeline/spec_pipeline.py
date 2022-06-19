@@ -339,11 +339,17 @@ class spec(phot_pipeline.phot):
         hduRef.header['BUNIT'] = ('counts', 'should be e- if gain has been applied')
         hduRef.header['VAL'] = ('Mean','Each pixel is the mean of the 4 bottom reference pixels')
         hduRef.name = 'REFPIX'
-         
+        
+        ## Save the wavelength array
+        hduWave = fits.ImageHDU(self.wavecal(dispPixelArr,head=exHeader))
+        hduWave.header['AXIS1'] = ('wavelength','wavelength (microns)')
+        hduWave.header['BUNIT'] = ('microns','wavelength unit')
+        hduWave.name = 'WAVELENGTH'
+        
         HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,
                                 hduBack,hduDispIndices,
                                 hduTime,hduFileNames,hduOrigHeader,
-                                hduRef])
+                                hduRef,hduWave])
         HDUList.writeto(self.specFile,overwrite=True)
         
     
@@ -1427,13 +1433,16 @@ class spec(phot_pipeline.phot):
             avgErrHDU = fits.ImageHDU(avgSpec_err)
             avgErrHDU.name = 'AVG SPEC ERR'
             
-
-                
+            ## Save the wavelength array
+            hduWave = fits.ImageHDU(self.wavecal(waveIndices))
+            hduWave.header['AXIS1'] = ('wavelength','wavelength (microns)')
+            hduWave.header['BUNIT'] = ('microns','wavelength unit')
+            hduWave.name = 'WAVELENGTH'
             
             ## Expect a card-too-long warning
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", message= "Card is too long, comment will be truncated")
-                outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU])
+                outHDUList = fits.HDUList([dynHDU,dynHDUerr,dispHDU,timeHDU,offsetHDU,avgHDU, avgErrHDU, hduWave])
                 if align == True:
                     if specType == 'Optimal':
                         alignedHDU = fits.ImageHDU(useSpec,HDUList['OPTIMAL SPEC'].header)
