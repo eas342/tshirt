@@ -61,6 +61,6 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 # Explicitly set the version of Python and its requirements
-python:
-  install:
-    - requirements: docs/requirements.txt
+# python:
+#   install:
+#     - requirements: docs/requirements.txt

@@ -1568,7 +1568,7 @@ class phot:
         
         if shorten == True:
             photArr = photArr[startInd:endInd,:]
-            nImg = 15
+            nImg = endInd - startInd
         else:
             nImg = self.nImg
         
@@ -1582,7 +1582,7 @@ class phot:
                 yCorrected = yCorrected / np.polyval(poly_fit,xNorm)
             
             if shorten == True:
-                yCorrected = yCorrected[0:15]
+                yCorrected = yCorrected[startInd:endInd]
             
             t['Stdev (%)'] = np.round([np.nanstd(yCorrected) * 100.],4)
             t['Theo Err (%)'] = np.round(np.nanmedian(yCorrected_err) * 100.,4)
