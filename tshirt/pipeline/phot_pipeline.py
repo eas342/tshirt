@@ -243,6 +243,10 @@ class phot:
     def set_up_apertures(self,positions):
         if self.param['srcGeometry'] == 'Circular':
             self.srcApertures = CircularAperture(positions,r=self.param['apRadius'])
+            
+        elif self.param['srcGeometry'] == 'CircularAnnulus':
+            self.srcApertures = CircularAnnulus(positions,r_in=self.param['srcStart'],
+                                                    r_out=self.param['srcEnd'])
         elif self.param['srcGeometry'] == 'Square':
             self.srcApertures = RectangularAperture(positions,w=self.param['apRadius'],
                                                     h=self.param['apRadius'],theta=0)
