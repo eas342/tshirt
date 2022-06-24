@@ -8,14 +8,14 @@ The ``jdRef`` parameter specifies a reference epoch for time series plots.
 Source Aperture Photometry Geometry
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Specify the aperture geometry, sizes as well as the box finding size for locating sources. The options for geometry `srcGeometry` are "Circular" and "Rectangular".
+Specify the aperture geometry, aperture sizes, and the box finding size for locating sources. The options for geometry `srcGeometry` are "Circular", "Rectangular", and "CircularAnnulus". If using ``CircularAnnulus``, the inner and outer radii are set by the ``srcStart`` and the ``srcEnd`` keywords while ignoring ``apRadius``,  ``apHeight`` and ``apWidth``. If using ``Rectangular``, the ``apHeight`` and ``apWidth`` keywords are used to define the source aperture size while ignoring ``apRadius``,  ``srcStart`` and ``srcEnd``. 
 
 Background Aperture Photometry Geometry
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Specify the background aperture geometry (:code:`bkgGeometry`). You can use either ``CircularAnnulus`` or ``Rectangle``. If using ``CircularAnnulus``, the inner and outer radii are set by the ``backStart`` and the ``backEnd`` keywords, while ignoring ``backHeight`` and ``backWidth``. If using ``Rectangular``, the ``backHeight`` and ``backWidth`` keywords are used to define the background aperture size. Regardless of the geometry, the background aperture is always centered relative to the source aperture. The offset between background aperture and the source aperture is set by ``backOffset``, which is a 2 element list in the form of [DX, DY], where DX and DY are the offset in number of pixels.
 
 
-Background Aperture Photometry Geometry
+Background Subtraction Methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Specify the background method (:code:`bkgMethod`). The options are
    - "mean" (default). This calculates the mean background value per pixel and subtracts this from all source pixels
@@ -27,8 +27,7 @@ Specify the background method (:code:`bkgMethod`). The options are
 
 Fixed Aperture Sizes
 ~~~~~~~~~~~~~~~~~~~~~~~
-For the circular aperture ``apRadius``, ``apHeight`` and ``apWidth`` give the source radius, and the inner and outer radii of the background annulus. For a rectangular aperture, the ``apHeight`` and ``apWidth`` describe the height and width. These units are in pixels.
-
+For the circular aperture, ``apRadius`` gives the source radius, and ``backStart`` and ``backEnd`` give the inner and outer radii of the background annulus. For a rectangular aperture, the ``apHeight`` and ``apWidth`` describe the height and width of the source, and ``backHeight`` and ``backWidth`` describe the height and width of the background. These units are in pixels.
 
 Scaled Aperture Sizes
 ~~~~~~~~~~~~~~~~~~~~~~
