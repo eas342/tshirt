@@ -1568,7 +1568,9 @@ class phot:
         
         if shorten == True:
             photArr = photArr[startInd:endInd,:]
+            errArr = errArr[startInd:endInd,:]
             nImg = endInd - startInd
+            timeArr = timeArr[startInd:endInd]
         else:
             nImg = self.nImg
         
@@ -1589,6 +1591,15 @@ class phot:
             mad = np.nanmedian(np.abs(yCorrected - np.nanmedian(yCorrected)))
             t['MAD (%)'] = np.round(mad * 100.,4)
         else:
+            if removeLinear == True:
+                xNorm = (timeArr - np.min(timeArr))/(np.max(timeArr) - np.min(timeArr))
+                for oneSrc in np.arange(self.nsrc):
+                    y1 = photArr[:,oneSrc]
+                    poly_fit = robust_poly(xNorm,y1,1)
+                    yDetrended= y1 / np.polyval(poly_fit,xNorm)
+                    photArr[:,oneSrc] = yDetrended
+                    errArr[:,oneSrc] = errArr[:,oneSrc] / np.polyval(poly_fit,xNorm)
+            
             t['Source #'] = np.arange(self.nsrc)
             medFlux = np.nanmedian(photArr,axis=0)
             t['Stdev (%)'] = np.round(np.nanstd(photArr,axis=0) / medFlux * 100.,4)
