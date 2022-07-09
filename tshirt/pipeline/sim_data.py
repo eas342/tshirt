@@ -7,7 +7,11 @@ import matplotlib.pyplot as plt
 import glob
 from photutils import CircularAperture, CircularAnnulus
 from photutils import RectangularAperture
-from photutils import centroid_2dg, aperture_photometry
+from photutils import aperture_photometry
+if photutils.__version__ > "1.0":
+    from photutils.centroids import centroid_2dg
+else:
+    from photutils import centroid_2dg
 import photutils
 import numpy as np
 from astropy.time import Time
