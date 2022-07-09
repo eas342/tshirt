@@ -2332,7 +2332,7 @@ def do_binning(x,y,nBin=20):
 def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    binMin=50,binMax=2000,customShortName=None,
                    logPlot=True,clip=False,xUnit='min',
-                   yUnit='ppm',showPlot=False):
+                   yUnit='ppm',showPlot=False,custTitle=None):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -2362,6 +2362,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         Name of units for X axis of input series
     yUnit: str
         Name of units for Y axis to be binned
+    custTitle: str or None
+        Custom title name. If None, will generate one automatically
     showPlot: bool
         Render the plot with matplotlib? If False, it is saved instead.
     """
@@ -2427,7 +2429,12 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     ax.set_ylabel(r'$\sigma$ ({})'.format(yUnit))
     ax.set_ylim(yLim)
     ax.legend()
-    ax.set_title("Allan Variance (Linear De-trend = {})".format(removeLinear))
+    if custTitle is None:
+        thisTitle = "Allan Variance (Linear De-trend = {})".format(removeLinear)
+    else:
+        thisTitle = custTitle
+    
+    ax.set_title(thisTitle)
     outName = 'all_var_{}_removelinear_{}.pdf'.format(customShortName,removeLinear)
     
     baseDir = get_baseDir()
