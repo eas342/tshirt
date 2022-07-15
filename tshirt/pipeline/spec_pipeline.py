@@ -2314,7 +2314,8 @@ class spec(phot_pipeline.phot):
         
         elif waveCalMethod == 'wfc3Dispersion':
             wavelengths = instrument_specific.hst_inst_funcs.hstwfc3_wavecal(dispIndices,**kwargs)
-            
+        elif waveCalMethod == 'quick_nrs_prism':
+            wavelengths = instrument_specific.jwst_inst_funcs.quick_nirspec_prism(dispIndices)
         else:
             raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
             

@@ -55,4 +55,16 @@ def ts_grismc_sim(pixels):
     wavelengths = (pixels - undevPx) * disp + undevWav
     
     return wavelengths
+
+def quick_nirspec_prism(pixels):
+    """
+    Simple Polynomial fit to the NIRSpec prism
+    Uses the jwst pipeline evaluated at Y=16 on 2022-07-15
+    """
+    coeff = np.array([  3.60978606,   2.78951832,  -0.68016157,  -0.5927275 ,
+                      -4.37635904,  11.12545761,  10.26701809, -30.14512184,
+                      -7.17013382,  29.26314013,   1.44422269,  -9.83708912])
+    domain = np.array([ 13., 511.])
+    poly_fun = np.polynomial.Polynomial(coeff,domain=domain)
+    return poly_fun(pixels)
     

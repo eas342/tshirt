@@ -58,3 +58,15 @@ This is a critical parameter in finding the spectroscopic profile. If it is too 
 This will show you one profile fit at a time with the spline knots shown. You can step through each cross-dispersion pixel by pressing "c". When you are done, press "q" to quick the python debugger (pdb).
  
 
+waveCalMethod
+~~~~~~~~~~~~~~
+The method to turn the dispersion pixels into wavelengths.
+
+* :code:`None` When it is :code:`None` (:code:`null` in the YAML file), the wavelengths are equal to the pixel in microns (just as a placeholder)
+
+* :code:`NIRCamTSquickPoly` Quick polynomial fit to NIRCam grism time series (use with caution)
+
+* :code:`wfc3Dispersion` Hubble Space Telescope Wide Field Camera 3 quick wavecal (use with caution)
+
+* :code:`quick_nrs_prism` Simple Polynomial fit to the NIRSpec prism using the jwst pipeline evaluated at Y=16 on 2022-07-15 (use with caution)
+
