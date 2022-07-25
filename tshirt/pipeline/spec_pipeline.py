@@ -1812,7 +1812,7 @@ class spec(phot_pipeline.phot):
     def plot_wavebin_series(self,nbins=10,offset=0.005,showPlot=False,yLim=None,xLim=None,
                             recalculate=False,dispIndices=None,differential=False,
                             interactive=False,unit='fraction',align=False,specType='Optimal',
-                            src=0,refCorrect=False):
+                            src=0,refCorrect=False,binStarts=None,binEnds=None):
         """
         Plot a normalized lightcurve for wavelength-binned data one wavelength at a time with
         an offset between the lightcurves.
@@ -1867,7 +1867,8 @@ class spec(phot_pipeline.phot):
         """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins,srcInd=src)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices,recalculate=recalculate,
-                                     specType=specType,align=align,src=src,refCorrect=refCorrect)
+                                     specType=specType,align=align,src=src,refCorrect=refCorrect,
+                                     binStarts=None,binEnds=None)
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins,srcInd=src))
         time = HDUList['TIME'].data
@@ -1951,7 +1952,8 @@ class spec(phot_pipeline.phot):
             HDUList.close()
     
     
-    def get_wavebin_series(self,nbins=10,recalculate=False,specType='Optimal',srcInd=0):
+    def get_wavebin_series(self,nbins=10,recalculate=False,specType='Optimal',srcInd=0,
+                           binStarts=None,binEnds=None):
         """
         Get a table of the the wavelength-binned time series
         
@@ -1974,6 +1976,12 @@ class spec(phot_pipeline.phot):
         srcInd: int, optional
             The index of the source. For single objects it is 0.
         
+        binStarts: int, optional or None
+            Pixel starting positions (or None). If None, it will be calculated as a linear spacing
+        
+        binEnds: int, optional
+            Pixel ending positions (or None). If None, it will be calculated as a linear spacing
+        
         Returns
         --------
         t1: astropy table
@@ -1990,7 +1998,8 @@ class spec(phot_pipeline.phot):
         """
         sFile = self.wavebin_specFile(nbins=nbins,srcInd=srcInd)
         if (os.path.exists(sFile) == False) | (recalculate == True):
-            self.plot_wavebin_series(nbins=nbins,recalculate=recalculate,specType=specType)
+            self.plot_wavebin_series(nbins=nbins,recalculate=recalculate,specType=specType,
+                                     binStarts=binStarts,binEnds=binEnds)
         HDUList = fits.open(sFile)
         disp = HDUList['DISP INDICES'].data
         binGrid = HDUList['BINNED F'].data
