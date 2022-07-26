@@ -43,6 +43,37 @@ def ts_wavecal_quick_nonlin(pixels,obsFilter='F322W2'):
     
     return wavelengths
     
+def flight_poly_grismr_nc(pixels,obsFilter='F322W2',detectorPixels=False):
+    """
+    Flight polynomials for NIRCam GRISMR grism time series 
+    
+    Parameters
+    ----------
+    obsFilter: str
+        NIRCam Observation filter: F322W2 or F444W
+    detectorPixels: bool
+        Are the pixels in detector pixels from raw fitswriter output?
+        This should be False for the MAST products in DMS format
+    """
+    if detectorPixels == True:
+        x = 2048 - pixels - 1
+    else:
+        x = pixels
+    if obsFilter == 'F322W2':
+        x0 = 1571.
+        coeff = np.array([ 3.92693691e+00,  9.81165339e-01,  1.66653554e-03, -2.87412352e-03])
+        xprime = (x - x0)/1000.
+    elif obsFilter == 'F444W':
+        ## need to update once we know where the new F444W position lands
+        raise Exception("Filter {} had a position tweak and needs updating".format(obsFilter))
+        x0 = 945
+        xprime = (x - x0)/1000.
+        coeff = np.array([3.928041104137344, 0.979649332832983])
+    else:
+        raise Exception("Filter {} not available".format(obsFilter))
+    poly = np.polynomial.Polynomial(coeff)
+    return poly(xprime)
+
 
 def ts_grismc_sim(pixels):
     """

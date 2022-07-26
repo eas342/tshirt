@@ -2325,6 +2325,13 @@ class spec(phot_pipeline.phot):
             wavelengths = instrument_specific.hst_inst_funcs.hstwfc3_wavecal(dispIndices,**kwargs)
         elif waveCalMethod == 'quick_nrs_prism':
             wavelengths = instrument_specific.jwst_inst_funcs.quick_nirspec_prism(dispIndices)
+        elif waveCalMethod == 'grismr_poly_dms':
+            if head == None:
+                head = fits.getheader(self.specFile,extname='ORIG HEADER')
+                obsFilter = head['FILTER']
+            else:
+                obsFilter = 'F322W2'
+            wavelengths = instrument_specific.jwst_inst_funcs.flight_poly_grismr_nc(dispIndices,obsFilter=obsFilter)
         else:
             raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
             

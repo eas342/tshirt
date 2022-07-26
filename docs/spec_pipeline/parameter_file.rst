@@ -64,9 +64,10 @@ The method to turn the dispersion pixels into wavelengths.
 
 * :code:`None` When it is :code:`None` (:code:`null` in the YAML file), the wavelengths are equal to the pixel in microns (just as a placeholder)
 
-* :code:`NIRCamTSquickPoly` Quick polynomial fit to NIRCam grism time series (use with caution)
+* :code:`NIRCamTSquickPoly` Quick polynomial fit to NIRCam grism time series from before flight measurement (use with caution)
 
 * :code:`wfc3Dispersion` Hubble Space Telescope Wide Field Camera 3 quick wavecal (use with caution)
 
 * :code:`quick_nrs_prism` Simple Polynomial fit to the NIRSpec prism using the jwst pipeline evaluated at Y=16 on 2022-07-15 (use with caution)
 
+* :code:`grismr_poly_dms` A polynomial fit to flight data from program 1076. Should be accurate to within a few angstroms for F322W2. F444W depends on where the target position lands after position adjustments.
