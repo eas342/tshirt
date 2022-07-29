@@ -153,7 +153,8 @@ class phot:
                          'readFromTshirtExamples': False,
                          'saturationVal': None, 'satNPix': 5, 'nanReplaceValue': 0.0,
                          'DATE-OBS': None,
-                         'driftFile': None
+                         'dateKeyword': 'DATE-OBS',
+                         'driftFile': None,
                          }
         
         
@@ -962,12 +963,12 @@ class phot:
         """
     
     def get_date(self,head):
-        if 'DATE-OBS' in head:
-            useDate = head['DATE-OBS']
+        if self.param['dateKeyword'] in head:
+            useDate = head[self.param['dateKeyword']]
         elif 'DATE_OBS' in head:
             useDate = head['DATE_OBS']
         elif 'DATE' in head:
-            warnings.warn('DATE-OBS not found in header. Using DATE instead')
+            warnings.warn('{} not found in header. Using DATE instead'.format(self.param['dateKeyword']))
             month1, day1, year1 = head['DATE'].split("/")
             useDate = "-".join([year1,month1,day1])
         elif 'DATE-OBS' in self.param:
