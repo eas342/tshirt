@@ -982,6 +982,10 @@ class phot:
             t0 = Time(useDate+'T'+head['TIME-OBS'])
         elif self.param['dateFormat'] == 'One Part':
             t0 = Time(useDate)
+        elif self.param['dateFormat'] == 'MJD':
+            t0 = Time(useDate,format='mjd')
+        elif self.param['dateFormat'] == 'JD':
+            t0 = Time(useDate,format='jd')
         else:
             raise Exception("Date format {} not understdood".format(self.param['dateFormat']))
         
