@@ -28,7 +28,7 @@ def do_even_odd(thisAmp):
 
 def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
                evenOdd=True,activePixMask=None,backgMask=None,
-               grismr=False):
+               grismr=False,returnFastSlow=False):
     """
     Do background subtraction amplifier-by-amplifier, row-by-row around the sources
     
@@ -63,6 +63,9 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
     grismr: bool
         Is this NIRCam GRISMR data? Special treatment is needed for NIRCam
                GRISMR, where the spectra run through multiple amplifiers
+    
+    returnFastSlow: bool
+        Return both the fast and slow read models?
     """
     
     ## Npix Threshold
@@ -202,7 +205,9 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
             outHDU = fits.PrimaryHDU(diag_imgs[outInd])
             outHDU.writeto(out_path,overwrite=True)
             
-        
-    return outimg, modelimg
+    if returnFastSlow == True:
+        return outimg, slowread_model, fastread_model
+    else:
+        return outimg, modelimg
     
     
