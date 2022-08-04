@@ -33,6 +33,11 @@ try:
 except ImportError as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
 
+try:
+    from astropy.modeling import models, fitting
+except ImportError as err3:
+    print("Could not import astropy modeling for spatial profiles")
+
 from . import phot_pipeline
 from . import utils
 from . import instrument_specific
@@ -279,6 +284,9 @@ class spec(phot_pipeline.phot):
         
         refRows = np.zeros([self.nImg,nDisp]) * np.nan
         
+        cenArr = np.zeros([self.nsrc,self.nImg]) * np.nan
+        fwhmArr = np.zeros([self.nsrc,self.nImg]) * np.nan
+        
         for ind in fileCountArray:
             specDict = outputSpec[ind]
             timeArr.append(specDict['t0'].jd)
@@ -290,6 +298,11 @@ class spec(phot_pipeline.phot):
             if 'ref row' in specDict:
                 refRows[ind,:] = specDict['ref row']
             airmass.append(specDict['airmass'])
+            
+            if 'cen' in specDict:
+                cenArr[:,ind] = specDict['cen']
+            if 'fwhm' in specDict:
+                fwhmArr[:,ind] = specDict['fwhm']
                 
         
         hdu = fits.PrimaryHDU(optSpec)
@@ -346,10 +359,23 @@ class spec(phot_pipeline.phot):
         hduWave.header['BUNIT'] = ('microns','wavelength unit')
         hduWave.name = 'WAVELENGTH'
         
+        ## Save the spatial centroid
+        hduCen = fits.ImageHDU(cenArr)
+        hduCen.header['AXIS1'] = ('image','spatial / time axis')
+        hduCen.header['AXIS2'] = ('src','source axis for multiple sources')
+        hduCen.header['BUNITS'] = ('px', 'pixels in spatial direction')
+        hduCen.name = 'CENTROID'
+        
+        hduFWHM = fits.ImageHDU(fwhmArr)
+        hduFWHM.header['AXIS1'] = ('image','spatial / time axis')
+        hduFWHM.header['AXIS2'] = ('src','source axis for multiple sources')
+        hduFWHM.header['BUNITS'] = ('px', 'pixels in spatial direction')
+        hduFWHM.name = 'FWHM'
+        
         HDUList = fits.HDUList([hdu,hduOptErr,hduSum,hduSumErr,
                                 hduBack,hduDispIndices,
                                 hduTime,hduFileNames,hduOrigHeader,
-                                hduRef,hduWave])
+                                hduRef,hduWave,hduCen,hduFWHM])
         HDUList.writeto(self.specFile,overwrite=True)
         
     
@@ -923,6 +949,8 @@ class spec(phot_pipeline.phot):
         sumSpectra_err = np.zeros_like(optSpectra)
         backSpectra = np.zeros_like(optSpectra)
         
+        cenInfo = np.zeros([self.nsrc])
+        fwhmInfo = np.zeros([self.nsrc])
         
         for oneSrc in np.arange(self.nsrc):
             profile_img = profile_img_list[oneSrc]
@@ -1037,6 +1065,42 @@ class spec(phot_pipeline.phot):
                 primHDU = fits.PrimaryHDU(weight2D)
                 primHDU.writeto(weightPath,overwrite=True)
             
+            if self.param['saveSpatialProfileStats'] == True:
+                ## get the centroid and FWHM info
+                numDisp = np.round(self.param['dispPixels'][1] - self.param['dispPixels'][0])
+                meanDispPx = np.mean(self.param['dispPixels']) + self.dispOffsets[oneSrc]
+                profilePix = ((dispIndices > meanDispPx - 0.15 * numDisp) & 
+                              (dispIndices <= meanDispPx + 0.15 * numDisp))
+                oneSourcePos = self.param['starPositions'][oneSrc]
+                startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
+                endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+                spatial_var = np.arange(startSpatial,endSpatial) ## independent variable
+                
+                
+                if self.param['dispDirection'] == 'x':
+                    spatial_profile = np.nanmedian(imgSub[startSpatial:endSpatial,profilePix],axis=1)
+                else:
+                    spatial_profile = np.nanmedian(imgSub[profilePix,startSpatial:endSpatial],axis=0)
+                
+                fitter = fitting.LevMarLSQFitter()
+                ampGuess = np.max(spatial_profile) - np.min(spatial_profile)
+                meanGuess = np.median(spatial_var)
+                gauss1d = models.Gaussian1D(amplitude=ampGuess, mean=meanGuess, stddev=3)
+                line_orig = models.Linear1D(slope=0.0, intercept=np.min(spatial_profile))
+                comb_gauss = line_orig + gauss1d
+                fitted_model = fitter(comb_gauss, spatial_var,spatial_profile, maxiter=111)
+                cenInfo[oneSrc] = fitted_model.mean_1.value
+                fwhmInfo[oneSrc] = fitted_model.stddev_1.value * 2.35
+                if saveFits == True:
+                    fig, ax = plt.subplots()
+                    ax.plot(spatial_var,spatial_profile,label='data')
+                    ax.plot(spatial_var,fitted_model(spatial_var),label='Model')
+                    spat_profile_name = 'spatial_prof_{}_src_{}.pdf'.format(prefixName,oneSrc)
+                    spatial_prof_path = os.path.join(self.baseDir,'diagnostics','spatial_profile',spat_profile_name)
+                    ax.legend()
+                    ax.set_title('Cen={}, FWHM={}'.format(cenInfo[oneSrc],fwhmInfo[oneSrc]))
+                    print("Saving spatial profile to {}".format(spatial_prof_path))
+                    fig.savefig(spatial_prof_path)
         
         extractDict = {} ## spectral extraction dictionary
         extractDict['t0'] = t0
@@ -1047,6 +1111,10 @@ class spec(phot_pipeline.phot):
         extractDict['sum spec err'] = sumSpectra_err
         extractDict['back spec'] = backSpectra
         extractDict['airmass'] = airmass
+        
+        if self.param['saveSpatialProfileStats'] == True:
+            extractDict['cen'] = cenInfo
+            extractDict['fwhm'] = fwhmInfo
         
         if self.param['saveRefRow'] == True:
             refRow = np.mean(img[0:4,:],axis=0)

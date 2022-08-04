@@ -71,3 +71,8 @@ The method to turn the dispersion pixels into wavelengths.
 * :code:`quick_nrs_prism` Simple Polynomial fit to the NIRSpec prism using the jwst pipeline evaluated at Y=16 on 2022-07-15 (use with caution)
 
 * :code:`grismr_poly_dms` A polynomial fit to flight data from program 1076. Should be accurate to within a few angstroms for F322W2. F444W depends on where the target position lands after position adjustments.
+
+saveSpatialProfileStats
+~~~~~~~~~~~~~~~~~~~~~~~
+If True, save the spatial profile centroid and FWHM for de-trending. If False, those are populated with NaN.
+

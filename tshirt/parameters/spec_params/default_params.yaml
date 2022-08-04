@@ -56,3 +56,4 @@ readFromTshirtExamples: False ## read the data from T-shirt examples within the 
 saveRefRow: False ## save rows of reference pixels?
 dateKeyword: DATE-OBS ## default FITS keyword to find date/time information from
 DATE-OBS: None ## manually supply a DATE-OBS if nothing is available in the header
+saveSpatialProfileStats: False ## save the spatial profile stats
