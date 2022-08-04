@@ -1067,10 +1067,19 @@ class spec(phot_pipeline.phot):
             
             if self.param['saveSpatialProfileStats'] == True:
                 ## get the centroid and FWHM info
-                numDisp = np.round(self.param['dispPixels'][1] - self.param['dispPixels'][0])
-                meanDispPx = np.mean(self.param['dispPixels']) + self.dispOffsets[oneSrc]
-                profilePix = ((dispIndices > meanDispPx - 0.15 * numDisp) & 
-                              (dispIndices <= meanDispPx + 0.15 * numDisp))
+                if self.param['profilePix'] == None:
+                    profDispStart_0 = self.param['dispPixels'][0]
+                    profDispEnd_0 = self.param['dispPixels'][1]
+                else:
+                    profDispStart_0 = self.param['profilePix'][0]
+                    profDispEnd_0 = self.param['profilePix'][1]
+                
+                profDispStart = profDispStart_0 + self.dispOffsets[oneSrc]
+                profDispEnd = profDispEnd_0 + self.dispOffsets[oneSrc]
+                
+                profilePix = ((dispIndices > profDispStart) &
+                             (dispIndices <= profDispEnd))
+                
                 oneSourcePos = self.param['starPositions'][oneSrc]
                 startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
                 endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
@@ -1101,6 +1110,7 @@ class spec(phot_pipeline.phot):
                     ax.set_title('Cen={}, FWHM={}'.format(cenInfo[oneSrc],fwhmInfo[oneSrc]))
                     print("Saving spatial profile to {}".format(spatial_prof_path))
                     fig.savefig(spatial_prof_path)
+                    plt.close(fig)
         
         extractDict = {} ## spectral extraction dictionary
         extractDict['t0'] = t0

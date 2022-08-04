@@ -74,5 +74,8 @@ The method to turn the dispersion pixels into wavelengths.
 
 saveSpatialProfileStats
 ~~~~~~~~~~~~~~~~~~~~~~~
-If True, save the spatial profile centroid and FWHM for de-trending. If False, those are populated with NaN.
+If True, save the spatial profile centroid and FWHM for de-trending from the median profile. If False, those are populated with NaN.
 
+profilePix
+~~~~~~~~~~
+If None, all dispersion pixels (along the wavelength direction) are used in calculating spatial profile statistics. If a 2 element list like :code:`[50,100]`, pixels 50 through 100 in the dispersion/wavelength direction will be used to measure the spatial profile statistics. Note that this only has an effect if :code:`saveSpatialProfileStats` is :code:`True` and this will not affect the extraction in current versions of tshirt. It will ony affect the saved profile statistics.
