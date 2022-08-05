@@ -79,3 +79,8 @@ If True, save the spatial profile centroid and FWHM for de-trending from the med
 profilePix
 ~~~~~~~~~~
 If None, all dispersion pixels (along the wavelength direction) are used in calculating spatial profile statistics. If a 2 element list like :code:`[50,100]`, pixels 50 through 100 in the dispersion/wavelength direction will be used to measure the spatial profile statistics. Note that this only has an effect if :code:`saveSpatialProfileStats` is :code:`True` and this will not affect the extraction in current versions of tshirt. It will ony affect the saved profile statistics.
+
+useSmoothProfileForStats
+~~~~~~~~~~~~~~~~~~~~~~~~
+Use the smoothed profile for the profile statistics? If True, the statistics will be on the man profile along the dispersion direction. Otherwise, a median of the data is calculated. Note that if :code:`fixedProfile` is True, this will give constant statistics for all images
+

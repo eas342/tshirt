@@ -1085,11 +1085,16 @@ class spec(phot_pipeline.phot):
                 endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
                 spatial_var = np.arange(startSpatial,endSpatial) ## independent variable
                 
-                
-                if self.param['dispDirection'] == 'x':
-                    spatial_profile = np.nanmedian(imgSub[startSpatial:endSpatial,profilePix],axis=1)
+                if self.param['useSmoothProfileForStats'] == True:
+                    if self.param['dispDirection'] == 'x':
+                        spatial_profile = np.nanmean(profile_img[startSpatial:endSpatial,profilePix],axis=1)
+                    else:
+                        spatial_profile = np.nanmean(profile_img[profilePix,startSpatial:endSpatial],axis=0)
                 else:
-                    spatial_profile = np.nanmedian(imgSub[profilePix,startSpatial:endSpatial],axis=0)
+                    if self.param['dispDirection'] == 'x':
+                        spatial_profile = np.nanmedian(imgSub[startSpatial:endSpatial,profilePix],axis=1)
+                    else:
+                        spatial_profile = np.nanmedian(imgSub[profilePix,startSpatial:endSpatial],axis=0)
                 
                 fitter = fitting.LevMarLSQFitter()
                 ampGuess = np.max(spatial_profile) - np.min(spatial_profile)
