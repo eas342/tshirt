@@ -369,6 +369,7 @@ class phot:
     
     def showStarChoices(self,img=None,head=None,custPos=None,showAps=False,
                         srcLabel=None,figSize=None,showPlot=False,
+                        allLabels=None,
                         apColor='black',backColor='black',
                         vmin=None,vmax=None,index=None,
                         labelColor='white',
@@ -389,7 +390,9 @@ class phot:
             Show apertures rather than circle stars
         srcLabel : str or None, optional
             What should the source label be? The default is "src"
-        srcLabel : list or None, optional
+        allLabels : list of str
+            Names for all aperture labels. Must be the same length as the number of sources
+        figSize : list or None, optional
             Specify the size of the plot.
             This is useful for looking at high/lower resolution
         showPlot : bool
@@ -470,13 +473,16 @@ class phot:
             
             #circ = plt.Circle((onePos[0], onePos[1]), rad, color='r')
             #ax.add_patch(circ)
-            if ind == 0:
-                if srcLabel is None:
-                    name='src'
+            if allLabels is None:
+                if ind == 0:
+                    if srcLabel is None:
+                        name='src'
+                    else:
+                        name=srcLabel
                 else:
-                    name=srcLabel
+                    name=str(ind)
             else:
-                name=str(ind)
+                name=allLabels[ind]
             ax.text(onePos[0]+txtOffset,onePos[1]+txtOffset,name,color=labelColor)
         
         ax.set_xlabel('X (px)')
@@ -492,6 +498,7 @@ class phot:
             fig.show()
         else:
             outF = os.path.join(self.baseDir,'plots','photometry','star_labels',outName)
+            print("Saving plot to {}".format(outF))
             fig.savefig(outF,
                         bbox_inches='tight')
             plt.close(fig)
