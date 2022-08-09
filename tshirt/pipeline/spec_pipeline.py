@@ -1847,7 +1847,6 @@ class spec(phot_pipeline.phot):
         
         binned_disp = np.zeros(nbins)
         
-        #db.set_trace()
         
         for ind, binStart, binEnd in zip(binIndices,binStarts,binEnds):
             theseWeights = weights[:,binStart:binEnd]
@@ -1951,7 +1950,7 @@ class spec(phot_pipeline.phot):
         if (os.path.exists(self.wavebin_specFile(nbins=nbins,srcInd=src)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices,recalculate=recalculate,
                                      specType=specType,align=align,src=src,refCorrect=refCorrect,
-                                     binStarts=None,binEnds=None)
+                                     binStarts=binStarts,binEnds=binEnds)
         
         HDUList = fits.open(self.wavebin_specFile(nbins=nbins,srcInd=src))
         time = HDUList['TIME'].data
