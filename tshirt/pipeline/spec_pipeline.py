@@ -1599,7 +1599,8 @@ class spec(phot_pipeline.phot):
         HDUList.close()
     
     def plot_noise_spectrum(self,src=0,showPlot=True,yLim=None,
-                            startInd=0,endInd=None,waveCal=False):
+                            startInd=0,endInd=None,waveCal=False,
+                            waveBin=False,nbins=10):
         """
         Plot the Noise Spectrum from the Dynamic Spectrum
         
@@ -1615,21 +1616,42 @@ class spec(phot_pipeline.phot):
             Starting time index to use
         endInd: int or None
             Ending index to use. None will use all
+        
         waveCal: bool
             Wavelength calibrate the dispersion pixel
+                            
+        waveBin: bool
+            Bin the wavelengths ?
+        nbins: int
+            How many wavelength bins should be used?
         """
         fig, ax = plt.subplots()
-        HDUList = fits.open(self.dyn_specFile(src))
-        x = HDUList['DISP INDICES'].data
+        
+        if waveBin == True:
+            res = self.print_noise_wavebin(nbins=nbins,startInd=startInd,endInd=endInd)
+            if waveCal == True:
+                x_plot = res['Wave (mid)']
+            else:
+                x_plot = res['Disp Mid']
+            y = res['Stdev (%)'] / 100.
+            theo_y = res['Theo Err (%)'] / 100.
+        else:
+            HDUList = fits.open(self.dyn_specFile(src))
+            x = HDUList['DISP INDICES'].data
+            if waveCal == True:
+                x_plot = self.wavecal(x)
+            else:
+                x_plot = x
+            
+            y = np.nanstd(HDUList['DYNAMIC SPEC'].data[startInd:endInd,:],axis=0)
+            
+            theo_y = np.nanmedian(HDUList['DYN SPEC ERR'].data[startInd:endInd,:],axis=0)
+        
         if waveCal == True:
-            x_plot = self.wavecal(x)
             xLabel = 'Wavelength ($\mu$m)'
         else:
-            x_plot = x
             xLabel = "Disp Pixel"
-        y = np.nanstd(HDUList['DYNAMIC SPEC'].data[startInd:endInd,:],axis=0)
         
-        theo_y = np.nanmedian(HDUList['DYN SPEC ERR'].data[startInd:endInd,:],axis=0)
         ax.plot(x_plot,y * 100.,label='Measured noise')
         ax.plot(x_plot,theo_y * 100.,label='Theoretical noise')
         ax.set_xlabel(xLabel)
@@ -1645,6 +1667,8 @@ class spec(phot_pipeline.phot):
             outPath = os.path.join(self.baseDir,'plots','spectra','noise_spectrum',outName)
             print("Writing noise spectrum to {}".format(outPath))
             fig.savefig(outPath,overwrite=True)
+        if waveBin == False:
+            HDUList.close()
     
     def plot_spec_offsets(self,src=0):
         if os.path.exists(self.dyn_specFile(src)) == False:
@@ -2114,7 +2138,8 @@ class spec(phot_pipeline.phot):
         return t1, t2
     
     def print_noise_wavebin(self,nbins=10,shorten=False,recalculate=False,align=False,
-                            specType='Optimal',npoints=15,srcInd=0):
+                            specType='Optimal',npoints=15,srcInd=0,
+                            startInd=0,endInd=None):
         """ 
         Get a table of noise measurements for all wavelength bins
         
@@ -2124,9 +2149,18 @@ class spec(phot_pipeline.phot):
             The number of wavelength bins
         shorten: bool
             Use a short segment of the full time series?
-            This could be useful for avoiding bad data or a deep transit
+            This could be useful for avoiding bad data or a deep transit.
+            This overrides startInd and endInd so choose either shorten or specify
+            the start and end indices
         npoints: int
-            Number of points to include in the calculation (if shorten is True)
+            Number of points to include in the calculation (only if shorten is True)
+            This will only use the first npoints.
+        startInd: int
+            Starting time index to use (for specifying a time interval via indices)
+            Shorten will supercede this so keep it False to use startInd.
+        endInd: int
+            Ending time index to use (for specifying a time interval via indices).
+            Shorten will supercede this so keep it False to use endInd.
         recalculate: bool
             Recalculate the wavebin series and dynamic spectrum?
         specType: str
@@ -2160,6 +2194,8 @@ class spec(phot_pipeline.phot):
         t['Wave (end)'] = np.round(self.wavecal(disp['Bin End']),3)
         if shorten == True:
             binGrid = binGrid[0:npoints,:]
+        else:
+            binGrid = binGrid[startInd:endInd,:]
         t['Stdev (%)'] = np.round(np.std(binGrid,axis=0) * 100.,4)
         t['Theo Err (%)'] = np.round(np.median(binGrid_err,axis=0) * 100.,4)
         
