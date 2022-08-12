@@ -1598,7 +1598,8 @@ class spec(phot_pipeline.phot):
         
         HDUList.close()
     
-    def plot_noise_spectrum(self,src=0,showPlot=True,yLim=None):
+    def plot_noise_spectrum(self,src=0,showPlot=True,yLim=None,
+                            startInd=0,endInd=None,waveCal=False):
         """
         Plot the Noise Spectrum from the Dynamic Spectrum
         
@@ -1610,15 +1611,28 @@ class spec(phot_pipeline.phot):
             Show a plot in backend?
         yLim: list or None
             Specify the y limits
+        startInd: int
+            Starting time index to use
+        endInd: int or None
+            Ending index to use. None will use all
+        waveCal: bool
+            Wavelength calibrate the dispersion pixel
         """
         fig, ax = plt.subplots()
         HDUList = fits.open(self.dyn_specFile(src))
         x = HDUList['DISP INDICES'].data
-        y = np.nanstd(HDUList['DYNAMIC SPEC'].data,axis=0)
-        theo_y = np.nanmedian(HDUList['DYN SPEC ERR'].data,axis=0)
-        ax.plot(x,y * 100.,label='Measured noise')
-        ax.plot(x,theo_y * 100.,label='Theoretical noise')
-        ax.set_xlabel("Disp Pixel")
+        if waveCal == True:
+            x_plot = self.wavecal(x)
+            xLabel = 'Wavelength ($\mu$m)'
+        else:
+            x_plot = x
+            xLabel = "Disp Pixel"
+        y = np.nanstd(HDUList['DYNAMIC SPEC'].data[startInd:endInd,:],axis=0)
+        
+        theo_y = np.nanmedian(HDUList['DYN SPEC ERR'].data[startInd:endInd,:],axis=0)
+        ax.plot(x_plot,y * 100.,label='Measured noise')
+        ax.plot(x_plot,theo_y * 100.,label='Theoretical noise')
+        ax.set_xlabel(xLabel)
         ax.set_ylabel("Noise (%)")
         if yLim is not None:
             ax.set_ylim(yLim[0],yLim[1])
