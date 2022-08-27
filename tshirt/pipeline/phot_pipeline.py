@@ -2344,7 +2344,8 @@ def do_binning(x,y,nBin=20):
 def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    binMin=50,binMax=2000,customShortName=None,
                    logPlot=True,clip=False,xUnit='min',
-                   yUnit='ppm',showPlot=False,custTitle=None):
+                   yUnit='ppm',showPlot=False,custTitle=None,
+                   nBinSequence=20):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -2366,6 +2367,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         Bin size for the smallest # of bins
     binMax: int
         Bin size for the largest # of bins
+    nBinSequence: int
+        Number of bins to cycle through in sequence
     removeLinear: bool
         Remove a linear trend from the time series first?
     clip: bool
@@ -2397,7 +2400,12 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         yerr = yerr * 1e6
     nPt = len(y)
     
-    logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),20)
+    maxAllowedBinNumber = len(x) // 2
+    if (binMax > maxAllowedBinNumber):
+        warnings.warn("Maximum number of bins is greater than the number of points. Setting binMax to {}".format(maxAllowedBinNumber))
+        binMax = maxAllowedBinNumber
+    
+    logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),nBinSequence)
     binNums = np.array(10**logBinNums,dtype=np.int)
     
     binSizes, stds, theoNoise, wNoise = [], [], [], []
@@ -2429,7 +2437,7 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
 
     ## only Use finite values (ignore NaNs where binning isn't possible)
     usePts = np.isfinite(stds)
-
+    #pdb.set_trace()
     fig, ax = plt.subplots(figsize=(5,4))
     if logPlot == True:
         ax.loglog(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
