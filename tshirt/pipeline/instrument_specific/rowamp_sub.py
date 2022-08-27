@@ -26,9 +26,19 @@ def do_even_odd(thisAmp):
     
     return thisAmp - even_odd_model, even_odd_model
 
+def col_by_col(thisAmp):
+    """
+    Do a column-by-column slow read correction
+    instead of an even/odd correction
+    """
+    colMedian = np.nanmedian(thisAmp,axis=0)
+    slowread_model = np.tile(colMedian,[thisAmp.shape[0],1])
+    return thisAmp - slowread_model, slowread_model
+
 def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
                evenOdd=True,activePixMask=None,backgMask=None,
-               grismr=False,returnFastSlow=False):
+               grismr=False,returnFastSlow=False,
+               colByCol=False):
     """
     Do background subtraction amplifier-by-amplifier, row-by-row around the sources
     
@@ -44,7 +54,10 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
         How many outputamplifiers are used? 4 for NIRCam stripe mode and 1 is for 1 output amplifier
     
     evenOdd: bool
-        Remove the even and odd offsets before doing row-by-row medians?
+        Remove the even and odd offsets before doing row-by-row medians? 
+    
+    colByCol: bool
+        Do column-by-column subtraction. This will supercede the even/odd correction.
     
     saveDiagnostics: bool
         Save diagnostic files?
@@ -128,7 +141,10 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
         ## loop through amps
         
         for amp in np.arange(4):
-            if evenOdd == True:
+            if colByCol == True:
+                thisAmp, colbycol_model = col_by_col(masked_img[:,ampStarts[amp]:ampEnds[amp]])
+                slowread_model[:,ampStarts[amp]:ampEnds[amp]] = colbycol_model
+            elif evenOdd == True:
                 thisAmp, even_odd_model = do_even_odd(masked_img[:,ampStarts[amp]:ampEnds[amp]])
                 slowread_model[:,ampStarts[amp]:ampEnds[amp]] = even_odd_model
             else:
@@ -168,7 +184,10 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
 
         
     elif amplifiers == 1:
-        if evenOdd == True:
+        if colByCol == True:
+            thisAmp,colbycol_model = col_by_col(masked_img)
+            slowread_model = colbycol_model
+        elif evenOdd == True:
             thisAmp,even_odd_model = do_even_odd(masked_img)
             slowread_model = even_odd_model
         else:
