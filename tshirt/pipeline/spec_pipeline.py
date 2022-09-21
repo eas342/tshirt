@@ -1932,7 +1932,8 @@ class spec(phot_pipeline.phot):
     def plot_wavebin_series(self,nbins=10,offset=0.005,showPlot=False,yLim=None,xLim=None,
                             recalculate=False,dispIndices=None,differential=False,
                             interactive=False,unit='fraction',align=False,specType='Optimal',
-                            src=0,refCorrect=False,binStarts=None,binEnds=None):
+                            src=0,refCorrect=False,binStarts=None,binEnds=None,
+                            timeBin=False,nTimeBin=150,waveLabels=False):
         """
         Plot a normalized lightcurve for wavelength-binned data one wavelength at a time with
         an offset between the lightcurves.
@@ -1984,6 +1985,10 @@ class spec(phot_pipeline.phot):
             Index number for which spectrum to look at (used for Multi-object spectroscopy)
         refCorrect: bool
             Correct by reference stars for MOS?
+        timeBin: bool
+            Bin the points in time?
+        nTimeBin
+            Number of points to bin in time
         """
         if (os.path.exists(self.wavebin_specFile(nbins=nbins,srcInd=src)) == False) | (recalculate == True):
             self.make_wavebin_series(nbins=nbins,dispIndices=dispIndices,recalculate=recalculate,
@@ -1998,6 +2003,11 @@ class spec(phot_pipeline.phot):
         
         binGrid = HDUList['BINNED F'].data
         binGrid_err = HDUList['BINNED ERR'].data
+        
+        if waveLabels == True:
+            waves_table = Table(HDUList['WAVELENGTHS'].data)
+            waves = np.array(waves_table['Bin Middle'])
+        
         if differential == True:
             weights = 1./(np.nanmean(binGrid_err,0))**2
             weights2D = np.tile(weights,[binGrid.shape[0],1])
@@ -2042,11 +2052,23 @@ class spec(phot_pipeline.phot):
             fig, ax = plt.subplots()
             for ind,oneDisp in enumerate(disp):
                 if unit == 'fraction':
-                    y_plot = binGrid[:,ind] - offset * ind
+                    y_plot_full_tres = binGrid[:,ind] - offset * ind
                 else:
-                    y_plot = (binGrid[:,ind] - 1.0) * 1e6 - offset * ind * 1e6
+                    y_plot_full_tres = (binGrid[:,ind] - 1.0) * 1e6 - offset * ind * 1e6
                 
-                ax.errorbar(time - offset_time,y_plot,fmt='o')
+                if timeBin == True:
+                    goodP = np.ones_like(time,dtype=bool)
+                    y_plot, xEdges, binNum = binned_statistic(time[goodP],y_plot_full_tres[goodP],
+                                                              bins=nTimeBin)
+                    time_plot = (xEdges[:-1] + xEdges[1:])/2.
+                else:
+                    y_plot = y_plot_full_tres
+                    time_plot = time
+                
+                ax.errorbar(time_plot - offset_time,y_plot,fmt='o')
+                
+                if waveLabels == True:
+                    ax.text(time_plot[-1] - offset_time,y_plot[-1],'{:.2f} $\mu$m'.format(waves[ind]))
             
             if yLim is not None:
                 ax.set_ylim(yLim[0],yLim[1])
