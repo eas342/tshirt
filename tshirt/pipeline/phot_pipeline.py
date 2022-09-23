@@ -374,7 +374,7 @@ class phot:
                         vmin=None,vmax=None,index=None,
                         labelColor='white',
                         xLim=None,yLim=None,
-                        txtOffset=20):
+                        txtOffset=20,diffImgIndex=None):
         """
         Show the star choices for photometry
         
@@ -415,6 +415,8 @@ class phot:
             Specify the minimum and maximum Y for the plot. For example yLim=[40,60]
         txtOffset: float
             The X and Y offset to place the text label for a source
+        diffImgIndex: int
+            Choose a file index from which to subtract a reference image
         """
         fig, ax = plt.subplots(figsize=figSize)
         
@@ -425,6 +427,10 @@ class phot:
             img, head = self.getImg(self.fileL[index])
         else:
             img_other, head = self.get_default_im(img=img,head=None)
+        
+        if diffImgIndex is not None:
+            img2, head2 = self.getImg(self.fileL[diffImgIndex])
+            img = img - img2
         
         if vmin is None:
             useVmin = np.nanpercentile(img,1)
