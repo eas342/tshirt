@@ -1,5 +1,6 @@
 import numpy as np
 import pdb
+import warnings
 
 def ts_wavecal(pixels,tserSim=False,
                obsFilter='F444W',subarray='SUBGRISM64',grism='GRISM0'):
@@ -65,10 +66,10 @@ def flight_poly_grismr_nc(pixels,obsFilter='F322W2',detectorPixels=False):
         xprime = (x - x0)/1000.
     elif obsFilter == 'F444W':
         ## need to update once we know where the new F444W position lands
-        raise Exception("Filter {} had a position tweak and needs updating".format(obsFilter))
+        warnings.warn('F444W cal may need tweaking.')
         x0 = 945
         xprime = (x - x0)/1000.
-        coeff = np.array([3.928041104137344, 0.979649332832983])
+        coeff = np.array([3.928041104137344 + 0.091033325, 0.979649332832983])
     else:
         raise Exception("Filter {} not available".format(obsFilter))
     poly = np.polynomial.Polynomial(coeff)
