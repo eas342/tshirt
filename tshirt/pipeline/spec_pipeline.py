@@ -2087,7 +2087,7 @@ class spec(phot_pipeline.phot):
             else:
                 outName = 'wavebin_tser_{}_src_{}.pdf'.format(self.dataFileDescrip,src)
                 outPath = os.path.join(self.baseDir,'plots','spectra','wavebin_tseries',outName)
-                fig.savefig(outPath)
+                fig.savefig(outPath,bbox_inches='tight')
                 plt.close(fig)
 
             
