@@ -1538,7 +1538,7 @@ class phot:
             else:
                 outName = 'raw_tser_{}.pdf'.format(self.dataFileDescrip)
                 outPath = os.path.join(self.baseDir,'plots','photometry','tser_allstar',outName)
-            fig.savefig(outPath)
+            fig.savefig(outPath,bbox_inches='tight')
             plt.close(fig)
         
         HDUList.close()
