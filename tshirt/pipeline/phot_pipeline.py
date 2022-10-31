@@ -1418,7 +1418,7 @@ class phot:
         normReg: list with two items or None
             Relative region over which to fit a baseline and re-normalize. This only works on reference-corrected photometry for now
         doBin : float or None
-            The bin size if showing binned data. This only works on reference-corrected photometry for now
+            The bin size if showing binned data.
         doNorm : bool
             Normalize the individual time series?
         yLim:  List
@@ -1508,7 +1508,13 @@ class phot:
                 ## To avoid repeat colors, switch to dashed lins
                 if oneSrc >= 10: linestyle='dashed'
                 else: linestyle= 'solid'
-                ax.plot(jdArr - jdRef,yplot,label=pLabel,linestyle=linestyle)
+
+                if doBin is not None:
+                    xplot, yplot2, yplot_err = do_binning(jdArr - jdRef,yplot,nBin=doBin)
+                else:
+                    xplot = jdArr - jdRef
+                    yplot2 = yplot
+                ax.plot(xplot,yplot2,label=pLabel,linestyle=linestyle)
         
             if head['SRCGEOM'] == 'Circular':
                 ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
