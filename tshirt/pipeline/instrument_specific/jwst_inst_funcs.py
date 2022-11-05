@@ -66,7 +66,6 @@ def flight_poly_grismr_nc(pixels,obsFilter='F322W2',detectorPixels=False):
         xprime = (x - x0)/1000.
     elif obsFilter == 'F444W':
         ## need to update once we know where the new F444W position lands
-        warnings.warn('F444W cal may need tweaking.')
         x0 = 945
         xprime = (x - x0)/1000.
         coeff = np.array([3.928041104137344 + 0.091033325, 0.979649332832983])
