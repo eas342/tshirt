@@ -1653,7 +1653,10 @@ class phot:
         timeHead = jdHDU.header
         
         cenData = HDUList['CENTROIDS'].data
-        fwhmData = HDUList['FWHM'].data
+        if 'FWHM' in HDUList:
+            fwhmData = HDUList['FWHM'].data
+        else:
+            fwhmData = np.zeros_like(cenData) * np.nan
         
         backData = HDUList['BACKG PHOT'].data
         
