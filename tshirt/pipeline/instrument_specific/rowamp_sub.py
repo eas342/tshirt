@@ -11,6 +11,7 @@ except ImportError as err1:
 import os
 import pdb
 from copy import deepcopy
+from scipy.signal import savgol_filter
 
 def do_even_odd(thisAmp):
     """
@@ -38,7 +39,7 @@ def col_by_col(thisAmp):
 def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
                evenOdd=True,activePixMask=None,backgMask=None,
                grismr=False,returnFastSlow=False,
-               colByCol=False):
+               colByCol=False,smoothSlowDir=None):
     """
     Do background subtraction amplifier-by-amplifier, row-by-row around the sources
     
@@ -79,6 +80,10 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
     
     returnFastSlow: bool
         Return both the fast and slow read models?
+    
+    smoothSlowDir: None or float
+        Length of the smoothing kernel to apply along the fast read direction 
+        If None, no smoothing is applied
     """
     
     ## Npix Threshold
@@ -159,6 +164,9 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
             bad_rows = np.sum(np.sum(np.isfinite(thisAmp),axis=1) <= Npix_threshold)
             if bad_rows == 0:
                 medVals = np.nanmedian(thisAmp,axis=1)
+                if smoothSlowDir is not None:
+                    medVals = savgol_filter(medVals,smoothSlowDir,3)
+                
                 ## tile this to make a model across the fast-read direction
                 fastread_model[:,ampStarts[amp]:ampEnds[amp]] = np.tile(medVals, [ampWidth,1]).T
                 amp_check_mask[amp] = True
@@ -196,6 +204,8 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
             thisAmp = masked_img - slowread_model
         
         medVals = np.nanmedian(thisAmp,axis=1)
+        if smoothSlowDir is not None:
+            medVals = savgol_filter(medVals,smoothSlowDir,3)
         ## tile this to make a constant model
         tiled_med = np.tile(medVals, [img.shape[1],1]).T
         ## put the results in the model image
