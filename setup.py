@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='tshirt',
-    version='0.1dev9',
+    version='0.2',
     author='Everett Schlawin, Kayli Glidic',
     packages=['tshirt','tshirt.pipeline',
               'tshirt.pipeline.instrument_specific'],
@@ -21,7 +21,8 @@ setup(
         "tqdm>=4.46.0",
         "photutils>=0.4.1",
         "bokeh>=1.4.0",
-        "pytest"
+        "pytest",
+        "celerite2"
     ],
     long_description=long_description,
     long_description_content_type='text/markdown'
