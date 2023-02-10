@@ -1600,7 +1600,8 @@ class spec(phot_pipeline.phot):
     
     def plot_noise_spectrum(self,src=0,showPlot=True,yLim=None,
                             startInd=0,endInd=None,waveCal=False,
-                            waveBin=False,nbins=10):
+                            waveBin=False,nbins=10,
+                            returnNoiseSpec=False):
         """
         Plot the Noise Spectrum from the Dynamic Spectrum
         
@@ -1624,6 +1625,9 @@ class spec(phot_pipeline.phot):
             Bin the wavelengths ?
         nbins: int
             How many wavelength bins should be used?
+        
+        returnNoiseSpec: bool
+            Return the noise spectrum? If True, an astropy table is returned
         """
         fig, ax = plt.subplots()
         
@@ -1669,6 +1673,13 @@ class spec(phot_pipeline.phot):
             fig.savefig(outPath,overwrite=True)
         if waveBin == False:
             HDUList.close()
+        
+        if returnNoiseSpec == True:
+            t = Table()
+            t['x'] = x_plot
+            t['y'] = y
+            t['theo_y'] = theo_y
+            return t
     
     def plot_spec_offsets(self,src=0):
         if os.path.exists(self.dyn_specFile(src)) == False:
