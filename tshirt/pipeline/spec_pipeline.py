@@ -231,6 +231,29 @@ class spec(phot_pipeline.phot):
                 #     self.counts.append(len(self.batchParam[oneKey]))
         return header
     
+    def get_median_img(self,nImg):
+        """
+        Calculate the median image fron n images
+
+        Parameters
+        ----------
+        nImg: int
+            Number of images to use for the profile
+        """
+        nSpacing = self.nImg // nImg
+        indToUse = np.arange(0,self.nImg,nSpacing)
+        nUsed = len(indToUse)
+        img, head = self.get_default_im()
+        all_img = np.zeros([nUsed,img.shape[0],img.shape[1]])
+        
+        for count,oneInd in enumerate(indToUse):
+            oneImgName = self.fileL[oneInd]
+            img2, head2 = self.getImg(oneImgName)
+            all_img[count,:,:] = img2
+        medImg = np.median(all_img,axis=0)
+        return medImg, head
+
+
     def do_extraction(self,useMultiprocessing=False):
         """
         Extract all spectroscopy
@@ -238,7 +261,11 @@ class spec(phot_pipeline.phot):
         fileCountArray = np.arange(self.nImg)
         
         if self.param['fixedProfile'] == True:
-            img, head = self.get_default_im()
+            if (self.nImg > self.param['nImgForProfile']) & (self.param['nImgForProfile'] > 1):
+                img, head = self.get_median_img(self.param['nImgForProfile'])
+            else:
+                img, head = self.get_default_im()
+            
             imgSub, bkgModel, subHead = self.do_backsub(img,head,saveFits=False,
                                                         directions=self.param['bkgSubDirections'])
             profileList, smooth_img_list = self.find_profile(imgSub,subHead,saveFits=True,masterProfile=True)
