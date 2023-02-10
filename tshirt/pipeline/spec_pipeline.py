@@ -1555,7 +1555,7 @@ class spec(phot_pipeline.phot):
         
         if waveCal == True:
             all_waves = self.wavecal(waveIndices)
-            extent = [all_waves[0],all_waves[-1],0,dynamicSpec.shape[1]]
+            extent = [all_waves[0],all_waves[-1],0,dynamicSpec.shape[0]]
         else:
             extent = None
         
