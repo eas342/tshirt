@@ -2316,7 +2316,7 @@ def ensure_coordinates_are_within_bounds(xCoord,yCoord,img):
 
     return out_x,out_y
 
-def do_binning(x,y,nBin=20):
+def do_binning(x,y,nBin=20,yerr=None,returnXwidth=False):
     """
     A function that uses scipy binned_statistic to bin data
     
@@ -2329,7 +2329,13 @@ def do_binning(x,y,nBin=20):
         Independent variable for use in assigning data to bins
     y: numpy array
         Dependent variable to be binned
-    
+    yerr: numpy array (optional)
+        The error on the y points
+    nBin: int or numpy array
+        The number of bins or else the bin array
+    returnXwidth: bool
+        Return the X widths?
+        
     Returns
     -------------
     3 item tuple:
@@ -2340,7 +2346,10 @@ def do_binning(x,y,nBin=20):
     yBin: numpy array
         mean value in bin
     yStd: numpy array
-        standard error of each bin
+        If yerr supplied,standard error of each bin
+        If yerr not supplied, the standard deviation of each bin
+    xWidth: numpy array
+        The x widths? If returnXwidth is True
     """
     yBins = Table()
     for oneStatistic in ['mean','std','count']:
@@ -2348,13 +2357,31 @@ def do_binning(x,y,nBin=20):
                                                 statistic=oneStatistic,bins=nBin)
         yBins[oneStatistic] = yBin
 
-    ## Standard error in the mean
-    stdErrM = yBins['std'] / np.sqrt(yBins['count'])
-    xShow = (xEdges[:-1] + xEdges[1:])/2.
-    yShow = yBins['mean']
-    yErrShow = stdErrM
+    if yerr is not None:
+        weights = 1./yerr**2
+        wSum, xEdges, binNum = binned_statistic(x,weights * y,
+                                                statistic='sum',bins=nBin)
+        sumW, xEdges, binNum = binned_statistic(x,weights,
+                                                statistic='sum',bins=nBin)
+        yWAvg = wSum/sumW
+        yWAvg_err = 1./np.sqrt(sumW)
 
-    return xShow, yShow, yErrShow
+
+    xShow = (xEdges[:-1] + xEdges[1:])/2.
+    xWidth = xEdges[1:] - xEdges[:-1]
+    if yerr is None:
+        stdErrM = yBins['std'] / np.sqrt(yBins['count'])
+        ## Standard error in the mean
+        yErrShow = stdErrM
+        yShow = yBins['mean']
+    else:
+        yShow = yWAvg
+        yErrShow = yWAvg_err
+
+    if returnXwidth == True:
+        return xShow, yShow, yErrShow, xWidth
+    else:
+        return xShow, yShow, yErrShow
 
 def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    binMin=50,binMax=2000,customShortName=None,
