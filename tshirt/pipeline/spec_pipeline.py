@@ -1432,7 +1432,8 @@ class spec(phot_pipeline.phot):
                           alignDiagnostics=False,extraFF=False,
                           specType='Optimal',showPlot=False,
                           vmin=None,vmax=None,flipX=False,
-                          waveCal=False):
+                          waveCal=False,topYlabel='',
+                          interpolation=None):
         """
         Plots a dynamic spectrum of the data
         
@@ -1460,6 +1461,10 @@ class spec(phot_pipeline.phot):
             Value maximum for dynamic spectrum image
         flipX: bool
             Flip the X axis?
+        interpolation: None or str
+            plot interpolation to use for matplotlib imshow()
+        topYlabel: str
+            The label for the top Y axis
         waveCal: bool
             Calibrate the dispersion to wavelength?
         """
@@ -1571,6 +1576,7 @@ class spec(phot_pipeline.phot):
                 x_spec = waveIndices
             
             axTop.plot(x_spec,avgSpec)
+            axTop.set_ylabel(topYlabel)
             ax = axArr[1]
         else:
             fig, ax = plt.subplots()
@@ -1587,7 +1593,8 @@ class spec(phot_pipeline.phot):
             extent = None
         
         imShowData = ax.imshow(dynamicSpec,vmin=vmin,vmax=vmax,origin='lower',
-                               extent=extent)
+                               extent=extent,interpolation=interpolation,
+                               rasterized=True)
         ax.set_aspect('auto')
         if waveCal == True:
             ax.set_xlabel('Wavelength ($\mu$m)')
@@ -1616,7 +1623,7 @@ class spec(phot_pipeline.phot):
         
         dyn_spec_name = '{}_dyn_spec_{}.pdf'.format(self.param['srcNameShort'],self.param['nightName'])
         dyn_spec_path = os.path.join(self.baseDir,'plots','spectra','dynamic_spectra',dyn_spec_name)
-        fig.savefig(dyn_spec_path,bbox_inches='tight')
+        fig.savefig(dyn_spec_path,bbox_inches='tight',dpi=150)
         
         if showPlot == True:
             fig.show()
