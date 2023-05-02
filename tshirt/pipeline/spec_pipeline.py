@@ -2503,7 +2503,9 @@ class spec(phot_pipeline.phot):
         HDUList.close()
         
     
-    def wavecal(self,dispIndices,waveCalMethod=None,head=None,**kwargs):
+    def wavecal(self,dispIndicesInput,waveCalMethod=None,head=None,
+                dispShift=None,
+                **kwargs):
         """
         Wavelength calibration to turn the dispersion pixels into wavelengths
         
@@ -2519,7 +2521,19 @@ class spec(phot_pipeline.phot):
             
         head: astropy FITS header, optional
             header for image
+        
+        dispShift: None or float
+            Value by which to shift the disp indices before evaluating the wavelengths
+            (for example a star is shifted). If None, it will use the value from the 
+            parameter 'waveCalPxOffset'
         """
+        if dispShift is None:
+            dispOffsetPx = self.param['waveCalPxOffset']
+        else:
+            dispOffsetPx = dispShift
+
+        dispIndices = np.array(dispIndicesInput) - dispOffsetPx
+
         if waveCalMethod == None:
             waveCalMethod = self.param['waveCalMethod']
         
