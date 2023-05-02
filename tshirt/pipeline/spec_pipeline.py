@@ -38,6 +38,7 @@ try:
 except ImportError as err3:
     print("Could not import astropy modeling for spatial profiles")
 
+from astropy.convolution import Gaussian2DKernel, convolve, convolve_fft
 from . import phot_pipeline
 from . import utils
 from . import instrument_specific
@@ -1433,7 +1434,8 @@ class spec(phot_pipeline.phot):
                           specType='Optimal',showPlot=False,
                           vmin=None,vmax=None,flipX=False,
                           waveCal=False,topYlabel='',
-                          interpolation=None):
+                          interpolation=None,
+                          smooth2D=None):
         """
         Plots a dynamic spectrum of the data
         
@@ -1467,6 +1469,9 @@ class spec(phot_pipeline.phot):
             The label for the top Y axis
         waveCal: bool
             Calibrate the dispersion to wavelength?
+        smooth2D: None or 2 element list
+            If None, no smoothing. If a 2 element list [x_std,y_std],
+            astropy convolve with 2D Gaussian kernel
         """
         if os.path.exists(self.specFile) == False:
             raise Exception("No spectrum file found. Run extraction first...")
@@ -1592,7 +1597,20 @@ class spec(phot_pipeline.phot):
         else:
             extent = None
         
-        imShowData = ax.imshow(dynamicSpec,vmin=vmin,vmax=vmax,origin='lower',
+        if smooth2D is None:
+            zShow = dynamicSpec
+        else:
+
+            
+            kernel = Gaussian2DKernel(x_stddev=smooth2D[0],y_stddev=smooth2D[1])
+            if kernel.shape[0] * kernel.shape[1] > 15000:
+                eTxt = "Large kernel sizes will hang. This one is {}x{}".format(kernel.shape[0],
+                                                                                kernel.shape[1])
+                raise Exception(eTxt)
+            
+            zShow = convolve_fft(dynamicSpec,kernel=kernel)
+        
+        imShowData = ax.imshow(zShow,vmin=vmin,vmax=vmax,origin='lower',
                                extent=extent,interpolation=interpolation,
                                rasterized=True)
         ax.set_aspect('auto')
