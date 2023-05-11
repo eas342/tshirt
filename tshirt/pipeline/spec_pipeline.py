@@ -2561,7 +2561,11 @@ class spec(phot_pipeline.phot):
                 head = fits.getheader(self.specFile,extname='ORIG HEADER')
                 obsFilter = head['FILTER']
             else:
-                obsFilter = 'F322W2'
+                if 'FILTER' in head:
+                    obsFilter = head['FILTER']
+                else:
+                    warning.warn('No filter specified. Assuming F322W2')
+                    obsFilter = 'F322W2'
             wavelengths = instrument_specific.jwst_inst_funcs.flight_poly_grismr_nc(dispIndices,obsFilter=obsFilter)
         else:
             raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
