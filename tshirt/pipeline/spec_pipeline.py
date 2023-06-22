@@ -2575,13 +2575,36 @@ class spec(phot_pipeline.phot):
         return wavelengths
         
     def inverse_wavecal(self,waveArr):
+        """
+        Calculate the pixel location for a given wavelength
+        Uses 1D interpolation of wavelength vs pixel
+        """
         waveArr_use = np.array(waveArr)
         xArray = np.arange(self.param['dispPixels'][0],
                            self.param['dispPixels'][1],1)
         interp_fun = interp1d(self.wavecal(xArray),xArray)
         px_out = interp_fun(waveArr)
         return px_out
-        
+    
+    def find_px_bins_from_waves(self,waveMid,waveWidth):
+        """
+        Given a set of wavelengths centers and widths, find the pixels
+        that will approximately give you those wavelengths, but with 
+        no pixels repeated or skipped.
+        """
+        waveEdges = np.array(waveMid) - np.array(waveWidth) * 0.5
+        waveEdges = np.append(waveEdges,waveMid[-1] + waveWidth[-1] * 0.5) ## last edge
+        pxEdges = np.array(np.round(self.inverse_wavecal(waveEdges)),dtype=int)
+        t = Table()
+        t['px start'] = pxEdges[0:-1]
+        t['px end'] = pxEdges[1:]
+        t['wave start'] = self.wavecal(t['px start'])
+        t['wave end'] = self.wavecal(t['px end'])
+        t['px mid'] = (t['px start'] + t['px end'])/2.
+        t['wave mid'] = (t['wave start'] + t['wave end'])/2.
+        return t
+    
+
 
 class batch_spec(phot_pipeline.batchPhot):
     def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):
