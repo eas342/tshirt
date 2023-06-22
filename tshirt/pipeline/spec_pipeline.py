@@ -16,6 +16,7 @@ from copy import deepcopy
 import yaml
 import warnings
 from scipy.stats import binned_statistic
+from scipy.interpolate import interp1d
 import astropy
 from astropy.table import Table
 from astropy.stats import LombScargle
@@ -2573,6 +2574,13 @@ class spec(phot_pipeline.phot):
         wavelengths = wavelengths - self.param['waveCalOffset']
         return wavelengths
         
+    def inverse_wavecal(self,waveArr):
+        waveArr_use = np.array(waveArr)
+        xArray = np.arange(self.param['dispPixels'][0],
+                           self.param['dispPixels'][1],1)
+        interp_fun = interp1d(self.wavecal(xArray),xArray)
+        px_out = interp_fun(waveArr)
+        return px_out
         
 
 class batch_spec(phot_pipeline.batchPhot):
