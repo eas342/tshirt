@@ -2580,8 +2580,8 @@ class spec(phot_pipeline.phot):
         Uses 1D interpolation of wavelength vs pixel
         """
         waveArr_use = np.array(waveArr)
-        xArray = np.arange(self.param['dispPixels'][0],
-                           self.param['dispPixels'][1],1)
+        xArray = np.arange(self.param['dispPixels'][0]-4,
+                           self.param['dispPixels'][1]+4,1)
         interp_fun = interp1d(self.wavecal(xArray),xArray)
         px_out = interp_fun(waveArr)
         return px_out
