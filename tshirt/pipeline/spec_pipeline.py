@@ -1484,6 +1484,9 @@ class spec(phot_pipeline.phot):
         elif specType == 'Sum':
             extSpec = HDUList['SUM SPEC'].data[src]
             errSpec = HDUList['SUM SPEC ERR'].data[src]
+        elif specType == 'Background':
+            extSpec = HDUList['BACKGROUND SPEC'].data[src]
+            errSpec = HDUList['BACKGROUND SPEC'].data[src] * np.nan
         else:
             raise Exception("Unrecognized SpecType {}".format(specType))
         
@@ -1571,7 +1574,8 @@ class spec(phot_pipeline.phot):
                         alignedHDU = fits.ImageHDU(useSpec,HDUList['SUM SPEC'].header)
                     ## Save the aligned spectra
                     outHDUList.append(alignedHDU)
-                outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
+                if specType != 'Background':
+                    outHDUList.writeto(self.dyn_specFile(src),overwrite=True)
         
         if specAtTop == True:
             fig, axArr = plt.subplots(2, sharex=True,gridspec_kw={'height_ratios': [1, 3]})
@@ -2601,9 +2605,37 @@ class spec(phot_pipeline.phot):
         t['wave start'] = self.wavecal(t['px start'])
         t['wave end'] = self.wavecal(t['px end'])
         t['px mid'] = (t['px start'] + t['px end'])/2.
+        t['px width'] = t['px end'] - t['px start']
         t['wave mid'] = (t['wave start'] + t['wave end'])/2.
+        t['wave width'] = t['wave end'] - t['wave start']
         return t
     
+    def make_constant_Rgrid(self,wStart,wEnd,Rfixed,plotBins=True):
+        """
+        Make an approximately constant R grid rounded to whole pixels
+
+        Parameters
+        ----------
+        wStart: float
+            The wavelength start for bin edges
+        wEnd: float
+            The wavelength end for bin edges
+        Rfixed: float
+            The spectral resolution
+        plotBins: bool
+            Plot the bins over a stellar spectrum?
+        """
+        wMids, wWidths = make_const_R_grid(wStart=wStart,wEnd=wEnd,Rfixed=Rfixed)
+        t = self.find_px_bins_from_waves(wMids,wWidths)
+        binEdges = np.append(t['wave start'][0],
+                             t['wave end'])
+        if plotBins == True:
+            avgX, avgY, avgYerr = self.get_avg_spec()
+            plt.plot(self.wavecal(avgX),avgY)
+            for oneEdge in binEdges:
+                plt.axvline(oneEdge)
+        return t
+
 
 
 class batch_spec(phot_pipeline.batchPhot):
@@ -2700,3 +2732,33 @@ def compare_spectra(fileNames=comparisonFileNames,specType='Optimal',showPlot=Fa
         fig.savefig(outPath)
         plt.close(fig)
         
+def make_const_R_grid(wStart=2.45,wEnd=3.96,Rfixed=100):
+    """
+    Make a constant-resolution grid
+    
+    for F444W NIRCam at R=100, I used
+    wStart=3.911238, wEnd=5.0,Rfixed=100
+
+        Parameters
+    ----------
+    wStart: float
+        The wavelength start for bin edges
+    wEnd: float
+        The wavelength end for bin edges
+    Rfixed: float
+        The spectral resolution
+    """
+    wCurrent = wStart
+    binEdges = []
+    iterNum=0
+    while (iterNum < 1e6) & (wCurrent < wEnd):
+        binEdges.append(wCurrent)
+        iterNum = iterNum + 1
+        wCurrent = wCurrent + wCurrent/Rfixed
+
+    wStarts = np.array(binEdges[0:-1])
+    wEnds = np.array(binEdges[1:])
+    wMids = (wStarts + wEnds)/2.
+    wWidths = wEnds - wStarts
+
+    return wMids, wWidths
