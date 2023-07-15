@@ -2762,3 +2762,9 @@ def make_const_R_grid(wStart=2.45,wEnd=3.96,Rfixed=100):
     wWidths = wEnds - wStarts
 
     return wMids, wWidths
+
+def moving_average(x, w):
+    y_out = np.convolve(x, np.ones(w), 'same') / w
+    y_out[0:w] = np.nan
+    y_out[-w:] = np.nan
+    return y_out
