@@ -639,9 +639,14 @@ class spec(phot_pipeline.phot):
         dispArray: numpy array
             Dispersion array in pixels
         """
-        self.find_trace()
-        poly1 = self.traceInfo['poly {}'.format(src)]
-        return np.polyval(poly1,np.array(dispArray))
+        if self.param['traceCurvedSpectrum'] == True:
+            self.find_trace()
+            poly1 = self.traceInfo['poly {}'.format(src)]
+            spatial_position = np.polyval(poly1,np.array(dispArray))
+        else:
+            spatial_position = self.param['starPositions'][src] * np.ones_like(dispArray,dtype=int)
+        return spatial_position
+        
 
     def find_trace(self,recalculateTrace=False,
                    recalculateTraceData=False):
@@ -699,13 +704,16 @@ class spec(phot_pipeline.phot):
         dispDirection =  self.param['dispDirection']
         if dispDirection.upper() == 'Y':
             spatialIndexArrayLength = img.shape[1]
-            dispersionIndexArrayLength = img.shape[0]
+#            dispersionIndexArrayLength = img.shape[0]
         elif dispDirection.upper() == 'X':
             spatialIndexArrayLength = img.shape[0]
-            dispersionIndexArrayLength = img.shape[1]
+ #           dispersionIndexArrayLength = img.shape[1]
         else:
             raise Exception("Unrecognized spatial direction")
-        
+        ## eventually use self.param['dispOffsets'][srcInd]
+        dispStart, dispEnd = self.param['dispPixels']
+        dispersionIndexArrayLength = int(dispEnd - dispStart)
+
         if self.param['mosBacksub'] == True:
             n_spatials = self.nsrc ## separate backsub for each source
         else:
@@ -726,10 +734,12 @@ class spec(phot_pipeline.phot):
                 raise NotImplementedError
                 
             else:
-                dispersionIndexArray = np.arange(dispersionIndexArrayLength)
+                dispersionIndexArray = np.arange(dispStart,dispEnd)
                 spatialIndexArray = np.arange(spatialIndexArrayLength)
                 ## fit the whole row/column
                 ptsTofit = np.ones(len(spatialIndexArray),dtype=bool)
+
+                dispersionCounterArray = np.arange(dispersionIndexArrayLength)
             
             ## set up which points to do background fitting for
             pts = np.zeros(len(spatialIndexArray),dtype=bool)
@@ -740,9 +750,9 @@ class spec(phot_pipeline.phot):
             
             pts[startsrc:endsrc] = True
 
-
             
-            for dispersion_Ind in tqdm.tqdm(dispersionIndexArray):
+            for dispersion_counter in tqdm.tqdm(dispersionCounterArray):
+                dispersion_Ind = dispersionIndexArray[dispersion_counter]
                 ind_var = spatialIndexArray ## independent variable
                 if dispDirection == 'Y':
                     dep_var = img[dispersion_Ind,:]
@@ -759,14 +769,14 @@ class spec(phot_pipeline.phot):
                     line_orig = models.Linear1D(slope=0.0, intercept=np.min(spatial_profile))
                     comb_gauss = line_orig + gauss1d
                     fitted_model = fitter(comb_gauss, ind_var,spatial_profile, maxiter=111)
-                    cenArr[dispersion_Ind,srcInd] = fitted_model.mean_1.value
-                    fwhmArr[dispersion_Ind,srcInd] = fitted_model.stddev_1.value * 2.35
+                    cenArr[dispersion_counter,srcInd] = fitted_model.mean_1.value
+                    fwhmArr[dispersion_counter,srcInd] = fitted_model.stddev_1.value * 2.35
                     
                     dep_var_model = fitted_model
                 elif fitMethod == 'scipyQuick':
                     mean,std = norm.fit(ind_var,spatial_profile)
-                    cenArr[dispersion_Ind,srcInd] = mean
-                    fwhmArr[dispersion_Ind,srcInd] = std * 2.35
+                    cenArr[dispersion_counter,srcInd] = mean
+                    fwhmArr[dispersion_counter,srcInd] = std * 2.35
                 else:
                     raise Exception("No fit method {}".format(fitMethod))
                 # polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
@@ -784,6 +794,7 @@ class spec(phot_pipeline.phot):
                     plt.plot(ind_var,dep_var_model(ind_var),label='model')
                     plt.show()
                     pdb.set_trace()
+                disperion_counter = dispersion_counter + 1
 
         t = Table()
         t['x'] = dispersionIndexArray
@@ -2509,7 +2520,22 @@ class spec(phot_pipeline.phot):
             outName = os.path.join(self.baseDir,'plots','spectra','broadband_series',bb_series_name)
             fig.savefig(outName)
 
-    
+    def calculate_src_ap(self,src=0):
+        """
+        Calculate the source aperture (where to start/end)
+        """
+        startInd, endInd = self.param['dispPixels']
+        dispersion_px = np.arange(startInd,endInd)
+        spatialMid = self.eval_trace(dispersion_px,src=src)
+        srcStart = np.array(spatialMid - self.param['apWidth'] / 2.,dtype=int)
+        srcEnd = np.array(spatialMid + self.param['apWidth'] / 2.,dtype=int)
+        t = Table()
+        t['dispersion_px'] = dispersion_px
+        t['srcStart'] = srcStart
+        t['srcEnd'] = srcEnd
+        t['spatialMid'] = spatialMid
+        return t
+
     
     def showStarChoices(self,img=None,head=None,showBack=True,
                         srcLabel=None,figSize=None,vmin=None,vmax=None,
@@ -2565,19 +2591,36 @@ class spec(phot_pipeline.phot):
             dispPos = np.array(self.param['dispPixels']) + self.dispOffsets[ind]
             dispLength = dispPos[1] - dispPos[0]
             
-            if self.param['dispDirection'] == 'x':
-                xPos = dispPos[0]
-                yPos = onePos - apWidth / 2.
-                width = dispLength
-                height = apWidth
+            if self.param['traceCurvedSpectrum'] == True:
+                t = self.calculate_src_ap(src=ind)
+                dispersion_px, spatialMid = t['dispersion_px'], t['spatialMid']
+                srcStart, srcEnd = t['srcStart'], t['srcEnd']
+                if self.param['dispDirection'] == 'x':
+                    ax.step(dispersion_px,srcStart,color='r')
+                    ax.step(dispersion_px,srcEnd,color='r')
+                    xPos = dispPos[0]
+                    yPos = spatialMid[0]
+                else:
+                    ax.step(srcStart,dispersion_px,color='r')
+                    ax.step(srcEnd,dispersion_px,color='r')
+                    xPos = spatialMid[0]
+                    yPos = dispPos[0]
+                
             else:
-                xPos = onePos - apWidth / 2.
-                yPos = dispPos[0]
-                width = apWidth
-                height = dispLength
+                if self.param['dispDirection'] == 'x':
+                    xPos = dispPos[0]
+                    yPos = onePos - apWidth / 2.
+                    width = dispLength
+                    height = apWidth
+                else:
+                    xPos = onePos - apWidth / 2.
+                    yPos = dispPos[0]
+                    width = apWidth
+                    height = dispLength
             
-            rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,fill=False,edgecolor='r')
-            ax.add_patch(rec)
+            
+                rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,fill=False,edgecolor='r')
+                ax.add_patch(rec)
             
             if ind == 0:
                 if srcLabel is None:
@@ -2589,6 +2632,7 @@ class spec(phot_pipeline.phot):
             ax.text(xPos+txtOffset,yPos+txtOffset,name,color='white')
         
         if showBack == True:
+            
             for oneDirection in self.param['bkgSubDirections']:
                 if oneDirection == 'X':
                     bkPixels = self.param['bkgRegionsX']
