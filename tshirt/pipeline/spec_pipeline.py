@@ -126,6 +126,7 @@ class spec(phot_pipeline.phot):
                                       'trace_'+self.dataFileDescrip+'.ecsv')
         self.traceDataFile = os.path.join(self.baseDir,'traces','trace_functions',
                                           'trace_data_'+self.dataFileDescrip+'.ecsv')
+        self.check_trace_requirements()
 
         self.master_profile_prefix = 'master_{}'.format(self.dataFileDescrip)
         #self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
@@ -145,6 +146,7 @@ class spec(phot_pipeline.phot):
         self.set_up_disp_offsets()
         
         self.check_parameters()
+        
         
         
     def check_parameters(self):
@@ -478,6 +480,11 @@ class spec(phot_pipeline.phot):
         ## make a background model
         bkgModel = np.zeros_like(img)
         
+        if self.param['traceCurvedSpectrum'] == True:
+            apTables = []
+            for oneSrc in np.arange(self.nsrc):
+                apTables.append(self.calculate_apertures(src=oneSrc))
+
         ## loop through the number of subtractions
         for sub_counter in np.arange(n_subtractions):
             
@@ -508,7 +515,7 @@ class spec(phot_pipeline.phot):
                 ptsToSubtract = np.ones(len(subtractionIndexArray),dtype=bool)
             
             ## set up which points to do background fitting for
-            pts = np.zeros(len(subtractionIndexArray),dtype=bool)
+            ptsAll = np.zeros(len(subtractionIndexArray),dtype=bool)
             for oneRegion in self.param['bkgRegions{}'.format(oneDirection)]:
                 if self.param['mosBacksub'] == True:
                     startSub = int(self.param['starPositions'][srcInd] + oneRegion[0])
@@ -516,7 +523,7 @@ class spec(phot_pipeline.phot):
                 else:
                     startSub, endSub = int(oneRegion[0]),int(oneRegion[1])
                 
-                pts[startSub:endSub] = True
+                ptsAll[startSub:endSub] = True
             
             
             for cross_Ind in cross_subtractionIndexArray:
@@ -525,6 +532,19 @@ class spec(phot_pipeline.phot):
                     dep_var = img[cross_Ind,:]
                 else:
                     dep_var = img[:,cross_Ind]
+
+                if self.param['traceCurvedSpectrum'] == True:
+                    pts = deepcopy(ptsAll)
+                    for oneSrc in np.arange(self.nsrc):
+                        oneTable = apTables[oneSrc]
+                        disp_pts_match = (cross_Ind == oneTable['dispersion_px'])
+                        if np.sum(disp_pts_match) > 0:
+                            spatialStart = oneTable['bkgEnd 0'][disp_pts_match][0]
+                            spatialEnd = oneTable['bkgStart 1'][disp_pts_match][0]
+                            pts[spatialStart:spatialEnd] = False
+                else:
+                    pts = ptsAll
+
                 polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
                                                     preScreen=self.param['backPreScreen'])
                 dep_var_model = np.polyval(polyFit,ind_var)
@@ -539,6 +559,7 @@ class spec(phot_pipeline.phot):
                     plt.plot(ind_var[pts],dep_var[pts],'o',color='red',label='pts fit')
                     plt.plot(ind_var,dep_var_model,label='model')
                     plt.show()
+                    pdb.set_trace()
         
         outHead = deepcopy(head)
         if oneDirection == 'X':
@@ -629,7 +650,21 @@ class spec(phot_pipeline.phot):
         outName = os.path.join(self.backsubDir,baseName+'.fits')
         outHDU.writeto(outName)
         
-    
+    def check_trace_requirements(self):
+        """
+        Some requirements for the trace code to work
+        """
+        if self.param['traceCurvedSpectrum'] == True:
+            numSubtractions = len(self.param['bkgSubDirections'])
+            assert numSubtractions == 1,'1 background subtraction allowed currently'
+            if self.param['dispDirection'] == 'x':
+                assert (self.param['bkgSubDirections'][0] == 'Y'),'x dispersion must have Y backsub'
+                assert (len(self.param['bkgRegionsY']) == 1),'Must have 1 subtraction only'
+            else:
+                assert (self.param['bkgSubDirections'][0] == 'X'),'y dispersion must have X backsub'
+                assert (len(self.param['bkgRegionsX']) == 1),'Must have 1 subtraction only'
+
+
     def eval_trace(self,dispArray,src=0):
         """
         Evaluate the trace function
@@ -2520,7 +2555,7 @@ class spec(phot_pipeline.phot):
             outName = os.path.join(self.baseDir,'plots','spectra','broadband_series',bb_series_name)
             fig.savefig(outName)
 
-    def calculate_src_ap(self,src=0):
+    def calculate_apertures(self,src=0):
         """
         Calculate the source aperture (where to start/end)
         """
@@ -2534,6 +2569,20 @@ class spec(phot_pipeline.phot):
         t['srcStart'] = srcStart
         t['srcEnd'] = srcEnd
         t['spatialMid'] = spatialMid
+
+        if self.param['traceCurvedSpectrum'] == True:
+            if self.param['dispDirection'] == 'x':
+                bkgRegions = self.param['bkgRegionsY'][0]
+            else:
+                bkgRegions = self.param['bkgRegionsX'][0]
+            bkgStarts0, bkgEnds1 = [], []
+            
+            t['bkgStart 0'] = int(bkgRegions[0])
+            t['bkgEnd 0'] = np.array(t['spatialMid'] - self.param['backgMinRadius'],dtype=int)
+            t['bkgStart 1'] = np.array(t['spatialMid'] + self.param['backgMinRadius'],dtype=int)
+            
+            t['bkgEnd 1'] = int(bkgRegions[1])
+        
         return t
 
     
@@ -2592,7 +2641,7 @@ class spec(phot_pipeline.phot):
             dispLength = dispPos[1] - dispPos[0]
             
             if self.param['traceCurvedSpectrum'] == True:
-                t = self.calculate_src_ap(src=ind)
+                t = self.calculate_apertures(src=ind)
                 dispersion_px, spatialMid = t['dispersion_px'], t['spatialMid']
                 srcStart, srcEnd = t['srcStart'], t['srcEnd']
                 if self.param['dispDirection'] == 'x':
@@ -2632,30 +2681,43 @@ class spec(phot_pipeline.phot):
             ax.text(xPos+txtOffset,yPos+txtOffset,name,color='white')
         
         if showBack == True:
-            
-            for oneDirection in self.param['bkgSubDirections']:
-                if oneDirection == 'X':
-                    bkPixels = self.param['bkgRegionsX']
-                elif oneDirection == 'Y':
-                    bkPixels = self.param['bkgRegionsY']
-                else:
-                    raise Exception("No Background subtraction direction {}".format(oneDirection))
-            
-                for oneReg in bkPixels:
+            if self.param['traceCurvedSpectrum'] == True:
+                for ind in np.arange(self.nsrc):
+                    t = self.calculate_apertures(src=ind)
+                    for bkgCounter in ['0','1']:
+                        arg1 = t['dispersion_px']
+                        arg2 = t['bkgStart {}'.format(bkgCounter)]
+                        arg3 = t['bkgEnd {}'.format(bkgCounter)]
+                        bkgColor = 'orange'
+                        bkgAlpha= 0.3
+                        if self.param['dispDirection'] == 'x':
+                            ax.fill_between(arg1,arg2,arg3,color=bkgColor,alpha=bkgAlpha)
+                        else:
+                            ax.fill_betweenx(arg1,arg2,arg3,color=bkgColor,alpha=bkgAlpha)
+            else:
+                for oneDirection in self.param['bkgSubDirections']:
                     if oneDirection == 'X':
-                        height = img.shape[0]
-                        width = oneReg[1] - oneReg[0]
-                        xPos = oneReg[0]
-                        yPos = 0
+                        bkPixels = self.param['bkgRegionsX']
+                    elif oneDirection == 'Y':
+                        bkPixels = self.param['bkgRegionsY']
                     else:
-                        height = oneReg[1] - oneReg[0]
-                        width = img.shape[1]
-                        xPos = 0
-                        yPos = oneReg[0]
-                    rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,color='orange',
-                                                alpha=0.3)
-                    ax.add_patch(rec)
-        
+                        raise Exception("No Background subtraction direction {}".format(oneDirection))
+                
+                    for oneReg in bkPixels:
+                        if oneDirection == 'X':
+                            height = img.shape[0]
+                            width = oneReg[1] - oneReg[0]
+                            xPos = oneReg[0]
+                            yPos = 0
+                        else:
+                            height = oneReg[1] - oneReg[0]
+                            width = img.shape[1]
+                            xPos = 0
+                            yPos = oneReg[0]
+                        rec = mpl.patches.Rectangle((xPos,yPos),width=width,height=height,color='orange',
+                                                    alpha=0.3)
+                        ax.add_patch(rec)
+            
         ax.set_xlabel('X (px)')
         ax.set_ylabel('Y (px)')
         

@@ -65,3 +65,4 @@ traceCurvedSpectrum: False ## Fit the trace to the spectrum?
 traceOrder: 3 ## polynomial order for the trace fitting
 traceFitBoxSize: 18 ## the spatial box size used to fit the trace
 traceFWHMguess: 2 ## Guess size for the spatial FWHM
+backgMinRadius: 5 ## minimum distance for background
