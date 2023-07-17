@@ -2678,7 +2678,18 @@ class spec(phot_pipeline.phot):
                     name=srcLabel
             else:
                 name=str(ind)
-            ax.text(xPos+txtOffset,yPos+txtOffset,name,color='white')
+            
+            if xlim is not None:
+                xPos_show = np.max([xlim[0],xPos])
+            else:
+                xPos_show = xPos
+
+            if ylim is not None:
+                yPos_show = np.max([ylim[0],yPos])
+            else:
+                yPos_show = yPos
+
+            ax.text(xPos_show+txtOffset,yPos_show+txtOffset,name,color='white')
         
         if showBack == True:
             if self.param['traceCurvedSpectrum'] == True:
