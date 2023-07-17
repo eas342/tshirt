@@ -2562,13 +2562,16 @@ class spec(phot_pipeline.phot):
         startInd, endInd = self.param['dispPixels']
         dispersion_px = np.arange(startInd,endInd)
         spatialMid = self.eval_trace(dispersion_px,src=src)
-        srcStart = np.array(spatialMid - self.param['apWidth'] / 2.,dtype=int)
-        srcEnd = np.array(spatialMid + self.param['apWidth'] / 2.,dtype=int)
+        spatialMid_int = np.array(np.round(spatialMid),dtype=int)
+        srcRadius_int = int(np.round(self.param['apWidth'] / 2.))
+        srcStart = spatialMid_int - srcRadius_int
+        srcEnd = spatialMid_int + srcRadius_int
         t = Table()
         t['dispersion_px'] = dispersion_px
         t['srcStart'] = srcStart
         t['srcEnd'] = srcEnd
         t['spatialMid'] = spatialMid
+        t['spatialMid_int'] = spatialMid_int
 
         if self.param['traceCurvedSpectrum'] == True:
             if self.param['dispDirection'] == 'x':
@@ -2578,8 +2581,9 @@ class spec(phot_pipeline.phot):
             bkgStarts0, bkgEnds1 = [], []
             
             t['bkgStart 0'] = int(bkgRegions[0])
-            t['bkgEnd 0'] = np.array(t['spatialMid'] - self.param['backgMinRadius'],dtype=int)
-            t['bkgStart 1'] = np.array(t['spatialMid'] + self.param['backgMinRadius'],dtype=int)
+            backInnerRadius_int = int(np.round(self.param['backgMinRadius']))
+            t['bkgEnd 0'] = t['spatialMid_int'] - backInnerRadius_int
+            t['bkgStart 1'] = t['spatialMid_int'] + backInnerRadius_int
             
             t['bkgEnd 1'] = int(bkgRegions[1])
         
@@ -2701,10 +2705,11 @@ class spec(phot_pipeline.phot):
                         arg3 = t['bkgEnd {}'.format(bkgCounter)]
                         bkgColor = 'orange'
                         bkgAlpha= 0.3
+                        step='pre'
                         if self.param['dispDirection'] == 'x':
-                            ax.fill_between(arg1,arg2,arg3,color=bkgColor,alpha=bkgAlpha)
+                            ax.fill_between(arg1,arg2,arg3,color=bkgColor,alpha=bkgAlpha,step=step)
                         else:
-                            ax.fill_betweenx(arg1,arg2,arg3,color=bkgColor,alpha=bkgAlpha)
+                            ax.fill_betweenx(arg1,arg2,arg3,color=bkgColor,alpha=bkgAlpha,step=step)
             else:
                 for oneDirection in self.param['bkgSubDirections']:
                     if oneDirection == 'X':
