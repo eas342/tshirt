@@ -61,3 +61,7 @@ DATE-OBS: None ## manually supply a DATE-OBS if nothing is available in the head
 saveSpatialProfileStats: False ## save the spatial profile stats
 profilePix: null ## the pixels to use in calculating the spatial profile statistics (not used in extraction)
 useSmoothProfileForStats: False ## use the spline-smoothed profile for profile statistics?
+traceCurvedSpectrum: False ## Fit the trace to the spectrum?
+traceOrder: 3 ## polynomial order for the trace fitting
+traceFitBoxSize: 18 ## the spatial box size used to fit the trace
+traceFWHMguess: 2 ## Guess size for the spatial FWHM

@@ -39,6 +39,8 @@
 - tser_data/refcor_phot/directory_placeholder.dat
 - centroids/directory_placeholder.dat
 - chisquare/directory_placeholder.dat
+- traces/trace_data/README.md
+- traces/trace_functions/README.md
 - cleaned_tser/directory_placeholder.dat
 - mcmcOutputs/maxLparams/directory_placeholder.dat
 - mcmcRuns/directory_placeholder.dat

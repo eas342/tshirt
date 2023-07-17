@@ -16,6 +16,7 @@ from copy import deepcopy
 import yaml
 import warnings
 from scipy.stats import binned_statistic
+from scipy.stats import norm
 from scipy.interpolate import interp1d
 import astropy
 from astropy.table import Table
@@ -121,6 +122,11 @@ class spec(phot_pipeline.phot):
         self.profile_dir = os.path.join(self.baseDir,'tser_data','saved_profiles')
         self.weight_dir = os.path.join(self.baseDir,'tser_data','saved_weights')
         
+        self.traceFile = os.path.join(self.baseDir,'traces','trace_functions',
+                                      'trace_'+self.dataFileDescrip+'.ecsv')
+        self.traceDataFile = os.path.join(self.baseDir,'traces','trace_functions',
+                                          'trace_data_'+self.dataFileDescrip+'.ecsv')
+
         self.master_profile_prefix = 'master_{}'.format(self.dataFileDescrip)
         #self.centroidFile = 'centroids/cen_'+self.dataFileDescrip+'.fits'
         #self.refCorPhotFile = 'tser_data/refcor_phot/refcor_'+self.dataFileDescrip+'.fits'
@@ -624,6 +630,168 @@ class spec(phot_pipeline.phot):
         outHDU.writeto(outName)
         
     
+    def eval_trace(self,dispArray,src=0):
+        """
+        Evaluate the trace function
+
+        Parameters:
+        ------------
+        dispArray: numpy array
+            Dispersion array in pixels
+        """
+        self.find_trace()
+        poly1 = self.traceInfo['poly {}'.format(src)]
+        return np.polyval(poly1,np.array(dispArray))
+
+    def find_trace(self,recalculateTrace=False,
+                   recalculateTraceData=False):
+        """
+        Find the trace either from saved file or trace data
+
+        Parameters
+        -----------
+        recalculateTrace: bool
+            Recalculate the trace?
+        recalculateTraceData: bool
+            Recalculate the trace data?
+        """
+        if (os.path.exists(self.traceFile) == True) & (recalculateTrace == False):
+            pass
+        else:
+            if (os.path.exists(self.traceDataFile) == True) & (recalculateTraceData == False):
+                pass
+            else:
+                img, head = self.get_default_im()
+                res = self.fit_trace(img,head)
+                res.write(self.traceDataFile,overwrite=True)
+            traceData = ascii.read(self.traceDataFile)
+            
+            tpoly = Table()
+            traceOrder = self.param['traceOrder']
+            tpoly['order'] = np.flip(np.arange(traceOrder+1))
+            for oneSrc in np.arange(self.nsrc):
+                tracePoly = phot_pipeline.robust_poly(traceData['x'],
+                                                      traceData['cen {}'.format(oneSrc)],
+                                                      traceOrder)
+                tpoly['poly {}'.format(oneSrc)] = tracePoly
+            tpoly.write(self.traceFile,overwrite=True)
+
+        self.traceInfo = ascii.read(self.traceFile)
+
+
+    def fit_trace(self,img,head,showEach=False,
+                   fitMethod='astropy'):
+        """
+        Use Gaussian to fit trace and FWHM
+
+        Parameters
+        ----------
+        img: numpy array
+            2D image to fit trace for
+        head: astropy header
+            FITS header to do fitting on
+        showEach: bool
+            Show each line fit?
+        fitMethod: str
+            'astropy' : will use models Gaussian2D + linear
+            'sckpyQuick' : will fit w/ scipy.stats.norm
+        """
+        dispDirection =  self.param['dispDirection']
+        if dispDirection.upper() == 'Y':
+            spatialIndexArrayLength = img.shape[1]
+            dispersionIndexArrayLength = img.shape[0]
+        elif dispDirection.upper() == 'X':
+            spatialIndexArrayLength = img.shape[0]
+            dispersionIndexArrayLength = img.shape[1]
+        else:
+            raise Exception("Unrecognized spatial direction")
+        
+        if self.param['mosBacksub'] == True:
+            n_spatials = self.nsrc ## separate backsub for each source
+        else:
+            n_spatials = 1 ## one backsub for the whole image
+        
+        fitOrder = self.param['traceOrder']
+        ## make a source model
+        srcModel = np.zeros_like(img)
+        
+        ## save the FWHM and centroid
+        fwhmArr = np.zeros([dispersionIndexArrayLength,self.nsrc])
+        cenArr = np.zeros([dispersionIndexArrayLength,self.nsrc])
+
+        ## loop through the number of spatials
+        for srcInd in np.arange(n_spatials):
+            
+            if self.param['mosBacksub'] == True:
+                raise NotImplementedError
+                
+            else:
+                dispersionIndexArray = np.arange(dispersionIndexArrayLength)
+                spatialIndexArray = np.arange(spatialIndexArrayLength)
+                ## fit the whole row/column
+                ptsTofit = np.ones(len(spatialIndexArray),dtype=bool)
+            
+            ## set up which points to do background fitting for
+            pts = np.zeros(len(spatialIndexArray),dtype=bool)
+            srcMid = self.param['starPositions'][srcInd]
+            boxSize = self.param['traceFitBoxSize']
+            startsrc = np.max([0,int(srcMid - boxSize)])
+            endsrc = np.min([np.max(spatialIndexArray),int(srcMid + boxSize)])
+            
+            pts[startsrc:endsrc] = True
+
+
+            
+            for dispersion_Ind in tqdm.tqdm(dispersionIndexArray):
+                ind_var = spatialIndexArray ## independent variable
+                if dispDirection == 'Y':
+                    dep_var = img[dispersion_Ind,:]
+                else:
+                    dep_var = img[:,dispersion_Ind]
+                
+                spatial_profile = dep_var
+                if fitMethod == 'astropy':
+                    fitter = fitting.LevMarLSQFitter()
+                    ampGuess = np.percentile(dep_var,90)
+                    meanGuess = np.sum(dep_var * spatialIndexArray)/np.sum(dep_var)
+                    gauss1d = models.Gaussian1D(amplitude=ampGuess, mean=meanGuess, 
+                                                stddev=self.param['traceFWHMguess']/2.35)
+                    line_orig = models.Linear1D(slope=0.0, intercept=np.min(spatial_profile))
+                    comb_gauss = line_orig + gauss1d
+                    fitted_model = fitter(comb_gauss, ind_var,spatial_profile, maxiter=111)
+                    cenArr[dispersion_Ind,srcInd] = fitted_model.mean_1.value
+                    fwhmArr[dispersion_Ind,srcInd] = fitted_model.stddev_1.value * 2.35
+                    
+                    dep_var_model = fitted_model
+                elif fitMethod == 'scipyQuick':
+                    mean,std = norm.fit(ind_var,spatial_profile)
+                    cenArr[dispersion_Ind,srcInd] = mean
+                    fwhmArr[dispersion_Ind,srcInd] = std * 2.35
+                else:
+                    raise Exception("No fit method {}".format(fitMethod))
+                # polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
+                #                                     preScreen=self.param['backPreScreen'])
+                # dep_var_model = np.polyval(polyFit,ind_var)
+                
+                # if dispDirection == 'Y':
+                #     bkgModel[dispersion_Ind,ind_var[ptsTofit]] = dep_var_model[ptsTofit]
+                # else:
+                #     bkgModel[ind_var[ptsTofit],dispersion_Ind] = dep_var_model[ptsTofit]
+                
+                if showEach == True:
+                    plt.plot(ind_var,dep_var,label='data')
+                    plt.plot(ind_var[pts],dep_var[pts],'o',color='red',label='pts fit')
+                    plt.plot(ind_var,dep_var_model(ind_var),label='model')
+                    plt.show()
+                    pdb.set_trace()
+
+        t = Table()
+        t['x'] = dispersionIndexArray
+        for oneSrc in np.arange(self.nsrc):
+            t['cen {}'.format(oneSrc)] = cenArr[:,oneSrc]
+            t['fwhm {}'.format(oneSrc)] = fwhmArr[:,oneSrc]
+        return t
+
     def save_all_backsub(self,useMultiprocessing=False):
         """
         Save all background-subtracted images
