@@ -915,8 +915,14 @@ class spec(phot_pipeline.phot):
             
             
             profile_img = np.zeros_like(img)
-            startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
-            endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+            if (self.param['traceCurvedSpectrum'] == True):
+                t = self.calculate_apertures()
+                startSpatial = np.min(t['srcStart'])
+                endSpatial = np.max(t['srcEnd'])
+            else:
+                startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
+                endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+            
             for oneSpatialInd in np.arange(startSpatial,endSpatial + 1):
                 if self.param['dispDirection'] == 'x':
                     try:
@@ -954,14 +960,30 @@ class spec(phot_pipeline.phot):
                 else:
                     profile_img[dispStart:dispEnd,oneSpatialInd] = modelF
             
-            
             smooth_img = deepcopy(profile_img)
-            
-            ## add the delta in again for profile normalization > 0
-            if self.param['dispDirection'] == 'x':
-                profile_img[startSpatial:endSpatial+1,dispStart:dispEnd] += self.floor_delta
+
+            if (self.param['traceCurvedSpectrum'] == True):
+                ## set the pixels below and above the curved trace to be 0 in profile
+                for oneDispPx in np.arange(dispStart,dispEnd):
+                    oneTable = self.calculate_apertures(src=srcInd)
+                    disp_pts_match = (oneDispPx == oneTable['dispersion_px'])
+                    if np.sum(disp_pts_match) > 0:
+                        local_spatialStart = oneTable['bkgEnd 0'][disp_pts_match][0]
+                        local_spatialEnd = oneTable['bkgStart 1'][disp_pts_match][0]
+                        
+                        if self.param['dispDirection'] == 'x':
+                            profile_img[startSpatial:local_spatialStart,oneDispPx] = 0
+                            profile_img[local_spatialEnd:(endSpatial+1),oneDispPx] = 0
+                            profile_img[local_spatialStart:(local_spatialEnd+1),oneDispPx] += self.floor_delta
+                        else:
+                            profile_img[oneDispPx,startSpatial:local_spatialStart] = 0
+                            profile_img[oneDispPx,(local_spatialEnd+1):endSpatial] = 0
+                            profile_img[oneDispPx,local_spatialStart:(local_spatialEnd+1)] += self.floor_delta
             else:
-                profile_img[dispStart:dispEnd,startSpatial:endSpatial+1] += self.floor_delta
+                if self.param['dispDirection'] == 'x':
+                    profile_img[startSpatial:endSpatial+1,dispStart:dispEnd] += self.floor_delta
+                else:
+                    profile_img[dispStart:dispEnd,startSpatial:endSpatial+1] += self.floor_delta
             
             ## Renormalize            
             norm_profile = self.profile_normalize(profile_img)
@@ -995,6 +1017,7 @@ class spec(phot_pipeline.phot):
         
         return profile_img_list, smooth_img_list
     
+
     def read_profiles(self):
         """ Read in the master profile for each source if using a single profile for all images """
         profile_img_list, smooth_img_list = [], []
