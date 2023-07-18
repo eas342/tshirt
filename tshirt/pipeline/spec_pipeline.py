@@ -964,12 +964,12 @@ class spec(phot_pipeline.phot):
 
             if (self.param['traceCurvedSpectrum'] == True):
                 ## set the pixels below and above the curved trace to be 0 in profile
+                oneTable = self.calculate_apertures(src=srcInd)
                 for oneDispPx in np.arange(dispStart,dispEnd):
-                    oneTable = self.calculate_apertures(src=srcInd)
                     disp_pts_match = (oneDispPx == oneTable['dispersion_px'])
                     if np.sum(disp_pts_match) > 0:
-                        local_spatialStart = oneTable['bkgEnd 0'][disp_pts_match][0]
-                        local_spatialEnd = oneTable['bkgStart 1'][disp_pts_match][0]
+                        local_spatialStart = oneTable['srcStart'][disp_pts_match][0]
+                        local_spatialEnd = oneTable['srcEnd'][disp_pts_match][0]
                         
                         if self.param['dispDirection'] == 'x':
                             profile_img[startSpatial:local_spatialStart,oneDispPx] = 0
@@ -1035,10 +1035,6 @@ class spec(phot_pipeline.phot):
     
     def find_cov_weights(self,nDisp,varImg,profile_img,readNoise,
                          src=0,saveWeights=False,diagnoseCovariance=False):
-        oneSourcePos = self.param['starPositions'][src]
-        startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
-        endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
-        nSpatial = (endSpatial - startSpatial) + 1
         
         ## This will be slow at first because I'm starting with a for loop.
         ## Eventually do fancy 3D matrices to make it fast
@@ -1047,7 +1043,27 @@ class spec(phot_pipeline.phot):
         varPure = varImg - readNoise**2 ## remove the read noise because we'll put it in covariance matrix
         weight2D = np.zeros_like(profile_img)
         
+        if self.param['traceCurvedSpectrum'] == True:
+            apTable = self.calculate_apertures(src=src)
+        else:
+            oneSourcePos = self.param['starPositions'][src]
+            startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
+            endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+            nSpatial = (endSpatial - startSpatial) + 1
+        
         for oneInd in np.arange(nDisp):
+
+            if self.param['traceCurvedSpectrum'] == True:
+                disp_pts_match = (oneInd == apTable['dispersion_px'])
+                if np.sum(disp_pts_match) > 0:
+                    startSpatial = apTable['srcStart'][disp_pts_match][0]
+                    endSpatial = apTable['srcEnd'][disp_pts_match][0]
+                    nSpatial = (endSpatial - startSpatial) + 1
+                else:
+                    startSpatial = 1
+                    endSpatial = 0 ##make it have zero points
+                    nSpatial = 0
+            
             if self.param['dispDirection'] == 'x':
                 prof = profile_img[startSpatial:endSpatial+1,oneInd]
                 varPhotons = varPure[startSpatial:endSpatial+1,oneInd]
