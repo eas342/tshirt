@@ -804,7 +804,14 @@ class spec(phot_pipeline.phot):
                     line_orig = models.Linear1D(slope=0.0, intercept=np.min(spatial_profile))
                     comb_gauss = line_orig + gauss1d
                     fitted_model = fitter(comb_gauss, ind_var,spatial_profile, maxiter=111)
-                    cenArr[dispersion_counter,srcInd] = fitted_model.mean_1.value
+                    cen_found = fitted_model.mean_1.value
+                    cenGrace = 5
+                    if (cen_found > (np.min(ind_var) - cenGrace)) & (cen_found < (np.max(ind_var) + cenGrace)):
+                        thisCen = cen_found
+                    else:
+                        thisCen = np.nan
+
+                    cenArr[dispersion_counter,srcInd] = thisCen
                     fwhmArr[dispersion_counter,srcInd] = fitted_model.stddev_1.value * 2.35
                     
                     dep_var_model = fitted_model
