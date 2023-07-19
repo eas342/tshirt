@@ -2951,7 +2951,7 @@ class spec(phot_pipeline.phot):
         t['wave width'] = t['wave end'] - t['wave start']
         return t
     
-    def make_constant_Rgrid(self,wStart,wEnd,Rfixed,plotBins=True):
+    def make_constant_Rgrid(self,wStart=None,wEnd=None,Rfixed=100,plotBins=True):
         """
         Make an approximately constant R grid rounded to whole pixels
 
@@ -2966,6 +2966,10 @@ class spec(phot_pipeline.phot):
         plotBins: bool
             Plot the bins over a stellar spectrum?
         """
+        if wStart is None:
+            wStart = self.wavecal(self.param['dispPixels'][0])
+        if wEnd is None:
+            wEnd = self.wavecal(self.param['dispPixels'][1])
         wMids, wWidths = make_const_R_grid(wStart=wStart,wEnd=wEnd,Rfixed=Rfixed)
         t = self.find_px_bins_from_waves(wMids,wWidths)
         binEdges = np.append(t['wave start'][0],
