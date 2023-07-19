@@ -98,4 +98,20 @@ def quick_nirspec_prism(pixels):
     domain = np.array([ 13., 511.])
     poly_fun = np.polynomial.Polynomial(coeff,domain=domain)
     return poly_fun(pixels)
+
+def nirspec_grating(pixels,head):
+    if (head['GRATING'] == 'G395H') & (head['DETECTOR'] == 'NRS1'):
+        coeff = np.array([ 3.02973244e+00,  6.94058590e-01, -2.16013049e-03,
+                          -5.00304236e-04])
+        domain = np.array([   0., 2047.])
+    elif (head['GRATING'] == 'G395H') & (head['DETECTOR'] == 'NRS2'):
+        coeff = np.array([ 4.50367630e+00,  6.79386101e-01, -4.68405584e-03,
+                          -4.99513645e-04])
+        domain = np.array([   0., 2047.])
+    else:
+        raise NotImplementedError
+    
+    poly_fun = np.polynomial.Polynomial(coeff,domain=domain)
+    return poly_fun(pixels)
+
     

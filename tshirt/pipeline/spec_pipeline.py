@@ -124,7 +124,7 @@ class spec(phot_pipeline.phot):
         
         self.traceFile = os.path.join(self.baseDir,'traces','trace_functions',
                                       'trace_'+self.dataFileDescrip+'.ecsv')
-        self.traceDataFile = os.path.join(self.baseDir,'traces','trace_functions',
+        self.traceDataFile = os.path.join(self.baseDir,'traces','trace_data',
                                           'trace_data_'+self.dataFileDescrip+'.ecsv')
         self.check_trace_requirements()
 
@@ -2897,6 +2897,11 @@ class spec(phot_pipeline.phot):
             wavelengths = instrument_specific.hst_inst_funcs.hstwfc3_wavecal(dispIndices,**kwargs)
         elif waveCalMethod == 'quick_nrs_prism':
             wavelengths = instrument_specific.jwst_inst_funcs.quick_nirspec_prism(dispIndices)
+        elif waveCalMethod == 'nrs_grating':
+            if head == None:
+                head = fits.getheader(self.specFile,extname='ORIG HEADER')
+            wavelengths = instrument_specific.jwst_inst_funcs.nirspec_grating(dispIndices,head)
+
         elif waveCalMethod == 'grismr_poly_dms':
             if head == None:
                 head = fits.getheader(self.specFile,extname='ORIG HEADER')
