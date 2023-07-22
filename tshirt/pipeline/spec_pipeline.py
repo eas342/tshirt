@@ -797,7 +797,11 @@ class spec(phot_pipeline.phot):
                 
                 good_pts = np.isfinite(dep_var)
                 spatial_profile = dep_var[good_pts]
-                if fitMethod == 'astropy':
+                if np.sum(good_pts) < 5:
+                    cenArr[dispersion_counter,srcInd] = np.nan
+                    fwhmArr[dispersion_counter,srcInd] = np.nan
+                    dep_var_model = np.ones_like(dep_var) * np.nan
+                elif fitMethod == 'astropy':
                     fitter = fitting.LevMarLSQFitter()
                     ampGuess = np.percentile(spatial_profile,90)
                     meanGuess = np.sum(spatial_profile * spatialIndexArray[good_pts])/np.sum(spatial_profile)
@@ -819,7 +823,6 @@ class spec(phot_pipeline.phot):
 
                     cenArr[dispersion_counter,srcInd] = thisCen
                     fwhmArr[dispersion_counter,srcInd] = fitted_model.stddev_1.value * 2.35
-                    
                     dep_var_model = fitted_model
                 elif fitMethod == 'scipyQuick':
                     mean,std = norm.fit(ind_var,spatial_profile)
