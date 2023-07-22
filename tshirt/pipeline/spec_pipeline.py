@@ -761,7 +761,7 @@ class spec(phot_pipeline.phot):
         ## save the FWHM and centroid
         fwhmArr = np.zeros([dispersionIndexArrayLength,self.nsrc])
         cenArr = np.zeros([dispersionIndexArrayLength,self.nsrc])
-
+        
         ## loop through the number of spatials
         for srcInd in np.arange(n_spatials):
             
@@ -793,17 +793,23 @@ class spec(phot_pipeline.phot):
                     dep_var = img[dispersion_Ind,:]
                 else:
                     dep_var = img[:,dispersion_Ind]
+
                 
-                spatial_profile = dep_var
+                good_pts = np.isfinite(dep_var)
+                spatial_profile = dep_var[good_pts]
                 if fitMethod == 'astropy':
                     fitter = fitting.LevMarLSQFitter()
-                    ampGuess = np.percentile(dep_var,90)
-                    meanGuess = np.sum(dep_var * spatialIndexArray)/np.sum(dep_var)
+                    ampGuess = np.percentile(spatial_profile,90)
+                    meanGuess = np.sum(spatial_profile * spatialIndexArray[good_pts])/np.sum(spatial_profile)
                     gauss1d = models.Gaussian1D(amplitude=ampGuess, mean=meanGuess, 
                                                 stddev=self.param['traceFWHMguess']/2.35)
                     line_orig = models.Linear1D(slope=0.0, intercept=np.min(spatial_profile))
                     comb_gauss = line_orig + gauss1d
-                    fitted_model = fitter(comb_gauss, ind_var,spatial_profile, maxiter=111)
+                    try:
+                        fitted_model = fitter(comb_gauss, ind_var[good_pts],spatial_profile, maxiter=111)
+                    except Exception as e:
+                        pdb.set_trace()
+                    
                     cen_found = fitted_model.mean_1.value
                     cenGrace = 5
                     if (cen_found > (np.min(ind_var) - cenGrace)) & (cen_found < (np.max(ind_var) + cenGrace)):
