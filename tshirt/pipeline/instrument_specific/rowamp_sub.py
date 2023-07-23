@@ -145,7 +145,9 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
                evenOdd=True,activePixMask=None,backgMask=None,
                grismr=False,returnFastSlow=False,
                colByCol=False,smoothSlowDir=None,
-               GROEBA=False):
+               badRowsAllowed=0,
+               GROEBA=False,GPnsmoothKern=None,
+               showGP1D=False):
     """
     Do background subtraction amplifier-by-amplifier, row-by-row around the sources
     
@@ -175,6 +177,11 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
                true will be kept in the background estimation. If refpixMask is None
                no extra points will be masked
     
+    badRowsAllowed: int
+        Number of bad rows to accept and still do fast-read correction
+            (ie. if not enough background and/or ref pixels, 
+            no fast-read correction can be done)
+
     backgMask: numpy 2D array or None
         Mask for the background. Pixels that are False will be ignored in
                row-by-row background estimation. Pixels that are true will
@@ -194,6 +201,13 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
     GROEBA: bool
         Use Gaussian-Process row-by-row, odd/even by amplifier subtraction?
         This will use a Gaussian process to do 1/f noise interpolation
+
+    GPnsmoothKern: int or None
+        (only if GROEBA==True). Specify the window length for a Savgol smoothing
+        filter for the GP. Otherwise it is chosen automatically
+
+    showGP1D: bool
+        (only if GROEBA==True). Plot the GP prediction in 1D
     """
     
     ## Npix Threshold
@@ -289,18 +303,23 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
         ## in that case
         pxPerRow = np.sum(np.isfinite(thisAmp),axis=1)
         bad_rows = np.sum(pxPerRow <= Npix_threshold)
-        if bad_rows == 0:
+        
+        if bad_rows <= badRowsAllowed:
             if GROEBA == True:
                 t = time_unwrap(time2D[:,ampStarts[amp]:ampEnds[amp]],amp=amp)
                 f = time_unwrap(thisAmp,amp=amp)
-                if np.median(pxPerRow) < 6:
-                    ## Smooth more for small numbers of pixels like when using refpix
-                    nsmoothKern = 15001
-                else:
-                    nsmoothKern = 2001
+                if GPnsmoothKern is None:
+                    if np.median(pxPerRow) < 6:
+                        ## Smooth more for small numbers of pixels like when using refpix
+                        nsmoothKern = 15001
+                    else:
+                        nsmoothKern = 2001
                 
-                mu_gp1D = gp_predict(t,f,gp_comb,sigma_w=sigma_w,nsmoothKern=nsmoothKern)
-                
+                mu_gp1D = gp_predict(t,f,gp_comb,sigma_w=sigma_w,nsmoothKern=GPnsmoothKern)
+                if showGP1D == True:
+                    plt.plot(t,f); plt.plot(t,mu_gp1D)
+                    plt.show()
+                    pdb.set_trace()
                 fastread_model[:,ampStarts[amp]:ampEnds[amp]] = time_wrap(mu_gp1D,
                                                                           columns=colsAmp,
                                                                           rows=rowsAmp,
