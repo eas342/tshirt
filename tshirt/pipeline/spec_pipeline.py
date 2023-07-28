@@ -656,13 +656,14 @@ class spec(phot_pipeline.phot):
         """
         if self.param['traceCurvedSpectrum'] == True:
             numSubtractions = len(self.param['bkgSubDirections'])
-            assert numSubtractions == 1,'1 background subtraction allowed currently'
-            if self.param['dispDirection'] == 'x':
-                assert (self.param['bkgSubDirections'][0] == 'Y'),'x dispersion must have Y backsub'
-                assert (len(self.param['bkgRegionsY']) == 1),'Must have 1 subtraction only'
-            else:
-                assert (self.param['bkgSubDirections'][0] == 'X'),'y dispersion must have X backsub'
-                assert (len(self.param['bkgRegionsX']) == 1),'Must have 1 subtraction only'
+            assert numSubtractions <= 1,'<=1 background subtraction allowed currently'
+            if numSubtractions == 1:
+                if self.param['dispDirection'] == 'x':
+                    assert (self.param['bkgSubDirections'][0] == 'Y'),'x dispersion must have Y backsub'
+                    assert (len(self.param['bkgRegionsY']) == 1),'Must have 1 subtraction only'
+                else:
+                    assert (self.param['bkgSubDirections'][0] == 'X'),'y dispersion must have X backsub'
+                    assert (len(self.param['bkgRegionsX']) == 1),'Must have 1 subtraction only'
 
 
     def eval_trace(self,dispArray,src=0):
@@ -2062,7 +2063,7 @@ class spec(phot_pipeline.phot):
         avgSpecs = np.zeros([self.nsrc,nDispPixels])
         for oneSrc in np.arange(self.nsrc):
             dispSt, dispEnd = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[oneSrc],
-                                       dtype=np.int)
+                                       dtype=int)
             if skipIndividualDynamic == False:
                 self.plot_dynamic_spec(src=oneSrc,**kwargs)
             HDUList = fits.open(self.dyn_specFile(oneSrc))
@@ -2206,11 +2207,11 @@ class spec(phot_pipeline.phot):
         disp = HDUList['DISP INDICES'].data
         
         if dispIndices == None:
-            dispSt, dispEnd = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[src],dtype=np.int)
+            dispSt, dispEnd = np.array(np.array(self.param['dispPixels']) + self.dispOffsets[src],dtype=int)
         else:
             dispSt, dispEnd = dispIndices
         
-        binEdges = np.array(np.linspace(dispSt,dispEnd,nbins+1),dtype=np.int)
+        binEdges = np.array(np.linspace(dispSt,dispEnd,nbins+1),dtype=int)
         if binStarts is None:
             binStarts = binEdges[0:-1]
         if binEnds is None:
