@@ -777,7 +777,7 @@ class spec(phot_pipeline.phot):
 
                 dispersionCounterArray = np.arange(dispersionIndexArrayLength)
             
-            ## set up which points to do background fitting for
+            ## set up which points to do source fitting for
             pts = np.zeros(len(spatialIndexArray),dtype=bool)
             srcMid = self.param['starPositions'][srcInd]
             boxSize = self.param['traceFitBoxSize']
@@ -805,7 +805,8 @@ class spec(phot_pipeline.phot):
                 elif fitMethod == 'astropy':
                     fitter = fitting.LevMarLSQFitter()
                     ampGuess = np.percentile(spatial_profile,90)
-                    meanGuess = np.sum(spatial_profile * spatialIndexArray[good_pts])/np.sum(spatial_profile)
+                    meanGuess = spatialIndexArray[good_pts][np.argmax(spatial_profile)]
+                    #meanGuess = np.sum(spatial_profile * spatialIndexArray[good_pts])/np.sum(spatial_profile)
                     gauss1d = models.Gaussian1D(amplitude=ampGuess, mean=meanGuess, 
                                                 stddev=self.param['traceFWHMguess']/2.35)
                     line_orig = models.Linear1D(slope=0.0, intercept=np.min(spatial_profile))
