@@ -460,6 +460,9 @@ class spec(phot_pipeline.phot):
             img2, bkmodel2, head2 = spec.backsub_oneDir(img,head,'X')
         
         """
+
+        pts_threshold = 3 ## number of points required for a background subtraction
+        ## otherwise, it returns 0
         
         if oneDirection == 'X':
             subtractionIndexArrayLength = img.shape[1]
@@ -545,9 +548,12 @@ class spec(phot_pipeline.phot):
                 else:
                     pts = ptsAll
 
-                polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
-                                                    preScreen=self.param['backPreScreen'])
-                dep_var_model = np.polyval(polyFit,ind_var)
+                if np.sum(np.isfinite(dep_var[pts])) < pts_threshold:
+                    dep_var_model = np.zeros_like(ind_var)
+                else:
+                    polyFit = phot_pipeline.robust_poly(ind_var[pts],dep_var[pts],fitOrder,
+                                                        preScreen=self.param['backPreScreen'])
+                    dep_var_model = np.polyval(polyFit,ind_var)
                 
                 if oneDirection == 'X':
                     bkgModel[cross_Ind,ind_var[ptsToSubtract]] = dep_var_model[ptsToSubtract]
