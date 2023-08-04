@@ -675,8 +675,8 @@ class spec(phot_pipeline.phot):
     def eval_trace(self,dispArray,src=0):
         """
         Evaluate the trace function
-
-        Parameters:
+        
+        Parameters
         ------------
         dispArray: numpy array
             Dispersion array in pixels
@@ -2052,8 +2052,10 @@ class spec(phot_pipeline.phot):
         """
         Align the dynamic spectra for multi-object spectroscopy?
         This method uses the mosOffsets to get the gross alignments of the 
-            dynamic spectra.
+        dynamic spectra.
         
+        Parameters
+        ----------
         alignStars: bool
             Cross-correlate to find the individual star's offsets?
         starAlignDiagnostics: bool
@@ -3100,8 +3102,8 @@ def make_const_R_grid(wStart=2.45,wEnd=3.96,Rfixed=100):
     
     for F444W NIRCam at R=100, I used
     wStart=3.911238, wEnd=5.0,Rfixed=100
-
-        Parameters
+    
+    Parameters
     ----------
     wStart: float
         The wavelength start for bin edges
