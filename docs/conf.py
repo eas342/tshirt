@@ -22,7 +22,7 @@ copyright = '2020, Everett Schlawin'
 author = 'Everett Schlawin'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.3'
 
 
 # -- General configuration ---------------------------------------------------
