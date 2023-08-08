@@ -2387,7 +2387,7 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    binMin=50,binMax=2000,customShortName=None,
                    logPlot=True,clip=False,xUnit='min',
                    yUnit='ppm',showPlot=False,custTitle=None,
-                   nBinSequence=20):
+                   nBinSequence=20,sequenceLabels=None):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -2396,10 +2396,11 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     ------------
     x: numpy array
         Independent variable
-    y: numpy array
-        Dependent variable like flux
+    y: numpy array or list of numpy arrays.
+        Dependent variable like flux.
+        If y is a list, loop through the y for comparison
     (optional keywords)
-    yerr: numpy array
+    yerr: numpy array or list of numpy arrays
         Theoretical error
     customShortName: str
         Name for file
@@ -2423,70 +2424,117 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         Custom title name. If None, will generate one automatically
     showPlot: bool
         Render the plot with matplotlib? If False, it is saved instead.
+    sequenceLabels: list of strings
+        If y is a list of different data sets, they can be labeled with
+        sequenceLabels
     """
 
-    if clip == True:
-        x = x[2:]
-        y = y[2:]
-        if yerr is not None:
-            y = y[2:]
-        print("clipping to {} points".format(len(x)))
-
-    if removeLinear == True:
-        yPoly = robust_poly(x,y,1)
-        ymod = np.polyval(yPoly,x)
-        y = y / ymod
-    
-    if yUnit == 'ppm':
-        y = y * 1e6
-        yerr = yerr * 1e6
-    nPt = len(y)
-    
-    maxAllowedBinNumber = len(x) // 2
-    if (binMax > maxAllowedBinNumber):
-        warnings.warn("Maximum number of bins is greater than the number of points. Setting binMax to {}".format(maxAllowedBinNumber))
-        binMax = maxAllowedBinNumber
-    
-    logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),nBinSequence)
-    binNums = np.array(10**logBinNums,dtype=np.int)
-    
-    binSizes, stds, theoNoise, wNoise = [], [], [], []
-    
-    if yerr is not None:
-        theoNoiseNoBin = np.median(yerr)
-    else:
-        theoNoiseNoBin = np.nan
-    
-    cadence = np.median(np.diff(x))
-    whiteNoiseStart = np.std(y)
-    
-    for oneBin in binNums:
-        xBin,yBin,yBinErr = do_binning(x,y,nBin=oneBin)
-        binSize = np.median(np.diff(xBin))
-        nAvg = binSize/cadence
-        
-        stds.append(np.std(yBin))
-        binSizes.append(binSize)
-        theoNoise.append(theoNoiseNoBin / np.sqrt(nAvg))
-        wNoise.append(whiteNoiseStart / np.sqrt(nAvg))
-
-    ## do the unbinned Allan variance
-    stds.append(whiteNoiseStart)
-    binSizes.append(cadence)
-    theoNoise.append(theoNoiseNoBin)
-    wNoise.append(whiteNoiseStart)
-
-
-    ## only Use finite values (ignore NaNs where binning isn't possible)
-    usePts = np.isfinite(stds)
-    #pdb.set_trace()
     fig, ax = plt.subplots(figsize=(5,4))
-    if logPlot == True:
-        ax.loglog(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
+
+    if type(y) == list:
+        n_data = len(y)
+        if type(yerr) == list:
+            assert n_data == len(yerr)
+        if type(x) == list:
+            assert n_data == len(x)
+        if sequenceLabels is not None:
+            assert n_data == len(sequenceLabels)
     else:
-        ax.semilogx(np.array(binSizes)[usePts],np.array(stds)[usePts],label='Measured')
-    ax.plot(binSizes,theoNoise,label='Read + Photon Noise')
-    ax.plot(binSizes,wNoise,label='White noise scaling')
+        n_data = 1
+    
+
+
+    for data_index in range(n_data):
+
+        if type(x) == list:
+            x_use = deepcopy(x[data_index])
+        else:
+            x_use = deepcopy(x)
+
+        if type(y) == list:
+            y_use = deepcopy(y[data_index])
+        else:
+            y_use = deepcopy(y)
+
+        if type(yerr) == list:
+            yerr_use = deepcopy(yerr[data_index])
+        else:
+            yerr_use = deepcopy(yerr)
+
+        if clip == True:
+            x_use = x_use[2:]
+            y_use = y_use[2:]
+            if yerr is not None:
+                y_use = y_use[2:]
+            print("clipping to {} points".format(len(x_use)))
+
+        if removeLinear == True:
+            yPoly = robust_poly(x_use,y_use,1)
+            ymod = np.polyval(yPoly,x_use)
+            y_use = y_use / ymod
+        
+        if yUnit == 'ppm':
+            y_use = y_use * 1e6
+            yerr = yerr * 1e6
+        nPt = len(y_use)
+        
+        maxAllowedBinNumber = len(x_use) // 2
+        if (binMax > maxAllowedBinNumber):
+            warnings.warn("Maximum number of bins is greater than the number of points. Setting binMax to {}".format(maxAllowedBinNumber))
+            binMax = maxAllowedBinNumber
+        
+        logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),nBinSequence)
+        binNums = np.array(10**logBinNums,dtype=np.int)
+        
+        binSizes, stds, theoNoise, wNoise = [], [], [], []
+        
+        if yerr_use is not None:
+            theoNoiseNoBin = np.median(yerr_use)
+        else:
+            theoNoiseNoBin = np.nan
+        
+        cadence = np.median(np.diff(x_use))
+        whiteNoiseStart = np.std(y_use)
+        
+        for oneBin in binNums:
+            xBin,yBin,yBinErr = do_binning(x_use,y_use,nBin=oneBin)
+            binSize = np.median(np.diff(xBin))
+            nAvg = binSize/cadence
+            
+            stds.append(np.std(yBin))
+            binSizes.append(binSize)
+            theoNoise.append(theoNoiseNoBin / np.sqrt(nAvg))
+            wNoise.append(whiteNoiseStart / np.sqrt(nAvg))
+
+        ## do the unbinned Allan variance
+        stds.append(whiteNoiseStart)
+        binSizes.append(cadence)
+        theoNoise.append(theoNoiseNoBin)
+        wNoise.append(whiteNoiseStart)
+
+
+        ## only Use finite values (ignore NaNs where binning isn't possible)
+        usePts = np.isfinite(stds)
+        #pdb.set_trace()
+        
+        if sequenceLabels is None:
+            extraInfo = ""
+        else:
+            extraInfo = " {}".format(sequenceLabels[data_index])
+        
+        measuredLabel = 'Measured{}'.format(extraInfo)
+
+
+        if logPlot == True:
+            ax.loglog(np.array(binSizes)[usePts],np.array(stds)[usePts],
+                      label=measuredLabel)
+        else:
+            ax.semilogx(np.array(binSizes)[usePts],np.array(stds)[usePts],
+                        label='Measured')
+        if np.sum(np.isfinite(theoNoise)) >= 1:
+            ax.plot(binSizes,theoNoise,label='Read + Photon Noise{}'.format(extraInfo))
+        ax.plot(binSizes,wNoise,label='White noise scaling{}'.format(extraInfo))
+    
     ax.set_xlabel('Bin Size ({})'.format(xUnit))
     ax.set_ylabel(r'$\sigma$ ({})'.format(yUnit))
     ax.set_ylim(yLim)
