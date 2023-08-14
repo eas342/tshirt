@@ -2558,9 +2558,12 @@ class spec(phot_pipeline.phot):
         t['Disp St'] = disp['Bin Start']
         t['Disp Mid'] = disp['Bin Middle']
         t['Disp End'] = disp['Bin End']
-        t['Wave (st)'] = np.round(self.wavecal(disp['Bin Start']),3)
-        t['Wave (mid)'] = np.round(self.wavecal(t['Disp Mid']),3)
-        t['Wave (end)'] = np.round(self.wavecal(disp['Bin End']),3)
+        waveStart = self.wavecal(disp['Bin Start'])
+        waveEnd = self.wavecal(disp['Bin End'])
+        t['Wave (st)'] = np.round(waveStart,3)
+        t['Wave (mid px)'] = np.round(self.wavecal(t['Disp Mid']),3)
+        t['Wave (mid)'] = np.round((waveStart + waveEnd)/2.,3)
+        t['Wave (end)'] = np.round(waveEnd,3)
         if shorten == True:
             binGrid = binGrid[0:npoints,:]
         else:
