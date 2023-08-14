@@ -2387,7 +2387,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    binMin=50,binMax=2000,customShortName=None,
                    logPlot=True,clip=False,xUnit='min',
                    yUnit='ppm',showPlot=False,custTitle=None,
-                   nBinSequence=20,sequenceLabels=None):
+                   nBinSequence=20,sequenceLabels=None,
+                   skipLegend=False):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -2427,6 +2428,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     sequenceLabels: list of strings
         If y is a list of different data sets, they can be labeled with
         sequenceLabels
+    skipLegend: bool
+        Skip the Legend?
     """
 
     fig, ax = plt.subplots(figsize=(5,4))
@@ -2442,7 +2445,6 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     else:
         n_data = 1
     
-
 
     for data_index in range(n_data):
 
@@ -2475,7 +2477,7 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         
         if yUnit == 'ppm':
             y_use = y_use * 1e6
-            yerr = yerr * 1e6
+            yerr_use = yerr_use * 1e6
         nPt = len(y_use)
         
         maxAllowedBinNumber = len(x_use) // 2
@@ -2538,7 +2540,10 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     ax.set_xlabel('Bin Size ({})'.format(xUnit))
     ax.set_ylabel(r'$\sigma$ ({})'.format(yUnit))
     ax.set_ylim(yLim)
-    ax.legend()
+    if skipLegend == True:
+        pass
+    else:
+        ax.legend()
     if custTitle is None:
         thisTitle = "Allan Variance (Linear De-trend = {})".format(removeLinear)
     else:
