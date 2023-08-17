@@ -2634,10 +2634,20 @@ class spec(phot_pipeline.phot):
         srcRadius_int = int(np.round(self.param['apWidth'] / 2.))
         srcStart = spatialMid_int - srcRadius_int
         srcEnd = spatialMid_int + srcRadius_int
+
+        ## check that aperture is not outside boundaries of image
+        img, head = self.get_default_im()
+        if self.param['dispDirection'] == 'x':
+            maxSpatial = img.shape[0] - 1
+        else:
+            maxSpatial = img.shape[1] - 1
+        
+
+
         t = Table()
         t['dispersion_px'] = dispersion_px
-        t['srcStart'] = srcStart
-        t['srcEnd'] = srcEnd
+        t['srcStart'] = np.maximum(srcStart,0)
+        t['srcEnd'] = np.minimum(srcEnd,maxSpatial)
         t['spatialMid'] = spatialMid
         t['spatialMid_int'] = spatialMid_int
 
@@ -2650,8 +2660,8 @@ class spec(phot_pipeline.phot):
             
             t['bkgStart 0'] = int(bkgRegions[0])
             backInnerRadius_int = int(np.round(self.param['backgMinRadius']))
-            t['bkgEnd 0'] = t['spatialMid_int'] - backInnerRadius_int
-            t['bkgStart 1'] = t['spatialMid_int'] + backInnerRadius_int
+            t['bkgEnd 0'] = np.maximum(bkgRegions[0],t['spatialMid_int'] - backInnerRadius_int)
+            t['bkgStart 1'] = np.minimum(bkgRegions[1],t['spatialMid_int'] + backInnerRadius_int)
             
             t['bkgEnd 1'] = int(bkgRegions[1])
         
