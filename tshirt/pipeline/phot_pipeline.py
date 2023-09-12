@@ -543,8 +543,8 @@ class phot:
             else:
                 ax = axArr.ravel()[ind]
             
-            yStamp_proposed = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=np.int)
-            xStamp_proposed = np.array(onePos[0] + np.array([-1,1]) * boxsize,dtype=np.int)
+            yStamp_proposed = np.array(onePos[1] + np.array([-1,1]) * boxsize,dtype=int)
+            xStamp_proposed = np.array(onePos[0] + np.array([-1,1]) * boxsize,dtype=int)
             xStamp, yStamp = ensure_coordinates_are_within_bounds(xStamp_proposed,yStamp_proposed,img)
             
             stamp = img[yStamp[0]:yStamp[1],xStamp[0]:xStamp[1]]
@@ -1728,7 +1728,7 @@ class phot:
         """
         combRef = []
         
-        srcArray = np.arange(self.nsrc,dtype=np.int)
+        srcArray = np.arange(self.nsrc,dtype=int)
         
         if excludeSrc == None:
             maskOut = (srcArray == 0)
@@ -2486,7 +2486,7 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
             binMax = maxAllowedBinNumber
         
         logBinNums = np.linspace(np.log10(binMin),np.log10(binMax),nBinSequence)
-        binNums = np.array(10**logBinNums,dtype=np.int)
+        binNums = np.array(10**logBinNums,dtype=int)
         
         binSizes, stds, theoNoise, wNoise = [], [], [], []
         
