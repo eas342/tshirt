@@ -23,6 +23,8 @@ else:
 import numpy as np
 from astropy.time import Time
 import astropy.units as u
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
 import pdb
 from copy import deepcopy
 import yaml
@@ -155,6 +157,7 @@ class phot:
                          'DATE-OBS': None,
                          'dateKeyword': 'DATE-OBS',
                          'driftFile': None,
+                         'skyPositions': None
                          }
         
         
@@ -895,7 +898,15 @@ class phot:
         allX, allY = [], []
         allfwhmX, allfwhmY = [], []
         
-        positions = self.get_default_cen(ind=ind)
+        if self.param['skyPositions'] is None:
+            positions = self.get_default_cen(ind=ind)
+        else:
+            degArr = np.array(self.param['skyPositions']).T
+            coord = SkyCoord(degArr[0] * u.degree,degArr[1] * u.degree)
+            sciHeader = fits.getheader(self.fileL[ind],extname='SCI')
+            wcs_res = WCS(sciHeader)
+            x,y = coord.to_pixel(wcs=wcs_res)
+            positions = np.array([x,y]).T
         
         for srcInd, onePos in enumerate(positions):
             xcen, ycen, fwhmX, fwhmY = self.get_centroid(img,onePos[0],onePos[1])

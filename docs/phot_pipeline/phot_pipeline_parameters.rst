@@ -58,3 +58,10 @@ Timing Method
 The ``phot_pipeline`` will automatically find the JD time from the ``DATE-OBS`` and ``TIME-OBS`` keywords. However, if using JWST data, all the integrations are packed into a singel fits file with one ``DATE-OBS`` and ``TIME-OBS``. In this case, the data must be split into individual integrations, which are assigned an ``ON_INT`` keyword. If ``timineMethod`` is set to ``JWSTint``, then ``phot_pipeline`` will use the calculate integration times using ``TFRAME`` and ``INTTIME`` in the header.
 
 The parameter :code:`dateKeyword` will tell :code:`tshirt` to look for a specific FITS keyword for the date. Otherwise it searches common ones like :code:`DATE-OBS` or :code:`DATE_OBS`.
+
+Star Positions
+~~~~~~~~~~~~~~~~
+
+:code`refStarPos` [[X1,Y1],[X2,Y2]]. A list of star positions will be found in pixels from . This will be the starting guess if centroiding is being used.
+The first position will be the target star, and the remaining positions will be assumed to be reference stars.
+:code:`skyPositions`. Positions on the Sky in RA degrees, DEC degrees. If None, it will be ignored
