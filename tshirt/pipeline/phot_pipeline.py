@@ -1506,7 +1506,8 @@ class phot:
         else:
             for oneSrc in range(self.nsrc):
                 yFlux = photArr[:,oneSrc]
-                yNorm = yFlux / np.nanmedian(yFlux)
+                normFlux = np.nanmedian(yFlux)
+                yNorm = yFlux / normFlux
                 if oneSrc == 0:
                     pLabel = 'Src'
                 else:
@@ -1521,11 +1522,16 @@ class phot:
                 else: linestyle= 'solid'
 
                 if doBin is not None:
-                    xplot, yplot2, yplot_err = do_binning(jdArr - jdRef,yplot,nBin=doBin)
+                    xplot, yplot2, yplot_err2 = do_binning(jdArr - jdRef,yplot,nBin=doBin)
                 else:
                     xplot = jdArr - jdRef
                     yplot2 = yplot
-                ax.plot(xplot,yplot2,label=pLabel,linestyle=linestyle)
+                    yplot_err2 = errArr[:,oneSrc] / normFlux
+                
+                if errBar == 'all':
+                    ax.errorbar(xplot,yplot2,label=pLabel,linestyle=linestyle,yerr=yplot_err2)
+                else:   
+                    ax.plot(xplot,yplot2,label=pLabel,linestyle=linestyle)
         
             if head['SRCGEOM'] == 'Circular':
                 ax.set_title('Src Ap='+str(head['APRADIUS'])+',Back=['+str(head['BKGSTART'])+','+
