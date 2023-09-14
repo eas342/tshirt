@@ -23,7 +23,7 @@ else:
 import numpy as np
 from astropy.time import Time
 import astropy.units as u
-from astropy.wcs import WCS
+from astropy.wcs import WCS, FITSFixedWarning
 from astropy.coordinates import SkyCoord
 import pdb
 from copy import deepcopy
@@ -157,7 +157,8 @@ class phot:
                          'DATE-OBS': None,
                          'dateKeyword': 'DATE-OBS',
                          'driftFile': None,
-                         'skyPositions': None
+                         'skyPositions': None,
+                         'downselectImgWithCoord': False,
                          }
         
         
@@ -210,6 +211,45 @@ class phot:
             
         self.baseDir = baseDir
     
+    def get_source_xy(self,sciHead):
+        """
+        Get the source X and Y pixel positions from coordinates
+        """
+        # Convert the coordinates to pixel coordinates in the image
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=FITSFixedWarning)
+            wcs_res = WCS(sciHead)
+        
+        degArr = np.array(self.param['skyPositions']).T
+        coord = SkyCoord(degArr[0] * u.degree,degArr[1] * u.degree)
+        
+        coord_pix = coord.to_pixel(wcs=wcs_res)
+    
+        # Check if the pixel coordinates are inside the image
+        x, y = coord_pix
+        return x,y
+    
+    def source_in_img(self,fits_fileName):
+        """
+        Is the source within an image? Return 'unknown' if no sky positions specified
+        """
+        if self.param['skyPositions'] is None:
+            return 'unknown'
+        else:
+            # Open the FITS file and extract the image dimensions
+            with fits.open(fits_fileName) as HDUList:
+                image_data = HDUList['SCI'].data
+                image_shape = image_data.shape
+                sciHead = HDUList['SCI'].header
+                x, y = self.get_source_xy(sciHead)
+
+                src_in_img = (0 <= x < image_shape[1] and 0 <= y < image_shape[0])
+                if np.any(src_in_img):
+                    return True
+                else:
+                    return False
+
+
     def get_fileList(self):
         if self.param['readFromTshirtExamples'] == True:
             ## Find the files from the package data examples
@@ -223,22 +263,31 @@ class phot:
         
         origList = np.sort(glob.glob(search_path))
         if self.param['excludeList'] is not None:
-            fileList = []
+            fileList1 = []
             
             for oneFile in origList:
                 if os.path.basename(oneFile) not in self.param['excludeList']:
-                    fileList.append(oneFile)
+                    fileList1.append(oneFile)
         else:
-            fileList = origList
+            fileList1 = origList
         
-        if len(fileList) == 0:
+        
+        if self.param['downselectImgWithCoord'] == True:
+            fileList2 = []
+            for oneFile in origList:
+                if self.source_in_img(oneFile):
+                    fileList2.append(oneFile)
+        else:
+            fileList2 = fileList1
+
+        if len(fileList2) == 0:
             print("Note: File Search comes up empty")
             if os.path.exists(self.photFile):
                 print("Note: Reading file list from previous phot file instead.")
                 t1 = Table.read(self.photFile,hdu='FILENAMES')
-                fileList = np.array(t1['File Path'])
+                fileList2 = np.array(t1['File Path'])
         
-        return fileList
+        return fileList2
 
     def check_parameters(self):
         assert type(self.param['backOffset']) == list,"Background offset is not a list"
@@ -901,11 +950,12 @@ class phot:
         if self.param['skyPositions'] is None:
             positions = self.get_default_cen(ind=ind)
         else:
-            degArr = np.array(self.param['skyPositions']).T
-            coord = SkyCoord(degArr[0] * u.degree,degArr[1] * u.degree)
+            # degArr = np.array(self.param['skyPositions']).T
+            # coord = SkyCoord(degArr[0] * u.degree,degArr[1] * u.degree)
             sciHeader = fits.getheader(self.fileL[ind],extname='SCI')
-            wcs_res = WCS(sciHeader)
-            x,y = coord.to_pixel(wcs=wcs_res)
+            #wcs_res = WCS(sciHeader)
+            #x,y = coord.to_pixel(wcs=wcs_res)
+            x,y = self.get_source_xy(sciHeader)
             positions = np.array([x,y]).T
         
         for srcInd, onePos in enumerate(positions):

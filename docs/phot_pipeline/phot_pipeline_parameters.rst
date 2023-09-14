@@ -65,3 +65,7 @@ Star Positions
 :code`refStarPos` [[X1,Y1],[X2,Y2]]. A list of star positions will be found in pixels from . This will be the starting guess if centroiding is being used.
 The first position will be the target star, and the remaining positions will be assumed to be reference stars.
 :code:`skyPositions`. Positions on the Sky in RA degrees, DEC degrees. If None, it will be ignored
+
+downselectImgWithCoord
+~~~~~~~~~~~~~~~~~~~~~~~
+If True, down-select only images where the source is present and ignore ones where the source is missing
