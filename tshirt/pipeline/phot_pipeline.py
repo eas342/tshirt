@@ -2050,7 +2050,8 @@ class batchPhot:
     """
     def __init__(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
         self.alreadyLists = {'refStarPos': 2,'backOffset': 1,'apRange': 1,'excludeList': 1,
-                             'backsub_directions': 1}
+                             'backsub_directions': 1,
+                             'skyPositions': 2}
         self.general_init(batchFile=batchFile)
     
     def general_init(self,batchFile='parameters/phot_params/example_batch_phot.yaml'):
