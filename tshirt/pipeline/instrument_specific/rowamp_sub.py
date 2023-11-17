@@ -311,9 +311,9 @@ def do_backsub(img,photObj=None,amplifiers=4,saveDiagnostics=False,
                 if GPnsmoothKern is None:
                     if np.median(pxPerRow) < 6:
                         ## Smooth more for small numbers of pixels like when using refpix
-                        nsmoothKern = 15001
+                        GPnsmoothKern = 15001
                     else:
-                        nsmoothKern = 2001
+                        GPnsmoothKern = 2001
                 
                 mu_gp1D = gp_predict(t,f,gp_comb,sigma_w=sigma_w,nsmoothKern=GPnsmoothKern)
                 if showGP1D == True:
