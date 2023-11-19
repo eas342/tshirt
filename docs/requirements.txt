@@ -7,3 +7,4 @@ scipy
 bokeh
 sphinx-rtd-theme
 tqdm
+celerite2
