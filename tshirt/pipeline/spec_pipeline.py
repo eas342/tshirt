@@ -2004,7 +2004,7 @@ class spec(phot_pipeline.phot):
             outName = 'noise_spec_{}.pdf'.format(self.dataFileDescrip)
             outPath = os.path.join(self.baseDir,'plots','spectra','noise_spectrum',outName)
             print("Writing noise spectrum to {}".format(outPath))
-            fig.savefig(outPath,overwrite=True)
+            fig.savefig(outPath)
         if waveBin == False:
             HDUList.close()
         
