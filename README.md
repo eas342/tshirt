@@ -1,3 +1,6 @@
+[![PyPI status](https://img.shields.io/pypi/v/tshirt.svg)](https://pypi.python.org/pypi/tshirt/)
+[![Documentation Status](https://readthedocs.org/projects/tshirt/badge/?version=latest)](http://tshirt.readthedocs.io/?badge=latest)
+
 <p align="center">
    <img src="docs/images/t_shirt_logo.jpg" alt="T shirt logot" width="200 px">
    </br>

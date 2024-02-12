@@ -25,6 +25,9 @@ Instrument-Specific Modules
 .. automodule:: tshirt.pipeline.instrument_specific.jwst_inst_funcs
    :members:
 
+.. automodule:: tshirt.pipeline.instrument_specific.rowamp_sub
+   :members:
+
 
 Image Preparation Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
