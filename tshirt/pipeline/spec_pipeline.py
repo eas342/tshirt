@@ -20,7 +20,10 @@ from scipy.stats import norm
 from scipy.interpolate import interp1d
 import astropy
 from astropy.table import Table
-from astropy.stats import LombScargle
+try:
+    from astropy.stats import LombScargle
+except ImportError as errLS:
+    from astropy.timeseries import LombScargle
 import multiprocessing
 from multiprocessing import Pool
 import tqdm
