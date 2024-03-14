@@ -805,7 +805,7 @@ class spec(phot_pipeline.phot):
                     dep_var = img[:,dispersion_Ind]
 
                 
-                good_pts = np.isfinite(dep_var)
+                good_pts = np.isfinite(dep_var) & pts
                 spatial_profile = dep_var[good_pts]
                 if np.sum(good_pts) < 5:
                     cenArr[dispersion_counter,srcInd] = np.nan
@@ -852,7 +852,7 @@ class spec(phot_pipeline.phot):
                 
                 if showEach == True:
                     plt.plot(ind_var,dep_var,label='data')
-                    plt.plot(ind_var[pts],dep_var[pts],'o',color='red',label='pts fit')
+                    plt.plot(ind_var[good_pts],dep_var[good_pts],'o',color='red',label='pts fit')
                     plt.plot(ind_var,dep_var_model(ind_var),label='model')
                     plt.show()
                     pdb.set_trace()
