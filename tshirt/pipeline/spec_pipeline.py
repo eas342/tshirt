@@ -694,7 +694,8 @@ class spec(phot_pipeline.phot):
         
 
     def find_trace(self,recalculateTrace=False,
-                   recalculateTraceData=False):
+                   recalculateTraceData=False,
+                   showPlot=False):
         """
         Find the trace either from saved file or trace data
 
@@ -704,6 +705,8 @@ class spec(phot_pipeline.phot):
             Recalculate the trace?
         recalculateTraceData: bool
             Recalculate the trace data?
+        showPlot: bool
+            Show plot of fitting the trace?
         """
         if (os.path.exists(self.traceFile) == True) & (recalculateTrace == False):
             pass
@@ -727,7 +730,14 @@ class spec(phot_pipeline.phot):
             tpoly.write(self.traceFile,overwrite=True)
 
         self.traceInfo = ascii.read(self.traceFile)
-
+        if showPlot == True:
+            traceData = ascii.read(self.traceDataFile)
+            
+            for oneSrc in np.arange(self.nsrc):
+                plt.plot(traceData['x'],traceData['cen {}'.format(oneSrc)],'o')
+                y_eval = self.eval_trace(traceData['x'],src=oneSrc)
+                plt.plot(traceData['x'],y_eval)
+            plt.show()
 
     def fit_trace(self,img,head,showEach=False,
                    fitMethod='astropy'):
