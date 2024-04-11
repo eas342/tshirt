@@ -124,11 +124,17 @@ class spec(phot_pipeline.phot):
         
         self.profile_dir = os.path.join(self.baseDir,'tser_data','saved_profiles')
         self.weight_dir = os.path.join(self.baseDir,'tser_data','saved_weights')
-        
-        self.traceFile = os.path.join(self.baseDir,'traces','trace_functions',
-                                      'trace_'+self.dataFileDescrip+'.ecsv')
-        self.traceDataFile = os.path.join(self.baseDir,'traces','trace_data',
-                                          'trace_data_'+self.dataFileDescrip+'.ecsv')
+
+        self.traceReference = self.param['traceReference']
+        if self.traceReference is None:
+            self.traceFile = os.path.join(self.baseDir,'traces','trace_functions',
+                                        'trace_'+self.dataFileDescrip+'.ecsv')
+            self.traceDataFile = os.path.join(self.baseDir,'traces','trace_data',
+                                            'trace_data_'+self.dataFileDescrip+'.ecsv')
+        else:
+            self.traceDataFile = None
+            self.traceFile = self.traceReference
+
         self.check_trace_requirements()
 
         self.master_profile_prefix = 'master_{}'.format(self.dataFileDescrip)
@@ -673,7 +679,10 @@ class spec(phot_pipeline.phot):
                 else:
                     assert (self.param['bkgSubDirections'][0] == 'X'),'y dispersion must have X backsub'
                     assert (len(self.param['bkgRegionsX']) == 1),'Must have 1 subtraction only'
-
+        if self.traceReference is None:
+            pass
+        else:
+            assert os.path.exists(self.traceReference), 'Trace Reference not found'
 
     def eval_trace(self,dispArray,src=0):
         """

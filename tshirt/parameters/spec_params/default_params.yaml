@@ -65,6 +65,7 @@ traceCurvedSpectrum: False ## Fit the trace to the spectrum?
 traceOrder: 3 ## polynomial order for the trace fitting
 traceFitBoxSize: 18 ## the spatial box size used to fit the trace
 traceFWHMguess: 2 ## Guess size for the spatial FWHM
+traceReference: null ## Reference trace
 backgMinRadius: 5 ## minimum distance for background
 skyPositions: None ## use RA and Dec for positions (only works for photometry though)
 downselectImgWithCoord: False ## Check images for source w/ coordinates (only works for photometry though)

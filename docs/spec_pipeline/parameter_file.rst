@@ -84,3 +84,22 @@ useSmoothProfileForStats
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Use the smoothed profile for the profile statistics? If True, the statistics will be on the man profile along the dispersion direction. Otherwise, a median of the data is calculated. Note that if :code:`fixedProfile` is True, this will give constant statistics for all images
 
+traceCurvedSpectrum
+~~~~~~~~~~~~~~~~~~~~
+Trace a curved spectrum? If True, allows a curved aperture instead of a rectangular one
+
+traceOrder
+~~~~~~~~~~~
+Polynomial order for the trace fitting
+
+traceFitBoxSize
+~~~~~~~~~~~~~~~~
+The spatial box size used to fit the trace
+
+traceFWHMguess
+~~~~~~~~~~~~~~
+Guess size for the spatial FWHM when fitting to a Gaussian
+
+traceReference
+~~~~~~~~~~~~~~
+If you want to use the trace from a previous file, give the path name as a string
