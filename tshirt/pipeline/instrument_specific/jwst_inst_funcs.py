@@ -125,7 +125,10 @@ def miri_lrs(pixels):
                        1.67742638e-02,  3.77253454e-01,  3.80071027e+00])
     poly_fun = np.polyval(coeff,y_transform)
     output_arr = np.zeros(input_arr.size) * np.nan
-    if np.sum(good_pt) > 0:
-        output_arr[good_pt] = poly_fun
     
+    output_arr[good_pt] = poly_fun
+    
+    
+    if (input_arr.ndim == 0):
+        output_arr = output_arr[0]
     return output_arr
