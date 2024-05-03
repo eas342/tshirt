@@ -114,4 +114,18 @@ def nirspec_grating(pixels,head):
     poly_fun = np.polynomial.Polynomial(coeff,domain=domain)
     return poly_fun(pixels)
 
+def miri_lrs(pixels):
+    """
+    Polynomial fit to transformed Y coordinate
+    """
+    input_arr = np.array(pixels)
+    good_pt = input_arr <= 394.
+    y_transform =  np.array((394. - input_arr[good_pt])**0.5)
+    coeff = np.array([-4.33398729e-08,  2.68709385e-06, -4.92122230e-05, -2.30504962e-04,
+                       1.67742638e-02,  3.77253454e-01,  3.80071027e+00])
+    poly_fun = np.polyval(coeff,y_transform)
+    output_arr = np.zeros(input_arr.size) * np.nan
+    if np.sum(good_pt) > 0:
+        output_arr[good_pt] = poly_fun
     
+    return output_arr

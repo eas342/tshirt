@@ -2967,6 +2967,8 @@ class spec(phot_pipeline.phot):
                     warning.warn('No filter specified. Assuming F322W2')
                     obsFilter = 'F322W2'
             wavelengths = instrument_specific.jwst_inst_funcs.flight_poly_grismr_nc(dispIndices,obsFilter=obsFilter)
+        elif waveCalMethod == 'miri_lrs':
+            wavelengths = instrument_specific.jwst_inst_funcs.miri_lrs(dispIndices)
         else:
             raise Exception("Unrecognized wavelength calibration method {}".format(waveCalMethod))
             
