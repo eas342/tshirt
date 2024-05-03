@@ -765,11 +765,11 @@ class spec(phot_pipeline.phot):
             'astropy' : will use models Gaussian2D + linear
             'sckpyQuick' : will fit w/ scipy.stats.norm
         """
-        dispDirection =  self.param['dispDirection']
-        if dispDirection.upper() == 'Y':
+        dispDirection = self.param['dispDirection'].upper()
+        if dispDirection == 'Y':
             spatialIndexArrayLength = img.shape[1]
 #            dispersionIndexArrayLength = img.shape[0]
-        elif dispDirection.upper() == 'X':
+        elif dispDirection == 'X':
             spatialIndexArrayLength = img.shape[0]
  #           dispersionIndexArrayLength = img.shape[1]
         else:
