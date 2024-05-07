@@ -117,6 +117,12 @@ def nirspec_grating(pixels,head):
 def miri_lrs(pixels):
     """
     Polynomial fit to transformed Y coordinate
+
+    ## See this file
+    /Users/~/Documents/jwst/flight_data/proc/01185/wasp69b_proc/miri_lrs_rate/lrs_wavecal.ipynb
+    I ran wcs_step = assign_wcs.AssignWcsStep()
+    Then calculated wavelengths with:
+    xcor,ycor,wavearr = wcs_res.meta.wcs(37 * np.ones(NY),y_array)
     """
     input_arr = np.array(pixels)
     good_pt = input_arr <= 394.
