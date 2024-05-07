@@ -1409,8 +1409,13 @@ class spec(phot_pipeline.phot):
                              (dispIndices <= profDispEnd))
                 
                 oneSourcePos = self.param['starPositions'][oneSrc]
-                startSpatial = int(oneSourcePos - self.param['apWidth'] / 2.)
-                endSpatial = int(oneSourcePos + self.param['apWidth'] / 2.)
+                if self.param['profileFitWidth'] is None:
+                    spatialWidthToFit = self.param['apWidth']
+                else:
+                    spatialWidthToFit = self.param['profileFitWidth']
+                
+                startSpatial = int(oneSourcePos - spatialWidthToFit / 2.)
+                endSpatial = int(oneSourcePos + spatialWidthToFit / 2.)
                 spatial_var = np.arange(startSpatial,endSpatial) ## independent variable
                 
                 if self.param['useSmoothProfileForStats'] == True:

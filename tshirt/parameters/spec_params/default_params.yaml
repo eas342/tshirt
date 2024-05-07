@@ -59,7 +59,8 @@ saveRefRow: False ## save rows of reference pixels?
 dateKeyword: DATE-OBS ## default FITS keyword to find date/time information from
 DATE-OBS: None ## manually supply a DATE-OBS if nothing is available in the header
 saveSpatialProfileStats: False ## save the spatial profile stats
-profilePix: null ## the pixels to use in calculating the spatial profile statistics (not used in extraction)
+profilePix: null ## the dispersion pixels to use in calculating the spatial profile statistics (not used in extraction)
+profileFitWidth: null ## the spatial profile width in calculating spatial profile statistics
 useSmoothProfileForStats: False ## use the spline-smoothed profile for profile statistics?
 traceCurvedSpectrum: False ## Fit the trace to the spectrum?
 traceOrder: 3 ## polynomial order for the trace fitting
