@@ -3001,6 +3001,7 @@ class spec(phot_pipeline.phot):
         waveEdges = np.array(waveMid) - np.array(waveWidth) * 0.5
         waveEdges = np.append(waveEdges,waveMid[-1] + waveWidth[-1] * 0.5) ## last edge
         pxEdges = np.array(np.round(self.inverse_wavecal(waveEdges)),dtype=int)
+
         t = Table()
         t['px start'] = pxEdges[0:-1]
         t['px end'] = pxEdges[1:]
@@ -3010,6 +3011,21 @@ class spec(phot_pipeline.phot):
         t['px width'] = t['px end'] - t['px start']
         t['wave mid'] = (t['wave start'] + t['wave end'])/2.
         t['wave width'] = t['wave end'] - t['wave start']
+
+        ## Check whether dispersion is negative
+        
+        if np.sum(t['px width'] < 0) == len(t):
+            ## Negative dispersion
+            t['px width'] = np.abs(t['px width'])
+            prevStart = deepcopy(t['px start'])
+            t['px start'] = t['px end']
+            t['px end'] = prevStart
+        elif np.sum(t['px width'] > 0) == len(t):
+            ## Positive dispersion
+            pass
+        else:
+            raise Exception("Detected zero or flipped dispersion")
+
         return t
     
     def make_constant_Rgrid(self,wStart=None,wEnd=None,Rfixed=100,plotBins=True):
