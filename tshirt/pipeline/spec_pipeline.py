@@ -277,6 +277,8 @@ class spec(phot_pipeline.phot):
         """
         Extract all spectroscopy
         """
+        from ..__init__ import __version__
+        
         fileCountArray = np.arange(self.nImg)
         
         if self.param['fixedProfile'] == True:
@@ -359,6 +361,7 @@ class spec(phot_pipeline.phot):
         hdu.header['AXIS3'] = ('src','source axis')
         hdu.header['SRCNAME'] = (self.param['srcName'], 'Source name')
         hdu.header['NIGHT'] = (self.param['nightName'], 'Night Name')
+        hdu.header['TSHIRTV'] = (__version__,'tshirt version number')
         hdu.name = 'Optimal Spec'
         
         hdu.header = self.add_parameters_to_header(hdu.header)
@@ -1037,7 +1040,7 @@ class spec(phot_pipeline.phot):
             
             ## save the smoothed image
             smooth_img_list.append(smooth_img)
-                
+
         if saveFits == True:
             primHDU = fits.PrimaryHDU(img,head)
             if masterProfile == True:
