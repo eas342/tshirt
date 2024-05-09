@@ -22,7 +22,8 @@ setup(
         "photutils>=0.4.1",
         "bokeh>=1.4.0",
         "pytest",
-        "celerite2"
+        "celerite2",
+        "matplotlib"
     ],
     long_description=long_description,
     long_description_content_type='text/markdown'
