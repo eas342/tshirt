@@ -8,13 +8,13 @@ class borderChecks(unittest.TestCase):
     
     def test_inside(self):
         xres, yres = phot_pipeline.ensure_coordinates_are_within_bounds([2],[2.5],self.image)
-        self.assertEquals(xres[0],2)
-        self.assertEquals(yres[0],2.5)
+        self.assertEqual(xres[0],2)
+        self.assertEqual(yres[0],2.5)
     
     def test_outside(self):
         xres, yres = phot_pipeline.ensure_coordinates_are_within_bounds([-1.5],[2.5],self.image)
-        self.assertEquals(xres[0],0)
-        self.assertEquals(yres[0],2.5)
+        self.assertEqual(xres[0],0)
+        self.assertEqual(yres[0],2.5)
 
     def test_array(self):
         xres, yres = phot_pipeline.ensure_coordinates_are_within_bounds([-5,-2,3,4,7],
