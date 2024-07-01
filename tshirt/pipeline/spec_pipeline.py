@@ -1159,7 +1159,9 @@ class spec(phot_pipeline.phot):
                     cov_matrix = np.diag(varPhotons) + cov_read
                 
                 cov_matrix_norm = np.outer(1./prof,1./prof) * cov_matrix
+                
                 inv_cov = np.linalg.inv(cov_matrix_norm)
+                
                 weights = np.dot(np.ones_like(prof),inv_cov)
                 #optflux[oneInd] = np.nansum(weights * data * correction / prof) / np.sum(weights)
                 #varFlux[oneInd] = np.nansum(correction) / np.sum(weights)
@@ -3031,6 +3033,57 @@ class spec(phot_pipeline.phot):
 
         return t
     
+    def make_native_px_grid(self,dispPixels=None,
+                            doublePx=False):
+        """
+        Make a wavelength grid at native resolution
+
+        Parameters
+        ----------
+        dispPixels: 2 element list or None
+            Start and end pixels. If None, it will use the 
+            file from the parameters "dispPixels"
+        
+        doublePx: bool
+            Double up pixels?
+        """
+        if dispPixels is None:
+            pxStart = self.param['dispPixels'][0]
+            pxEnd = self.param['dispPixels'][1]
+        else:
+            pxStart = dispPixels[0]
+            pxEnd = dispPixels[1]
+        
+        t = Table()
+        if doublePx == True:
+            t['px start'] = np.arange(pxStart,pxEnd,2)
+            t['px end'] = np.arange(pxStart+2,pxEnd+1,2)
+        else:
+            t['px start'] = np.arange(pxStart,pxEnd)
+            t['px end'] = np.arange(pxStart+1,pxEnd+1)
+        t['wave start'] = self.wavecal(t['px start'])
+        t['wave end'] = self.wavecal(t['px end'])
+        t['px mid'] = (t['px start'] + t['px end'])/2.
+        t['px width'] = t['px end'] - t['px start']
+        t['wave mid'] = (t['wave start'] + t['wave end'])/2.
+        t['wave width'] = t['wave end'] - t['wave start']
+
+        ## Check whether dispersion is negative
+        
+        if np.sum(t['px width'] < 0) == len(t):
+            ## Negative dispersion
+            t['px width'] = np.abs(t['px width'])
+            prevStart = deepcopy(t['px start'])
+            t['px start'] = t['px end']
+            t['px end'] = prevStart
+        elif np.sum(t['px width'] > 0) == len(t):
+            ## Positive dispersion
+            pass
+        else:
+            raise Exception("Detected zero or flipped dispersion")
+
+        return t
+
     def make_constant_Rgrid(self,wStart=None,wEnd=None,Rfixed=100,plotBins=True):
         """
         Make an approximately constant R grid rounded to whole pixels
