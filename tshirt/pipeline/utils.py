@@ -336,6 +336,7 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
     else:
         peakArg = np.argmax(corr)
         yPeak = corr[peakArg]
+        
         xOffset = offsets[peakArg]
         indOffset = offsetIndices[peakArg]
 
@@ -344,7 +345,7 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
         plt.plot(offsetIndices,corr,label='Cross-cor')
         if subPixel == True:
             plt.plot(offsetIndices,yModel,label='Parabola Fit')
-        plt.plot(xOffset,yPeak,'o',color='red',label='Peak')
+        plt.plot(indOffset,yPeak,'o',color='red',label='Peak')
         plt.legend()
         plt.show()
     
