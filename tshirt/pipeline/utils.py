@@ -172,7 +172,7 @@ def flatten(x,y,flatteningMethod='filter',polyOrd=2,
     """
     
     if flatteningMethod == 'polynomial':
-        polyFit = robust_poly(x,y,polyOrd=polyOrd)
+        polyFit = robust_poly(x,y,polyord=polyOrd)
         
         yFlat = y / np.polyval(polyFit,x)
         if normalize == False:
@@ -254,6 +254,7 @@ def subpixel_peak(x,y):
 
 def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
                     flatteningMethod='filter',
+                    polyOrd=2,
                     highPassFreq=0.01,lowPassFreq=None,
                     subPixel=False):
     """
@@ -282,7 +283,11 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
         What kind of flattening method should be used on the arrays?
             'filter' will apply a filter
             'polynomial' will divide by a polynomial
-                    
+    
+    polyOrd: int
+        Order of polynomial to use for flattening,
+        passed to :code:`flatten`
+    
     highpassFreq: float
         The frequency (on a scale from Nyquist to 1) to pass information
     
@@ -307,9 +312,9 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
         plt.show()
     
     y1Flat = flatten(x,y1Norm,flatteningMethod=flatteningMethod,highPassFreq=highPassFreq,
-                              lowPassFreq=lowPassFreq)
+                              lowPassFreq=lowPassFreq,polyOrd=polyOrd)
     y2Flat = flatten(x,y2Norm,flatteningMethod=flatteningMethod,highPassFreq=highPassFreq,
-                              lowPassFreq=lowPassFreq)
+                              lowPassFreq=lowPassFreq,polyOrd=polyOrd)
     
     if diagnostics == True:
         plt.plot(y1Flat,label='reference')
