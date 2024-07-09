@@ -3034,7 +3034,8 @@ class spec(phot_pipeline.phot):
         return t
     
     def make_native_px_grid(self,dispPixels=None,
-                            doublePx=False):
+                            doublePx=False,
+                            halfpx_correction=True):
         """
         Make a wavelength grid at native resolution
 
@@ -3046,6 +3047,10 @@ class spec(phot_pipeline.phot):
         
         doublePx: bool
             Double up pixels?
+
+        halfpx_correction: bool
+            Correct for the fact that the wavelengths are mid-px
+            so the wavelength start should be the left pixel edge
         """
         if dispPixels is None:
             pxStart = self.param['dispPixels'][0]
@@ -3061,9 +3066,13 @@ class spec(phot_pipeline.phot):
         else:
             t['px start'] = np.arange(pxStart,pxEnd)
             t['px end'] = np.arange(pxStart+1,pxEnd+1)
-        t['wave start'] = self.wavecal(t['px start'])
-        t['wave end'] = self.wavecal(t['px end'])
-        t['px mid'] = (t['px start'] + t['px end'])/2.
+        if halfpx_correction == True:
+            correction = -0.5
+        else:
+            correction = 0.0
+        t['wave start'] = self.wavecal(t['px start'] + correction)
+        t['wave end'] = self.wavecal(t['px end'] + correction)
+        t['px mid'] = (t['px start'] + t['px end'])/2. + correction
         t['px width'] = t['px end'] - t['px start']
         t['wave mid'] = (t['wave start'] + t['wave end'])/2.
         t['wave width'] = t['wave end'] - t['wave start']
