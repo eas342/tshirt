@@ -2535,7 +2535,7 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
             x_use = x_use[2:]
             y_use = y_use[2:]
             if yerr is not None:
-                y_use = y_use[2:]
+                yerr_use = yerr_use[2:]
             print("clipping to {} points".format(len(x_use)))
 
         if removeLinear == True:
@@ -2545,7 +2545,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         
         if yUnit == 'ppm':
             y_use = y_use * 1e6
-            yerr_use = yerr_use * 1e6
+            if yerr is not None:
+                yerr_use = yerr_use * 1e6
         nPt = len(y_use)
         
         maxAllowedBinNumber = len(x_use) // 2
