@@ -174,7 +174,7 @@ def flatten(x,y,flatteningMethod='filter',polyOrd=2,
     if flatteningMethod == 'polynomial':
         polyFit = robust_poly(x,y,polyord=polyOrd)
         
-        yFlat = y / np.polyval(polyFit,x)
+        yFlat = y - np.polyval(polyFit,x)
         if normalize == False:
             yFlat = yFlat + np.median(y)
             
