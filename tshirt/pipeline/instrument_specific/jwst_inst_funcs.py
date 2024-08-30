@@ -108,6 +108,10 @@ def nirspec_grating(pixels,head):
         coeff = np.array([ 4.50367630e+00,  6.79386101e-01, -4.68405584e-03,
                           -4.99513645e-04])
         domain = np.array([   0., 2047.])
+    elif (head['GRATING'] == 'G395M') & (head['DETECTOR'] == 'NRS1'):
+        coeff = np.array([ 3.34261555e+00,  1.84168959e+00, -7.24341224e-04,
+                           -1.41509082e-03])
+        domain = np.array([   0., 2047.])
     else:
         raise NotImplementedError
     
