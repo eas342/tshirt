@@ -79,16 +79,19 @@ def adjust_aperture_set(phot_obj,param,srcSize,backStart,backEnd,
         
     elif phot_obj.pipeType == 'spectroscopy':
         param['apWidth'] = srcSize
-        backLoc_1_start = param['starPositions'][0] - backEnd
-        backLoc_1_end = param['starPositions'][0] - backStart
-        backLoc_2_start = param['starPositions'][0] + backStart
-        backLoc_2_end = param['starPositions'][0] + backEnd
-        backLocList = [[backLoc_1_start,backLoc_1_end],
-                       [backLoc_2_start,backLoc_2_end]]
-        if param['dispDirection'] == 'x':
-            param['bkgRegionsY'] = backLocList
+        if param['traceCurvedSpectrum'] == False:
+            backLoc_1_start = param['starPositions'][0] - backEnd
+            backLoc_1_end = param['starPositions'][0] - backStart
+            backLoc_2_start = param['starPositions'][0] + backStart
+            backLoc_2_end = param['starPositions'][0] + backEnd
+            backLocList = [[backLoc_1_start,backLoc_1_end],
+                           [backLoc_2_start,backLoc_2_end]]
+            if param['dispDirection'] == 'x':
+                param['bkgRegionsY'] = backLocList
+            else:
+                param['bkgRegionsX'] = backLocList
         else:
-            param['bkgRegionsX'] = backLocList
+            param['backgMinRadius'] = backStart
         
         new_phot = spec(directParam=param)
         if showPlot == True:
