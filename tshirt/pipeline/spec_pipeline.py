@@ -11,6 +11,7 @@ import glob
 import numpy as np
 from astropy.time import Time
 import astropy.units as u
+import astropy.constants as const
 import pdb
 from copy import deepcopy
 import yaml
@@ -3255,3 +3256,161 @@ def moving_average(x, w):
     y_out[0:w] = np.nan
     y_out[-w:] = np.nan
     return y_out
+
+def BB(wave,Temp):
+    """
+    Evaluate a blackbody
+
+    Parameters
+    ----------
+    wave: numpy array
+        Wavelength
+    Temp: quantity 
+        Temperature (with units)
+    """
+    exparg = const.h * const.c / (wave * const.k_B * Temp)
+    
+    return 2. * const.h * const.c**2/wave**5 * 1./(np.exp(exparg) - 1.)
+
+def TB(wave,intens):
+    """ 
+    Calculate the Brightness temperature from intensity
+
+    Parameters
+    -------------
+    wave: numpy array
+        Wavelength with units of length
+    intens: numpy array
+        Intensity, must be in itensity units per wavelength
+    """
+    
+    logarg = 1. + 2. * const.h * const.c**2 / (intens * wave**5)
+    
+    tb = const.h * const.c / (const.k_B * wave * np.log(logarg))
+    return tb.si
+
+def TB_err(wave,intens,dI):
+    """ 
+    Calculate the Brightness temperature error from intensity and
+    intensity error
+
+    Parameters
+    -------------
+    wave: numpy array
+        Wavelength with units of length
+    intens: numpy array
+        Intensity, must be in itensity units per wavelength
+    dI: numpy array
+        Intensity erorr, must be in itensity units per wavelength
+    """
+    logarg = 1. + 2. * const.h * const.c**2 / (intens * wave**5)
+    fac2 = (2. * const.h * const.c**2)/(intens**2 * wave**5)
+    
+    tb_err = TB(wave,intens) / (np.log(logarg) * (logarg)) * fac2 * dI
+    
+    return tb_err.si
+
+def star_to_planet_units(k):
+    """
+    Convert observed stellar instensity to planet intensity
+
+    Parameters
+    ----------
+    k: float
+        Planet to star radius ratio
+    """
+    star_to_planet_units = (1./ k**2) #* u.erg / (u.cm**2 * u.s * u.AA)
+    return star_to_planet_units
+
+def bin_spec(xorig,yorig,xout,dxout,
+                  yerr=None):
+    """
+    Bin a spectrum with a for loop (slow)
+
+    Parameters
+    ----------
+    xorig: numpy array
+        wavelength of input
+    yorig: numpy array
+        flux/intensity of input
+    xout: numpy array
+        bin centers of output
+    dxout: numpy array
+        bin widths of output
+    yerr: None or numpy array
+    """
+    if yerr is None:
+        pass
+    else:
+        weights = 1./yerr**2
+    binspec_list = []
+    binspec_list_err = []
+    for ind in np.arange(len(xout)):
+        pts = ((xorig > (xout[ind] - dxout[ind]/2.)) & 
+              (xorig <= (xout[ind] + dxout[ind]/2.)))
+        
+        if np.sum(pts) == 0:
+            thisBin = np.nan
+            thisBinerr = np.nan
+        elif yerr is None:
+            thisBin = np.mean(yorig[pts])
+            thisBinerr = np.std(yorig[pts])
+        else:
+            thisBin = np.sum(yorig[pts] * weights[pts])/np.sum(weights[pts])
+            thisBinerr = 1./np.sqrt(np.sum(weights[pts]))
+
+        binspec_list.append(thisBin)
+        binspec_list_err.append(thisBinerr)
+
+    return np.array(binspec_list), np.array(binspec_list_err)
+    # binEdges = xout - dxout
+    # binEdges = np.append(binEdges,xout[-1]+dxout[-1])
+    # xbin, ybin, ybinerr = phot_pipeline.do_binning(xorig,y=yorig,
+    #                                                nBin=binEdges)
+    # return xbin,ybin
+
+def TB_from_fp(wave,fp,istar,k):
+    """ 
+    Calculate the Brightness temperature from Fp/F*
+
+    Parameters
+    -------------
+    wave: numpy array
+        Wavelength with units of length
+    fp: numpy array
+        Unitless Fp/F*
+    istar: numpy array
+        Stellar intensity, must be in itensity units per wavelength
+    k: float
+        Planet to star radius ratio
+    """
+
+    # xbin, star_intens_bin = bin_star_intensity(stmodel['Wavelength']/1e4,
+    #                                            stmodel['SpecificIntensity'],
+    #                                            wave,wave_width)
+    Iplanet = istar * star_to_planet_units(k) * fp
+    return TB(wave,Iplanet)
+
+def TB_from_fp_err(wave,fp,fp_err,istar,k):
+    """ 
+    Calculate the Brightness temperature error
+    from Fp/F* and Fp/F* err
+
+    Parameters
+    -------------
+    wave: numpy array
+        Wavelength with units of length
+    fp: numpy array
+        Unitless Fp/F*
+    fp_err: numpy array
+        Unitless Fp/F* error
+    istar: numpy array
+        Stellar intensity, must be in itensity units per wavelength
+    k: float
+        Planet to star radius ratio
+    """
+    
+    Iplanet = istar * star_to_planet_units(k) * fp
+    Iplanet_err = istar * star_to_planet_units(k) * fp_err
+    
+    return TB_err(wave,Iplanet,Iplanet_err)
