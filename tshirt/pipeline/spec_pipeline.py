@@ -3338,6 +3338,14 @@ def bin_spec(xorig,yorig,xout,dxout,
     dxout: numpy array
         bin widths of output
     yerr: None or numpy array
+
+    Outputs
+    -------
+    ybin: numpy array
+        Binned values
+    ybin_err: numpy array
+        Bin error. If yerr is supplied, weighted avg in the mean
+        If no yerr is supplied, it's stdev/sqrt(N)
     """
     if yerr is None:
         pass
@@ -3354,7 +3362,7 @@ def bin_spec(xorig,yorig,xout,dxout,
             thisBinerr = np.nan
         elif yerr is None:
             thisBin = np.mean(yorig[pts])
-            thisBinerr = np.std(yorig[pts])
+            thisBinerr = np.std(yorig[pts])/np.sqrt(np.sum(pts))
         else:
             thisBin = np.sum(yorig[pts] * weights[pts])/np.sum(weights[pts])
             thisBinerr = 1./np.sqrt(np.sum(weights[pts]))
