@@ -3126,7 +3126,36 @@ class spec(phot_pipeline.phot):
                 plt.axvline(oneEdge)
         return t
 
+    def make_constant_SNRgrid(self,nBins=60,wStart=None,wEnd=None,plotBins=True,
+                            iterations=4):
+        """
+        Make an approximately constant SNR grid rounded to whole pixels
 
+        Parameters
+        ----------
+        wStart: float
+            The wavelength start for bin edges
+        wEnd: float
+            The wavelength end for bin edges
+        nBins: int
+            How many bins to make?
+        plotBins: bool
+            Plot the bins over a stellar spectrum?
+        iterations: int
+            Number of iterations to use
+        """
+        st_sp1x,st_sp1y,st_sp1yerr = self.get_avg_spec()
+        st_sp1w = self.wavecal(st_sp1x)
+        snr_arr = st_sp1y/st_sp1yerr
+
+        wMids, wWidths = make_const_SNR_grid(st_sp1w,snr_arr,nBins,
+                                                wStart=wStart,wEnd=wEnd,
+                                                plotBins=plotBins,
+                                                iterations=iterations)
+        
+        t = self.find_px_bins_from_waves(wMids,wWidths)
+
+        return t
 
 class batch_spec(phot_pipeline.batchPhot):
     def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):
@@ -3252,6 +3281,56 @@ def make_const_R_grid(wStart=2.45,wEnd=3.96,Rfixed=100):
     wWidths = wEnds - wStarts
 
     return wMids, wWidths
+
+def make_const_SNR_grid(x,snr_arr,nBins=60,
+                        wStart=None,wEnd=None,
+                        plotBins=True,
+                        iterations=4,
+                        snr_edge_threshold=0.01):
+    """
+    Make a constant-SNR grid
+
+    Parameters
+    ----------
+    x: numpy float array
+        Wavelengths of spectrum
+    snr: numpy float array
+        The Signal to noise of the spectrum
+    nBins: the number of bins to make
+        The spectral resolution
+    wStart: float (optional)
+        The wavelength start for bin edges
+    wEnd: float (optional)
+        The wavelength end for bin edges
+    iterations: int
+        Number of iterations to use
+    snr_edge_threshold: float
+        How many times the median SNR to use for bin edges
+    """
+    
+    snr_interp = interp1d(x,snr_arr)
+    useful_pts = snr_arr > snr_edge_threshold * np.nanmedian(snr_arr)
+
+    if wStart is None:
+        wStart = np.nanmin(x[useful_pts])
+    if wEnd is None:
+        wEnd = np.nanmax(x[useful_pts])
+    wEval = np.linspace(wStart,wEnd,nBins)
+    for gridIter in np.arange(iterations):
+        dx = 1./snr_interp(wEval)
+        dx = (wEnd - wStart) * dx/np.sum(dx)
+        xEdges = np.append(wStart,wStart + np.cumsum(dx))
+        xGrid_mid = (xEdges[1:] + xEdges[:-1])/2.
+        xGrid_widths = np.diff(xEdges)
+        wEval = xGrid_mid
+    
+    if plotBins == True:
+        plt.plot(x,snr_arr)
+        for oneEdge in xEdges:
+            plt.axvline(oneEdge,color='orange')
+        plt.xlabel("Wavelength")
+        plt.ylabel("SNR")
+    return xGrid_mid, xGrid_widths
 
 
 def moving_average(x, w):
