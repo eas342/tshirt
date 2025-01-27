@@ -2456,7 +2456,7 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    logPlot=True,clip=False,xUnit='min',
                    yUnit='ppm',showPlot=False,custTitle=None,
                    nBinSequence=20,sequenceLabels=None,
-                   skipLegend=False):
+                   skipLegend=False,plotExtension='pdf'):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -2498,6 +2498,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         sequenceLabels
     skipLegend: bool
         Skip the Legend?
+    plotExtension: str
+        Plot extension (e.g. 'pdf' or 'png')
     """
 
     fig, ax = plt.subplots(figsize=(5,4))
@@ -2619,14 +2621,15 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         thisTitle = custTitle
     
     ax.set_title(thisTitle)
-    outName = 'all_var_{}_removelinear_{}.pdf'.format(customShortName,removeLinear)
+    outName = 'all_var_{}_removelinear_{}.{}'.format(customShortName,removeLinear,
+                                                     plotExtension)
     
     baseDir = get_baseDir()
     outPath = os.path.join(baseDir,'plots','allan_variance',outName)
     if showPlot == True:
         fig.show()
     else:
-        fig.savefig(outPath,
+        fig.savefig(outPath,dpi=150,facecolor='white',
                     bbox_inches='tight')
     
     
