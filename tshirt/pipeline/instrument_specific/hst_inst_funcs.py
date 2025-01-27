@@ -28,6 +28,12 @@ def hstwfc3_wavecal(dispIndices,xc0=75.0,yc0=75.0,DirIm_x_appeture=522,DirIm_y_a
         
         Notes
         --------
+        See Instrument Science Report for some background
+            Instrument Science Report WFC3 2016-15
+            Trace and Wavelength Calibrations of the WFC3 G102 and G141 IR Grisms
+        Looks like this comes from Wilkins 2007 PhD thesis
+
+            
         Note that direct image and spectral image should be taken with the
         same aperture. If not, please adjust the centroid measurement
         according to table in: https://www.stsci.edu/hst/instrumentation/focus-and-pointing/fov-geometry
@@ -65,3 +71,16 @@ def hstwfc3_wavecal(dispIndices,xc0=75.0,yc0=75.0,DirIm_x_appeture=522,DirIm_y_a
         f = interp1d(np.arange(subarray),wavelength)
         wavelengths = f(dispIndices)
     return wavelengths
+
+def hst_wavecal_grism256(dispIndices):
+    """
+    Parameters to the function for WASP-69 b
+    """
+    #coord0_undo = (1014 - 512) // 2
+
+    return hstwfc3_wavecal(dispIndices,xc0=365.8 - 175,
+                           yc0=265.0 - 175,
+                           DirIm_x_appeture=522,DirIm_y_appeture=522,
+                           SpecIm_x_appeture=505,
+                           SpecIm_y_appeture=532,
+                           subarray=512)

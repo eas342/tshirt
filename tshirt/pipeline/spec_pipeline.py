@@ -2960,6 +2960,8 @@ class spec(phot_pipeline.phot):
         
         elif waveCalMethod == 'wfc3Dispersion':
             wavelengths = instrument_specific.hst_inst_funcs.hstwfc3_wavecal(dispIndices,**kwargs)
+        elif waveCalMethod == 'wfc3G256':
+            wavelengths = instrument_specific.hst_inst_funcs.hst_wavecal_grism256(dispIndices)
         elif waveCalMethod == 'quick_nrs_prism':
             wavelengths = instrument_specific.jwst_inst_funcs.quick_nirspec_prism(dispIndices)
         elif waveCalMethod == 'nrs_grating':
@@ -3250,6 +3252,7 @@ def make_const_R_grid(wStart=2.45,wEnd=3.96,Rfixed=100):
     wWidths = wEnds - wStarts
 
     return wMids, wWidths
+
 
 def moving_average(x, w):
     y_out = np.convolve(x, np.ones(w), 'same') / w
