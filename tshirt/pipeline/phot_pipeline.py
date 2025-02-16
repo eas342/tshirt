@@ -2456,7 +2456,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
                    logPlot=True,clip=False,xUnit='min',
                    yUnit='ppm',showPlot=False,custTitle=None,
                    nBinSequence=20,sequenceLabels=None,
-                   skipLegend=False,plotExtension='pdf'):
+                   skipLegend=False,plotExtension='pdf',
+                   returnData=False):
     """
     Make an Allan Variance plot for a time series
     to see if it bins as sqrt(N) statistics
@@ -2500,6 +2501,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         Skip the Legend?
     plotExtension: str
         Plot extension (e.g. 'pdf' or 'png')
+    returnData: bool
+        Return the Allan Variance Data?
     """
 
     fig, ax = plt.subplots(figsize=(5,4))
@@ -2515,6 +2518,12 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     else:
         n_data = 1
     
+    outDict = {'stds':[],
+               'binSizes': [],
+               'theoNoise': [],
+               'wNoise':[],
+               'usePt':[],
+               'labels':[]}
 
     for data_index in range(n_data):
 
@@ -2607,6 +2616,13 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
         if np.sum(np.isfinite(theoNoise)) >= 1:
             ax.plot(binSizes,theoNoise,label='Read + Photon Noise{}'.format(extraInfo))
         ax.plot(binSizes,wNoise,label='White noise scaling{}'.format(extraInfo))
+
+        outDict['stds'].append(stds)
+        outDict['binSizes'].append(np.array(binSizes))
+        outDict['theoNoise'].append(theoNoise)
+        outDict['wNoise'].append(wNoise)
+        outDict['usePt'].append(usePts)
+        outDict['labels'].append(extraInfo)
     
     ax.set_xlabel('Bin Size ({})'.format(xUnit))
     ax.set_ylabel(r'$\sigma$ ({})'.format(yUnit))
@@ -2634,6 +2650,8 @@ def allan_variance(x,y,yerr=None,removeLinear=False,yLim=[None,None],
     
     
         plt.close(fig)
+    if returnData == True:
+        return outDict
 
 def exists_and_equal(dict1,key1,val1):
     """
