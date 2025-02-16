@@ -1436,9 +1436,16 @@ class spec(phot_pipeline.phot):
                         spatial_profile = np.nanmedian(imgSub[profilePix,startSpatial:endSpatial],axis=0)
                 
                 fitter = fitting.LevMarLSQFitter()
+                #fitter = fitting.DogBoxLSQFitter()
                 ampGuess = np.max(spatial_profile) - np.min(spatial_profile)
                 meanGuess = np.median(spatial_var)
-                gauss1d = models.Gaussian1D(amplitude=ampGuess, mean=meanGuess, stddev=3)
+
+                gauss1d = models.Gaussian1D(amplitude=ampGuess, mean=meanGuess,
+                                            stddev=self.param['traceFWHMguess']/2.35,
+                                            bounds={"amplitude":(0.,np.inf),
+                                                    "stddev":(0.2,np.inf),
+                                                    "mean":(np.min(spatial_var)-1.,
+                                                            np.max(spatial_var)+1.)})
                 line_orig = models.Linear1D(slope=0.0, intercept=np.min(spatial_profile))
                 comb_gauss = line_orig + gauss1d
                 fitted_model = fitter(comb_gauss, spatial_var,spatial_profile, maxiter=111)
@@ -1447,6 +1454,7 @@ class spec(phot_pipeline.phot):
                 if saveFits == True:
                     fig, ax = plt.subplots()
                     ax.plot(spatial_var,spatial_profile,label='data')
+                    ax.plot(spatial_var,comb_gauss(spatial_var),label='Initial Guess')
                     ax.plot(spatial_var,fitted_model(spatial_var),label='Model')
                     spat_profile_name = 'spatial_prof_{}_src_{}.pdf'.format(prefixName,oneSrc)
                     spatial_prof_path = os.path.join(self.baseDir,'diagnostics','spatial_profile',spat_profile_name)
