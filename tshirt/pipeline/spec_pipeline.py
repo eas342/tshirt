@@ -2431,7 +2431,8 @@ class spec(phot_pipeline.phot):
             
             colors = itertools.cycle(palette)
             for ind,oneDisp in enumerate(disp):
-                p.circle(x='t',y="y{:02d}".format(ind),source=source,color=next(colors))
+                p.circle(x='t',y="y{:02d}".format(ind),source=source,color=next(colors),
+                         size=5)
             
             p.add_tools(HoverTool(tooltips=[('name', '@name'),('index','@ind')]))
             bokeh.plotting.show(p)
