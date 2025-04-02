@@ -1832,7 +1832,7 @@ class phot:
         # Median abs deviation of all reference photometry
         MADphot = np.nanmedian(absDeviation)
         # Points that deviate above threshold
-        badP = (absDeviation > sigRej * np.ones((self.nImg,self.nsrc),dtype=np.float) * MADphot)
+        badP = (absDeviation > sigRej * np.ones((self.nImg,self.nsrc),dtype=float) * MADphot)
         
         normPhot.mask = refMask2D | badP
         refPhot.mask = refMask2D | badP
