@@ -1965,6 +1965,32 @@ class phot:
         p.add_tools(HoverTool(tooltips=[('name', '@name'),('index','@ind')]))
         bokeh.plotting.show(p)
         
+    def countrate_to_electrons_mult(self,head):
+        """
+        Get the factor to convert from slope or counts to e-
+        Assuming that the data is there to do the conversion
+        Otherwise, it just multiplies by 1.0
+        """
+        if self.param['isSlope'] == True:
+            itimeKey = self.param['itimeKeyword']
+            if itimeKey in head:
+                intTime = head[itimeKey]
+            elif 'EFFINTTM' in head:
+                intTime = head['EFFINTTM']
+            else:
+                warnings.warn("Couldn't find {} in header. Trying EXPTIME".format(itimeKey))
+                intTime = head['EXPTIME']
+            ## If it's a slope image, multiply rate time intTime to get counts
+            slopeFactor = intTime
+        else:
+            slopeFactor = 1.
+
+        if self.param['detectorGain'] != None:
+            gainFactor = self.param['detectorGain']
+        else:
+            gainFactor = 1.
+        
+        return slopeFactor * gainFactor
 
     def getImg(self,path):
         """ Load an image from a given path and extensions"""
@@ -1989,21 +2015,9 @@ class phot:
             raise NotImplementedError
         
         head = HDUList[headExtension].header
-        if self.param['isSlope'] == True:
-            itimeKey = self.param['itimeKeyword']
-            if itimeKey in head:
-                intTime = head[itimeKey]
-            elif 'EFFINTTM' in head:
-                intTime = head['EFFINTTM']
-            else:
-                warnings.warn("Couldn't find {} in header. Trying EXPTIME".format(itimeKey))
-                intTime = head['EXPTIME']
-            ## If it's a slope image, multiply rate time intTime to get counts
-            img = img * intTime
-        
-        if self.param['detectorGain'] != None:
-            img = img * self.param['detectorGain']
-        
+
+        img = img * self.countrate_to_electrons_mult(head)
+
         HDUList.close()
         return img, head
         
