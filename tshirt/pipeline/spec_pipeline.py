@@ -1286,6 +1286,7 @@ class spec(phot_pipeline.phot):
         sumSpectra_err = np.zeros_like(optSpectra)
         backSpectra = np.zeros_like(optSpectra)
         peakSpectra = np.zeros_like(optSpectra)
+        rssSpectra = np.zeros_like(optSpectra) ## root sum square
 
         cenInfo = np.zeros([self.nsrc])
         fwhmInfo = np.zeros([self.nsrc])
@@ -1386,11 +1387,12 @@ class spec(phot_pipeline.phot):
             backSpectra[oneSrc,:] = np.nanmean(bkgModel * srcMask,spatialAx)
 
             ## save the peak spectra, removing bad px adding back in background model
-            holey_img = deepcopy(imgSub) + bkgModel * srcMask
+            holey_img = deepcopy((imgSub + bkgModel) * srcMask)
             holey_img[badPx] = 0
             
             peakSpectra[oneSrc,:] = np.nanmax(holey_img,axis=spatialAx)
-            
+            rssSpectra[oneSrc,:] = np.sqrt(np.nansum(holey_img**2,axis=spatialAx))
+
             if saveFits == True:
                 prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
                 if self.param['readNoiseCorrelation'] == True:
@@ -1484,6 +1486,7 @@ class spec(phot_pipeline.phot):
         extractDict['back spec'] = backSpectra
         extractDict['airmass'] = airmass
         extractDict['peak spec'] = peakSpectra
+        extractDict['rss spec'] = rssSpectra
         
         if self.param['saveSpatialProfileStats'] == True:
             extractDict['cen'] = cenInfo
@@ -1769,7 +1772,10 @@ class spec(phot_pipeline.phot):
         t['Disp Indices'] = specRes['disp indices']
         img, head = self.getImg(self.fileL[useInd])
         for oneSrc in np.arange(self.nsrc):
-            t['Peak Spec {}'.format(oneSrc)] = specRes['peak spec'][oneSrc] / self.countrate_to_electrons_mult(head)
+            cr_conversion = self.countrate_to_electrons_mult(head)
+            t['Peak Spec {}'.format(oneSrc)] = specRes['peak spec'][oneSrc] / cr_conversion
+            t['Rss Spec {}'.format(oneSrc)] = specRes['rss spec'][oneSrc] / cr_conversion
+            t['Sum {}'.format(oneSrc)] = specRes['sum spec'][oneSrc] / cr_conversion
         t.write(self.peakSpecFile,overwrite=True)
 
 
