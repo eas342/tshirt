@@ -1554,7 +1554,7 @@ class spec(phot_pipeline.phot):
             ax.plot(plot_x,y,label=oneSpecType)
         ax.legend()
         if waveCal == True:
-            ax.set_xlabel("Wavelength ($\mu$m)")
+            ax.set_xlabel(r"Wavelength ($\mu$m)")
         else:
             ax.set_xlabel("{} pixel".format(self.param['dispDirection'].upper()))
         
@@ -1599,11 +1599,11 @@ class spec(phot_pipeline.phot):
         elif transform == 'lam-squared':
             lam = self.wavecal(x_px)
             x = lam**2
-            x_unit = 'Frequency (1/$\lambda^2$)'
+            x_unit = r'Frequency (1/$\lambda^2$)'
         elif transform == 'inv-lam':
             lam = self.wavecal(x_px)
             x = 1./lam
-            x_unit = '$\lambda^2/(\Delta \lambda) (\mu$m)'
+            x_unit = r'$\lambda^2/(\Delta \lambda) (\mu$m)'
         else:
             raise Exception("Unrecognized transform {}".format(transform))
             
@@ -1966,7 +1966,7 @@ class spec(phot_pipeline.phot):
                                rasterized=True)
         ax.set_aspect('auto')
         if waveCal == True:
-            ax.set_xlabel('Wavelength ($\mu$m)')
+            ax.set_xlabel(r'Wavelength ($\mu$m)')
         else:
             ax.set_xlabel('Disp (pixels)')
         
@@ -2055,7 +2055,7 @@ class spec(phot_pipeline.phot):
             theo_y = np.nanmedian(HDUList['DYN SPEC ERR'].data[startInd:endInd,:],axis=0)
         
         if waveCal == True:
-            xLabel = 'Wavelength ($\mu$m)'
+            xLabel = r'Wavelength ($\mu$m)'
         else:
             xLabel = "Disp Pixel"
         
@@ -2485,7 +2485,7 @@ class spec(phot_pipeline.phot):
                 ax.errorbar(time_plot - offset_time,y_plot,fmt='o')
                 
                 if waveLabels == True:
-                    ax.text(time_plot[-1] - offset_time,y_plot[-1],'{:.2f} $\mu$m'.format(waves[ind]))
+                    ax.text(time_plot[-1] - offset_time,y_plot[-1],r'{:.2f} $\mu$m'.format(waves[ind]))
             
             if yLim is not None:
                 ax.set_ylim(yLim[0],yLim[1])
