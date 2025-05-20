@@ -136,6 +136,9 @@ class spec(phot_pipeline.phot):
             self.traceDataFile = None
             self.traceFile = self.traceReference
 
+        self.peakSpecFile = os.path.join(self.baseDir,'tser_data','peak_spec',
+                                         'peak_spec_{}.ecsv'.format(self.dataFileDescrip))
+
         self.check_trace_requirements()
 
         self.master_profile_prefix = 'master_{}'.format(self.dataFileDescrip)
@@ -1282,7 +1285,8 @@ class spec(phot_pipeline.phot):
         sumSpectra = np.zeros_like(optSpectra)
         sumSpectra_err = np.zeros_like(optSpectra)
         backSpectra = np.zeros_like(optSpectra)
-        
+        peakSpectra = np.zeros_like(optSpectra)
+
         cenInfo = np.zeros([self.nsrc])
         fwhmInfo = np.zeros([self.nsrc])
         
@@ -1380,6 +1384,12 @@ class spec(phot_pipeline.phot):
             sumSpectra_err[oneSrc,:] = sumErr
             
             backSpectra[oneSrc,:] = np.nanmean(bkgModel * srcMask,spatialAx)
+
+            ## save the peak spectra, removing bad px adding back in background model
+            holey_img = deepcopy(imgSub) + bkgModel * srcMask
+            holey_img[badPx] = 0
+            
+            peakSpectra[oneSrc,:] = np.nanmax(holey_img,axis=spatialAx)
             
             if saveFits == True:
                 prefixName = os.path.splitext(os.path.basename(oneImgName))[0]
@@ -1473,6 +1483,7 @@ class spec(phot_pipeline.phot):
         extractDict['sum spec err'] = sumSpectra_err
         extractDict['back spec'] = backSpectra
         extractDict['airmass'] = airmass
+        extractDict['peak spec'] = peakSpectra
         
         if self.param['saveSpatialProfileStats'] == True:
             extractDict['cen'] = cenInfo
@@ -1745,6 +1756,23 @@ class spec(phot_pipeline.phot):
         
         return x, y, yerr
     
+    def get_one_peak_spec(self,src=0,ind=None):
+        """
+        Get the peak spectrum for one image
+        """
+        if ind == None:
+            useInd = self.get_default_index()
+        else:
+            useInd = ind
+        specRes = self.spec_for_one_file(useInd)
+        t = Table()
+        t['Disp Indices'] = specRes['disp indices']
+        img, head = self.getImg(self.fileL[useInd])
+        for oneSrc in np.arange(self.nsrc):
+            t['Peak Spec {}'.format(oneSrc)] = specRes['peak spec'][oneSrc] / self.countrate_to_electrons_mult(head)
+        t.write(self.peakSpecFile,overwrite=True)
+
+
     def dyn_specFile(self,src=0):
         return "{}_src_{}.fits".format(self.dyn_specFile_prefix,src)
         
