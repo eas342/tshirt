@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 from matplotlib import gridspec
 import glob
-from photutils import CircularAperture, CircularAnnulus
-from photutils import RectangularAperture
-from photutils import aperture_photometry
+from photutils.aperture import CircularAperture, CircularAnnulus
+from photutils.aperture import RectangularAperture
+from photutils.aperture import aperture_photometry
 import photutils
 if photutils.__version__ > "1.0":
     from . import fit_2dgauss
