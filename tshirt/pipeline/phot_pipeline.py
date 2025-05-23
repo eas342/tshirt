@@ -1065,7 +1065,8 @@ class phot:
         
         
         if 'timingMethod' in self.param:
-            if self.param['timingMethod'] == 'JWSTint':
+            if ((self.param['timingMethod'] == 'JWSTint') | 
+                (self.param['timingMethod'] == 'JWSTseg')):
                 if 'INTTIME' in head:
                     int_time = head['INTTIME']
                 elif 'EFFINTTM' in head:
@@ -1074,7 +1075,17 @@ class phot:
                     warnings.warn("Couldn't find inttime in header. Setting to 0")
                     int_time = 0
                 
-                t0 = t0 + (head['TFRAME'] + int_time) * (head['ON_NINT'] - 0.5) * u.second
+                if self.param['timingMethod'] == 'JWSTseg':
+                    int_count = (head['INTSTART'] + head['INTEND'])/2.
+                    #warnings.warn("using segment starts for timing, use cautiously for rate files")
+                elif 'ON_NINT' in head:
+                    int_count = head['ON_NINT']
+                else:
+                    warnings.warn("Couldn't find int count")
+                    int_count = 0
+                    
+
+                t0 = t0 + (head['TFRAME'] + int_time) * (int_count - 0.5) * u.second
             elif self.param['timingMethod'] == 'intCounter':
                 t0 = t0 + (head['ON_NINT']) * 1.0 * u.min ## placeholder to spread out time
         
