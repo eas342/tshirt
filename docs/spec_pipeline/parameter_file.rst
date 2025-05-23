@@ -107,10 +107,3 @@ Guess size for the spatial FWHM when fitting to a Gaussian
 traceReference
 ~~~~~~~~~~~~~~
 If you want to use the trace from a previous file, give the path name as a string
-
-timingMethod
-~~~~~~~~~~~~
-In some cases of JWST test data or using JWST rate files from different segments, you need to manually estimate the mid-integration time.
- If :code:`timingMethod` is set to :code:`JWSTint`, :code:`tshirt` estimates the time from the :code:`ON_NINT`.
- If :code:`timingMethod` is set to :code:`JWSTseg`, :code:`tshirt` estimates the time from the average of :code:`INTSTART` and :code:`INTEND` for tat segment.
- 
