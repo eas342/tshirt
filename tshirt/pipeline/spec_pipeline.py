@@ -3200,6 +3200,73 @@ class spec(phot_pipeline.phot):
 
         return t
 
+    def fluxcal(self):
+        """
+        Return a flux calibrated spectrum from the average spectrum
+        Currently set up for JWST NIRCam using P330-E observations
+        """
+        with warnings.catch_warnings() as w:
+            warnings.simplefilter('ignore', u.UnitsWarning)
+            
+            modDat = Table.read('https://archive.stsci.edu/hlsps/reference-atlases/cdbs'+
+                                '/current_calspec/p330e_mod_008.fits')
+        
+        xavg, yavg, yerr = self.get_avg_spec()
+        wavg = self.wavecal(xavg)
+        xavg_edges = xavg - 0.5
+        xavg_edges = np.append(xavg_edges,xavg[-1] + 0.5)
+        wavg_edges = self.wavecal(xavg_edges)
+        ymod_bin = phot_pipeline.do_binning(modDat['WAVELENGTH']/1e4,
+                                            modDat['FLUX'],
+                                            nBin=wavg_edges)
+        if os.path.exists(self.specFile) == False:
+            raise Exception("Couldn't find specFile."+
+                            "Try running extraction with do_extraction")
+        origHead = fits.getheader(self.specFile,extname='ORIG HEADER')
+        if (('INSTRUME' not in origHead) | ('FILTER' not in origHead) |
+            ('PUPIL' not in origHead)):
+            raise NotImplementedError("Couldn't find necessary header keywords")
+        elif ((origHead['INSTRUME'] == 'NIRCAM') & 
+              (origHead['FILTER'] == 'F322W2') &
+              (origHead['PUPIL'] == 'GRISMR')):
+            
+            specPath_std_rel = ('parameters/spec_params/jwst/prog_06606/'+
+                                'spec_nrc_prog06606014001_P330-E_F322W2_' +
+                                'autoparam_001.yaml')
+        else:
+            raise NotImplemented("Haven't implemented this instrument config yet")
+
+
+        #specPath_std_rel = ('parameters/spec_params/jwst/prog_06606/'+
+        #                    'spec_nrc_prog06606013001_P330-E_F444W_'+
+        #                    'autoparam_002.yaml')
+        specPath_std = os.path.join(self.baseDir,specPath_std_rel)
+        spec_std = spec(specPath_std)
+
+        std_avg = spec_std.get_avg_spec()
+        wav_std = spec_std.wavecal(std_avg[0])
+        assert np.allclose(wav_std,wavg,atol=1e-5), 'wavelength grid of std is different'
+
+        origHead_std = fits.getheader(spec_std.specFile,extname='ORIG HEADER')
+        conv_mult_std = spec_std.countrate_to_electrons_mult(origHead_std)
+        std_avg_rate = (std_avg[1] / conv_mult_std)
+        calFac =  ymod_bin[1] / std_avg_rate
+
+        yrate = yavg  / self.countrate_to_electrons_mult(origHead)
+        ycal = calFac * yrate
+        flam_units = u.erg/(u.s * u.cm**2 * u.AA)
+        fluxDat = Table()
+        fluxDat['wave'] = wavg
+        fluxDat['flux'] = ycal * flam_units
+        fluxDat['countRate'] = yrate * u.electron / u.s
+        fluxDat['cal model'] = ymod_bin[1] * flam_units
+        fluxDat['calFac'] = calFac * flam_units / (u.electron / u.s)
+        
+        outFile = 'fluxcal_{}.ecsv'.format(self.dataFileDescrip)
+        fluxDat.meta['outName'] = outFile
+        return fluxDat
+
+
 class batch_spec(phot_pipeline.batchPhot):
     def __init__(self,batchFile='parameters/spec_params/example_batch_spec_parameters.yaml'):
         self.alreadyLists = {'starPositions': 1,'bkgRegionsX': 2, 'bkgRegionsY': 2,
