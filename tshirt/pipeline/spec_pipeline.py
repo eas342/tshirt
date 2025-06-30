@@ -160,6 +160,11 @@ class spec(phot_pipeline.phot):
         
         self.check_parameters()
         
+        ## set up file name and path for flux cal results
+        self.fluxCal_name = 'fluxcal_{}.ecsv'.format(self.dataFileDescrip)
+        
+        self.fluxCal_path = os.path.join(self.baseDir,'tser_data',
+                                         'fluxcal_spec',self.fluxCal_name)
         
         
     def check_parameters(self):
@@ -3200,7 +3205,25 @@ class spec(phot_pipeline.phot):
 
         return t
 
-    def fluxcal(self):
+    def fluxcal(self,recalculate=False):
+        """
+        Read in the flux cal from file or execute if file doesn't exit
+
+
+        Parameters
+        -----------
+        recalculate: bool
+            Re-calculate the flux calibration?
+        """
+        if ((os.path.exists(self.fluxCal_path) == False) |
+            (recalculate == True)):
+            fluxDat = self.do_fluxcal()
+        else:
+            fluxDat = ascii.read(self.fluxCal_path)
+        return fluxDat
+
+
+    def do_fluxcal(self):
         """
         Return a flux calibrated spectrum from the average spectrum
         Currently set up for JWST NIRCam using P330-E observations
@@ -3223,6 +3246,11 @@ class spec(phot_pipeline.phot):
             raise Exception("Couldn't find specFile."+
                             "Try running extraction with do_extraction")
         origHead = fits.getheader(self.specFile,extname='ORIG HEADER')
+        if 'tshAutoVersion' in self.param:
+            autoParam = self.param['tshAutoVersion']
+        else:
+            autoParam = None
+        
         if (('INSTRUME' not in origHead) | ('FILTER' not in origHead) |
             ('PUPIL' not in origHead)):
             raise NotImplementedError("Couldn't find necessary header keywords")
@@ -3233,14 +3261,20 @@ class spec(phot_pipeline.phot):
             specPath_std_rel = ('parameters/spec_params/jwst/prog_06606/'+
                                 'spec_nrc_prog06606014001_P330-E_F322W2_' +
                                 'autoparam_001.yaml')
+        elif ((origHead['INSTRUME'] == 'NIRCAM') & 
+              (origHead['FILTER'] == 'F444W') &
+              (origHead['PUPIL'] == 'GRISMR')):
+            
+            specPath_std_rel = ('parameters/spec_params/jwst/prog_06606/'+
+                               'spec_nrc_prog06606013001_P330-E_F444W_'+
+                               'autoparam_{:03d}.yaml'.format(autoParam))
         else:
             raise NotImplemented("Haven't implemented this instrument config yet")
 
-
-        #specPath_std_rel = ('parameters/spec_params/jwst/prog_06606/'+
-        #                    'spec_nrc_prog06606013001_P330-E_F444W_'+
-        #                    'autoparam_002.yaml')
         specPath_std = os.path.join(self.baseDir,specPath_std_rel)
+        if os.path.exists(specPath_std) == False:
+            raise Exception("Couldn't find {}".format(specPath_std))
+        
         spec_std = spec(specPath_std)
 
         std_avg = spec_std.get_avg_spec()
@@ -3262,8 +3296,11 @@ class spec(phot_pipeline.phot):
         fluxDat['cal model'] = ymod_bin[1] * flam_units
         fluxDat['calFac'] = calFac * flam_units / (u.electron / u.s)
         
-        outFile = 'fluxcal_{}.ecsv'.format(self.dataFileDescrip)
-        fluxDat.meta['outName'] = outFile
+        fluxDat.meta['outName'] = self.fluxCal_name
+        
+        phot_pipeline.ensure_directories_are_in_place(self.fluxCal_path)
+        fluxDat.write(self.fluxCal_path,overwrite=True)
+
         return fluxDat
 
 
