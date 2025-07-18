@@ -165,6 +165,12 @@ class spec(phot_pipeline.phot):
         
         self.fluxCal_path = os.path.join(self.baseDir,'tser_data',
                                          'fluxcal_spec',self.fluxCal_name)
+
+        ## set up file name and path for flux cal results
+        self.fluxCal2D_name = 'fluxcal_2D_{}.fits'.format(self.dataFileDescrip)
+
+        self.fluxCal2D_path = os.path.join(self.baseDir,'tser_data',
+                                            'fluxcal2D_spec',self.fluxCal2D_name)
         
         
     def check_parameters(self):
@@ -3228,11 +3234,21 @@ class spec(phot_pipeline.phot):
         Return a flux calibrated spectrum from the average spectrum
         Currently set up for JWST NIRCam using P330-E observations
         """
+        modelName = 'p330e_mod_008.fits'
+        modelURL = ('https://archive.stsci.edu/hlsps/reference-atlases/cdbs'+
+                    '/current_calspec/'+modelName)
+        fluxCalModel_path = os.path.join(self.baseDir,
+                                         'stellar_models',
+                                         modelName)
+        if os.path.exists(fluxCalModel_path) == False:
+            import urllib.request
+            urllib.request.urlretrieve(modelURL,
+                                       fluxCalModel_path)
+        
         with warnings.catch_warnings() as w:
             warnings.simplefilter('ignore', u.UnitsWarning)
             
-            modDat = Table.read('https://archive.stsci.edu/hlsps/reference-atlases/cdbs'+
-                                '/current_calspec/p330e_mod_008.fits')
+            modDat = Table.read(fluxCalModel_path)
         
         xavg, yavg, yerr = self.get_avg_spec()
         wavg = self.wavecal(xavg)
@@ -3249,7 +3265,7 @@ class spec(phot_pipeline.phot):
         if 'tshAutoVersion' in self.param:
             autoParam = self.param['tshAutoVersion']
         else:
-            autoParam = None
+            autoParam = 1
         
         if (('INSTRUME' not in origHead) | ('FILTER' not in origHead) |
             ('PUPIL' not in origHead)):
@@ -3260,7 +3276,7 @@ class spec(phot_pipeline.phot):
             
             specPath_std_rel = ('parameters/spec_params/jwst/prog_06606/'+
                                 'spec_nrc_prog06606014001_P330-E_F322W2_' +
-                                'autoparam_001.yaml')
+                                'autoparam_{:03d}.yaml'.format(autoParam))
         elif ((origHead['INSTRUME'] == 'NIRCAM') & 
               (origHead['FILTER'] == 'F444W') &
               (origHead['PUPIL'] == 'GRISMR')):
@@ -3302,6 +3318,30 @@ class spec(phot_pipeline.phot):
         fluxDat.write(self.fluxCal_path,overwrite=True)
 
         return fluxDat
+    
+    def do_fluxcal2D(self,fluxCal_path=None):
+        """
+        Flux
+        """
+        specHDU = fits.open(self.specFile)
+        origHead = specHDU['ORIG HEADER'].header
+        primHead = specHDU[0].header
+        nSrc = primHead['NSOURCE']
+        nImg = primHead['NIMG']
+
+        if fluxCal_path is None:
+            fluxCal_path = self.fluxCal_path
+        fluxCal1D = ascii.read(fluxCal_path)
+        rateFactor = u.electron /( self.countrate_to_electrons_mult(origHead) * u.s)
+        calFactor = np.tile(fluxCal1D['calFac'],[nSrc,nImg,1]) * rateFactor
+        extToMult = ['OPTIMAL SPEC','OPT SPEC ERR','SUM SPEC','SUM SPEC ERR',
+                     'BACKGROUND SPEC']
+        for oneExtension in extToMult:
+            specHDU[oneExtension].data = np.array(specHDU[oneExtension].data * calFactor)
+            specHDU[oneExtension].header['BUNIT'] = str(calFactor.unit)
+        
+        specHDU.writeto(self.fluxCal2D_path,overwrite=True)
+        
 
 
 class batch_spec(phot_pipeline.batchPhot):
