@@ -380,4 +380,9 @@ def get_baseDir():
             os.mkdir(baseDir)
     
     return baseDir
-    
+
+def mod_phase_near_zero(x):
+    """
+    Calculate orbital phases so they are near 0
+    """
+    return np.mod(np.mod(x,1.0) - 0.5,1.) - 0.5
