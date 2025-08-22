@@ -24,6 +24,19 @@ Specify the background method (:code:`bkgMethod`). The options are
    - "colrow". This calculates a column-by-colum and/or row-by-row fit to the background. The parameters are similar to the :doc:`Spec Background Parameters </spec_pipeline/parameter_file>`. Specify the :code:`bkgOrderX`, :code:`bkgOrderY` for the polynomial orders of the fits. For example :code:`bkgOrderX: 1` for a linear fit. The order and which directions to be specified are in the :code:`backsub_directions` parameter. To do :code:`backsub_directions: ['Y','X']` would do the Y direction (column-by-column) first and then the X direction (row-by-row). :code:`backsub_directions: ['X']` would only do row-by-row subtraction.
    - "rowAmp". This is a somewhat JWST-specific code that will do row-by-row subtraction of the whole array (masking out sources) but treats each column individually. The sources are masked by making all pixels with a circle with radius :code:`backStart` from the source Nan and then using :code:`numpy.nanmedian()` to calculate the median of each row within a given amplifier. Mileage may vary if sources extend over an entire amplifier (512 pixels for JWST Stripe mode, also called 4 output amplifier mode).
 
+Centroid Method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The `centroidMethod` parameter specifies the method used to calculate the centroid of the source in the photometry pipeline. This is an important step in determining the precise location of the source in the image. The following options are available:
+- **`2D Gaussian`**: Fits a two-dimensional Gaussian function to the source to determine the centroid. 
+- **`1D Gaussian`**: Fits a one-dimensional Gaussian function along each axis separately to determine the centroid.
+- **`COM`**: Uses the center of mass (COM) method to calculate the centroid. 
+- **`quadratic`**: Fits a quadratic function to the source to determine the centroid.
+See the `photutils documentation on centroids <https://photutils.readthedocs.io/en/stable/reference/centroids_api.html>`_ for more details on these methods.
+#### Default Value
+The default value for `centroidMethod` is `'2D Gaussian'`.
+#### Example Usage
+To specify the centroid method in the parameter file or dictionary:
+
 
 Fixed Aperture Sizes
 ~~~~~~~~~~~~~~~~~~~~~~~

@@ -17,7 +17,8 @@ from photutils.aperture import aperture_photometry
 import photutils
 if photutils.__version__ > "1.0":
     from . import fit_2dgauss
-    from photutils.centroids import centroid_2dg
+    from photutils.centroids import centroid_2dg, centroid_1dg
+    from photutils.centroids import centroid_com, centroid_quadratic
 else:
     from photutils import centroid_2dg
 import numpy as np
@@ -136,6 +137,7 @@ class phot:
         defaultParams = {'srcGeometry': 'Circular', 'bkgSub': True, 'isCube': False, 'cubePlane': 0,
                         'doCentering': True, 'bkgGeometry': 'CircularAnnulus',
                         'boxFindSize': 18,'backStart': 9, 'backEnd': 12,
+                        'centroidMethod': '2D Gaussian',
                         'scaleAperture': False, 'apScale': 2.5, 'apRange': [0.01,9999],
                         'scaleBackground': False,
                         'nanTreatment': 'zero', 'backOffset': [0.0,0.0],
@@ -188,6 +190,17 @@ class phot:
         
         self.check_parameters()
         self.get_drift_dat()
+        
+        if self.param['centroidMethod'] == '2D Gaussian':
+            self.centroidFunction = centroid_2dg
+        elif self.param['centroidMethod'] == '1D Gaussian':
+            self.centroidFunction = centroid_1dg
+        elif self.param['centroidMethod'] == 'COM':
+            self.centroidFunction = centroid_com
+        elif self.param['centroidMethod'] == 'quadratic':
+            self.centroidFunction = centroid_quadratic
+        else:
+            raise ValueError('Unrecognized centroid method')
         
     
     def get_parameters(self,paramFile,directParam=None):
@@ -985,7 +998,7 @@ class phot:
         subimg = img[minY:maxY,minX:maxX]
         
         try:
-            xcenSub,ycenSub = centroid_2dg(subimg)
+            xcenSub,ycenSub = self.centroidFunction(subimg)
         except ValueError:
             warnings.warn("Found value error for centroid. Putting in Guess value")
             xcenSub,ycenSub = xGuess, yGuess
