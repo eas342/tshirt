@@ -31,11 +31,14 @@
 - tser_data/phot_aperture_optimization/README.md
 - tser_data/spec_aperture_optimization/README.md
 - tser_data/spec/README.md
+- tser_data/fluxcal_spec/README.md
+- tser_data/fluxcal2D_spec/README.md
 - tser_data/peak_spec/README.md
 - tser_data/README.md
 - tser_data/saved_profiles/README.md
 - tser_data/dynamic_spec/README.md
 - tser_data/wavebin_spec/README.md
+- tser_data/broadband_tseries/README.md
 - tser_data/phot/directory_placeholder.dat
 - tser_data/refcor_phot/directory_placeholder.dat
 - centroids/directory_placeholder.dat
@@ -53,3 +56,4 @@
 - example_tshirt_data/example_data/spec_time_series/README.md
 - example_tshirt_data/example_data/hst_spec_tseries/README.md
 - example_tshirt_data/sim_data/drift_phot/README.md
+- stellar_models/README.md
