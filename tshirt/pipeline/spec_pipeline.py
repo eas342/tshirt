@@ -2525,7 +2525,7 @@ class spec(phot_pipeline.phot):
                 plt.close(fig)
 
             
-            HDUList.close()
+        HDUList.close()
     
     
     def get_wavebin_series(self,nbins=10,recalculate=False,specType='Optimal',srcInd=0,
@@ -2665,29 +2665,68 @@ class spec(phot_pipeline.phot):
         HDUList.close()
         return t
     
-    def get_broadband_series(self,src=0):
-        HDUList = fits.open(self.specFile)
+    def get_broadband_series(self,src=0,recalculate=False,**kwargs):
+        """
+        Return a table from the broadband time series
+
+        Parameters
+        ----------
+        src: int
+            Source index
+        recalculate: bool
+            Recalculate the time series?
+        """
+        nbins=1
+        if ((os.path.exists(self.wavebin_specFile(nbins=nbins,srcInd=src)) == False) | 
+            (recalculate == True)):
+            self.make_wavebin_series(nbins=nbins,**kwargs)
+        
+        HDUList = fits.open(self.wavebin_specFile(nbins=nbins,srcInd=src))
+
         t = Table()
-        t['time'] = HDUList['TIME'].data
+        t['Time'] = HDUList['TIME'].data
         
-        spec2D = HDUList['OPTIMAL SPEC'].data[src]
-        spec2D_err = HDUList['OPT SPEC ERR'].data[src]
-        t['Flux'] = np.nansum(spec2D,1)
-        t['Flux Err'] = np.sqrt(np.nansum(spec2D_err**2,1))
+        binGrid = HDUList['BINNED F'].data
+        binGrid_err = HDUList['BINNED ERR'].data
         
-        norm_value = np.nanmedian(t['Flux'])
-        t['Norm Flux'] = t['Flux']  / norm_value
-        t['Norm Flux Err'] = t['Flux Err'] / norm_value
+        #spec2D = HDUList['OPTIMAL SPEC'].data[src]
+        #spec2D_err = HDUList['OPT SPEC ERR'].data[src]
+        t['Flux'] = binGrid[:,0]
+        t['Flux Err'] = binGrid_err[:,0]
         
         HDUList.close()
         
         return t
     
+    def save_broadband_series(self,src=0,saveDir=None,
+                              **kwargs):
+        """
+        Save the broadband series to file
+
+        Parameters
+        ----------
+        src: int
+            Source index
+        saveDir: none or str
+            Directory to save the file to. If None,
+            it will go in tshirt/tser_data/broadbad_tseries
+        kwargs: additional parameter to pass to 
+            get_broadband_series and make_wavebin_series
+        """
+        t = self.get_broadband_series(src=src,**kwargs)
+        if saveDir is None:
+            saveDir = os.path.join(self.baseDir,'tser_data',
+                                   'broadband_tseries')
+        saveName = 'bb_'+self.dataFileDescrip +'.csv'
+        savePath = os.path.join(saveDir,saveName)
+        print("Saving broadband Time Series to {}".format(savePath))
+        t.write(savePath,overwrite=True)
+
     def plot_broadband_series(self,src=0,showPlot=True,matchIraf=False):
         t = self.get_broadband_series(src=src)
-        offset_time = self.get_offset_time(t['time'])
+        offset_time = self.get_offset_time(t['Time'])
         
-        err_ppm = np.nanmedian(t['Norm Flux Err']) * 1e6
+        err_ppm = np.nanmedian(t['Flux Err']) * 1e6
         print('Formal Err = {} ppm '.format(err_ppm))
         fig, ax = plt.subplots()
         
@@ -2697,11 +2736,11 @@ class spec(phot_pipeline.phot):
             ax.set_xlabel("Int Number")
         else:
             marker = 'o'
-            x = t['time'] - offset_time
+            x = t['Time'] - offset_time
             ax.set_xlabel("Time - {} (days)".format(offset_time))
             
         
-        ax.plot(x,t['Norm Flux'],marker)
+        ax.plot(x,t['Flux'],marker)
         ax.set_ylabel("Normalized Flux")
         if showPlot == True:
             fig.show()
