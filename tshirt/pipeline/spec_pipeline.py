@@ -796,10 +796,11 @@ class spec(phot_pipeline.phot):
         dispStart, dispEnd = self.param['dispPixels']
         dispersionIndexArrayLength = int(dispEnd - dispStart)
 
-        if self.param['mosBacksub'] == True:
-            n_spatials = self.nsrc ## separate backsub for each source
-        else:
-            n_spatials = 1 ## one backsub for the whole image
+        n_spatials = self.nsrc
+        # if self.param['mosBacksub'] == True:
+        #     n_spatials = self.nsrc ## separate backsub for each source
+        # else:
+        #     n_spatials = 1 ## one backsub for the whole image
         
         fitOrder = self.param['traceOrder']
         ## make a source model
