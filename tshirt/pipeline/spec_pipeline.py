@@ -128,10 +128,15 @@ class spec(phot_pipeline.phot):
 
         self.traceReference = self.param['traceReference']
         if self.traceReference is None:
+            if self.param['movingTrace'] == True:
+                traceExt = '.fits'
+            else:
+                traceExt = '.csv'
             self.traceFile = os.path.join(self.baseDir,'traces','trace_functions',
-                                        'trace_'+self.dataFileDescrip+'.ecsv')
+                                        'trace_'+self.dataFileDescrip+traceExt)
             self.traceDataFile = os.path.join(self.baseDir,'traces','trace_data',
-                                            'trace_data_'+self.dataFileDescrip+'.ecsv')
+                                            'trace_data_'+self.dataFileDescrip+
+                                            traceExt)
         else:
             self.traceDataFile = None
             self.traceFile = self.traceReference
@@ -722,7 +727,8 @@ class spec(phot_pipeline.phot):
 
     def find_trace(self,recalculateTrace=False,
                    recalculateTraceData=False,
-                   showPlot=False):
+                   showPlot=False,
+                   ind=None):
         """
         Find the trace either from saved file or trace data
 
@@ -734,6 +740,8 @@ class spec(phot_pipeline.phot):
             Recalculate the trace data?
         showPlot: bool
             Show plot of fitting the trace?
+        ind: int or None
+            The index of the file to use for tracing.
         """
         if (os.path.exists(self.traceFile) == True) & (recalculateTrace == False):
             pass
