@@ -2805,7 +2805,8 @@ class spec(phot_pipeline.phot):
     
     def showStarChoices(self,img=None,head=None,showBack=True,
                         srcLabel=None,figSize=None,vmin=None,vmax=None,
-                        xlim=None,ylim=None,showPlot=False):
+                        xlim=None,ylim=None,showPlot=False,
+                        ind=None):
         """ Show the star choices for spectroscopy
                         
         Parameters
@@ -2832,10 +2833,16 @@ class spec(phot_pipeline.phot):
             (optional) Set the y limit of plot
         showPlot: bool
             Make the plot visible?
+        ind: int or None
+            Index of the file list
+            This will override img and head if provided
         """
         fig, ax = plt.subplots(figsize=figSize)
         
-        img, head = self.get_default_im(img=img,head=None)
+        if ind is None:
+            img, head = self.get_default_im(img=img,head=None)
+        else:
+            img, head = self.getImg(self.fileL[ind])
         
         if vmin == None:
             vmin = np.nanpercentile(img,1)
