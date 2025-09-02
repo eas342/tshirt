@@ -989,7 +989,7 @@ class spec(phot_pipeline.phot):
             
             profile_img = np.zeros_like(img)
             if (self.param['traceCurvedSpectrum'] == True):
-                t = self.calculate_apertures()
+                t = self.calculate_apertures(src=srcInd)
                 startSpatial = np.min(t['srcStart'])
                 endSpatial = np.max(t['srcEnd'])
             else:
