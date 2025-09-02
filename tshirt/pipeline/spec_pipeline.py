@@ -449,7 +449,8 @@ class spec(phot_pipeline.phot):
         
     
     def backsub_oneDir(self,img,head,oneDirection,saveFits=False,
-                       showEach=False,ind=None,custPrefix=None):
+                       showEach=False,ind=None,custPrefix=None,
+                       showEachStart=0):
         """
         Do the background subtraction in a specified direction
         Either row-by-row or column-by-column
@@ -467,6 +468,10 @@ class spec(phot_pipeline.phot):
             Save a fits file of the subtraction model?
         showEach: bool
             Show each polynomial fit?
+        showEachStart: int
+            Cross-subtraction (ie. Dispersion) index to start showing plots
+            This is useful because the flux is often very low at the starting
+            spatial index.
         ind: int or None
             The ind in the fileL. This is mainly used for naming files,
             if files are being saved.
@@ -592,11 +597,16 @@ class spec(phot_pipeline.phot):
                 else:
                     bkgModel[ind_var[ptsToSubtract],cross_Ind] = dep_var_model[ptsToSubtract]
                 
-                if showEach == True:
-                    plt.plot(ind_var,dep_var,label='data')
-                    plt.plot(ind_var[pts],dep_var[pts],'o',color='red',label='pts fit')
-                    plt.plot(ind_var,dep_var_model,label='model')
-                    plt.show()
+                if (showEach == True) & (cross_Ind >= showEachStart):
+                    fig, ax = plt.subplots()
+                    ax.plot(ind_var,dep_var,label='data')
+                    ax.plot(ind_var[pts],dep_var[pts],'o',color='red',label='pts fit')
+                    ax.plot(ind_var,dep_var_model,label='model')
+                    ax.set_xlabel('Pixel {}'.format(oneDirection))
+                    ax.set_ylabel('Counts')
+                    ax.set_title("Cross-index: {}".format(cross_Ind))
+                    ax.legend()
+                    fig.show()
                     pdb.set_trace()
         
         outHead = deepcopy(head)
