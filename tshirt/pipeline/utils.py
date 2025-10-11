@@ -200,14 +200,14 @@ def roll_pad(y,pixShift,pad_value=np.nan,order=1):
     Otherwise, it will do linear interpolation to do the subpixel shift
     """
     if type(pixShift) is int:
-        rolled = np.array(np.roll(y,pixShift),dtype=np.float)
+        rolled = np.array(np.roll(y,pixShift),dtype=float)
         if pixShift > 0:
             rolled[0:pixShift] = pad_value
         elif pixShift < 0:
             rolled[pixShift:] = pad_value
         return rolled
     else:
-        rolled = ndimage.interpolation.shift(np.array(y,dtype=np.float),pixShift,
+        rolled = ndimage.interpolation.shift(np.array(y,dtype=float),pixShift,
                                              mode='constant',cval=pad_value,
                                              order=order)
         
@@ -215,7 +215,7 @@ def roll_pad(y,pixShift,pad_value=np.nan,order=1):
         # numPix = len(y)
         # indArr = np.arange(numPix)
         # intpixShift = np.int(np.floor(pixShift))
-        # rolled = np.zeros_like(y,dtype=np.float) * np.nan
+        # rolled = np.zeros_like(y,dtype=float) * np.nan
         # fInterp = interp1d(indArr,y)
         #
         # newFracIndArr = indArr - pixShift
@@ -332,7 +332,7 @@ def crosscor_offset(x,y1,y2,Noffset=150,diagnostics=False,
             xOffset = np.max(offsets)
         else:
             fInterp = interp1d(offsetIndices,offsets)
-            xOffset = np.float(fInterp(indOffset))
+            xOffset = float(fInterp(indOffset))
     else:
         peakArg = np.argmax(corr)
         yPeak = corr[peakArg]
