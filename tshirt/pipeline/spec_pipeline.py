@@ -1818,6 +1818,8 @@ class spec(phot_pipeline.phot):
                           vmin=None,vmax=None,flipX=False,
                           waveCal=False,topYlabel='',
                           interpolation=None,
+                          refCorrect=False,
+                          yLim=[None,None],
                           smooth2D=None):
         """
         Plots a dynamic spectrum of the data
@@ -1844,6 +1846,8 @@ class spec(phot_pipeline.phot):
             Value minimum for dynamic spectrum image
         vmax: float or None
             Value maximum for dynamic spectrum image
+        yLim: list of 2 elements of float or None
+            The y limits of the top spectrum
         flipX: bool
             Flip the X axis?
         interpolation: None or str
@@ -1852,6 +1856,8 @@ class spec(phot_pipeline.phot):
             The label for the top Y axis
         waveCal: bool
             Calibrate the dispersion to wavelength?
+        refCorrect: bool
+            Use reference-corrected dynamic spectrum?
         smooth2D: None or 2 element list
             If None, no smoothing. If a 2 element list [x_std,y_std],
             astropy convolve with 2D Gaussian kernel
@@ -1912,10 +1918,24 @@ class spec(phot_pipeline.phot):
             warnings.simplefilter("ignore", category=RuntimeWarning)
             avgSpec_err = np.sqrt(np.nansum(errSpec**2,0)) / np.nansum(specCounts,0)
         
-        waveIndices = HDUList['DISP INDICES'].data
-        normImg = np.tile(avgSpec,[nImg,1])
-        dynamicSpec = useSpec / normImg
-        dynamicSpec_err = errSpec / normImg
+        if refCorrect == True:
+            refFile = self.dyn_specFile('ratio')
+            if os.path.exists(refFile) == False:
+                raise Exception("No reference file found. Run reference correction first...")
+            refHDUList = fits.open(refFile)
+            waveIndices = refHDUList['WAVELENGTH'].data
+            useSpec = refHDUList['DYNAMIC SPECTRATIO'].data[src]
+            errSpec = refHDUList['DYN SPEC ERR'].data[src]
+            refHDUList.close()
+            avgRatio = np.nanmedian(useSpec,axis=0)
+            normImg = np.tile(avgRatio,[nImg,1])
+            dynamicSpec = useSpec / normImg
+            dynamicSpec_err = errSpec / normImg
+        else:
+            waveIndices = HDUList['DISP INDICES'].data
+            normImg = np.tile(avgSpec,[nImg,1])
+            dynamicSpec = useSpec / normImg
+            dynamicSpec_err = errSpec / normImg
         
         if saveFits == True:
             dynHDU = fits.PrimaryHDU(dynamicSpec,HDUList['OPTIMAL SPEC'].header)
@@ -1969,6 +1989,7 @@ class spec(phot_pipeline.phot):
             
             axTop.plot(x_spec,avgSpec)
             axTop.set_ylabel(topYlabel)
+            axTop.set_ylim(yLim[0],yLim[1])
             ax = axArr[1]
         else:
             fig, ax = plt.subplots()
