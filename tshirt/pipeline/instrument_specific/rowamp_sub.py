@@ -13,7 +13,11 @@ import pdb
 from copy import deepcopy
 from scipy.signal import savgol_filter, savgol_coeffs
 from astropy.convolution import convolve
-import celerite2
+try:
+    import celerite2
+except ImportError as err2:
+    warnings.warn("Could not import celerite2. Gaussian Process 1/f correction will not work.")
+    pass
 
 
 def do_even_odd(thisAmp):
