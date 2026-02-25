@@ -45,8 +45,9 @@ try:
     from bokeh.models import ColumnDataSource, HoverTool
     from bokeh.models import Range1d
     from bokeh.models import WheelZoomTool
-except ImportError as err2:
+except (ImportError,AttributeError) as err2:
     print("Could not import bokeh plotting. Interactive plotting may not work")
+    pass
 from .utils import robust_poly, robust_statistics
 from .utils import get_baseDir
 from .instrument_specific import rowamp_sub
