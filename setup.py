@@ -23,7 +23,8 @@ setup(
         "bokeh>=1.4.0",
         "pytest",
         "celerite2",
-        "matplotlib"
+        "matplotlib",
+        "setuptools",
     ],
     long_description=long_description,
     long_description_content_type='text/markdown'
